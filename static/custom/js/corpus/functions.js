@@ -35,43 +35,6 @@ function generic_line_detail_formatter(index, row) {
     return html.join("\n");
 }
 
-function sanskrit_line_detail_formatter(index, row) {
-    var words = [];
-    var roots = [];
-    var genders = [];
-    var cases = [];
-    var forms = [];
-    var noun_markers = [];
-
-    for (word of row.analysis) {
-        words.push(word.original);
-        roots.push(word.root);
-        if (word.details !== {}) {
-            genders.push(word.details.gender);
-            cases.push(word.details.case);
-            forms.push(word.details.form);
-        } else {
-            genders.push("");
-            cases.push("");
-            forms.push("");
-        }
-        noun_markers.push(word.is_noun);
-    }
-
-    var html = [
-        '<div class="table-responsive-sm"><table class="table table-striped">',
-        '<tr><th scope="row">Word</th><td>' + words.join("</td><td>") + '</td></tr>',
-        '<tr><th scope="row">Root</th><td>' + roots.join("</td><td>") + '</td></tr>',
-        '<tr><th scope="row">Gender</th><td>' + genders.join("</td><td>") + '</td></tr>',
-        '<tr><th scope="row">Case</th><td>' + cases.join("</td><td>") + '</td></tr>',
-        '<tr><th scope="row">Number</th><td>' + forms.join("</td><td>") + '</td></tr>',
-        '<tr><th scope="row">Noun?</th><td>' + noun_markers.join("</td><td>") + '</td></tr>',
-        '</table></div>',
-    ];
-
-    return html.join("\n");
-}
-
 function column_marked_formatter(value, row) {
     return value ? '<i class="fa fa-check"></i>' : '';
 }
