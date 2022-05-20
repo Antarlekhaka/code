@@ -1,0 +1,15 @@
+{% set task_id = "1" %}
+{% set title = "Sentence Boundary" %}
+{% set rows = "1" %}
+{% extends "task_base.html" %}
+
+{% block body %}
+<textarea id="task-{{task_id}}-input-before" style="resize: none;" class="form-control text-muted text-monospace" rows="3" required disabled>
+</textarea>
+
+{{super()}}
+
+<textarea id="task-{{task_id}}-input-after"  style="resize: none;" class="form-control text-muted text-monospace" rows="3" required disabled>
+</textarea>
+{% endblock %}
+

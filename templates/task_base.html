@@ -1,0 +1,21 @@
+<div class="card">
+    <div class="card-header">
+        {{title}}
+    </div>
+    <div class="card-body">
+        {% block body %}
+        <textarea id="task-{{task_id}}-input" class="form-control text-muted text-monospace" placeholder="Annotation" rows="{{rows or '9'}}" required disabled></textarea>
+        {% endblock %}
+    </div>
+    <div class="card-footer">
+        <button class="btn btn-light" disabled>
+            <span class="line-id-container">None</span>
+        </button>
+        <button id="task-{{task_id}}-submit" class="btn btn-primary float-right">
+            Submit
+        </button>
+        <button id="task-{{task_id}}-skip" class="mr-1 btn btn-secondary float-right">
+            Skip
+        </button>
+    </div>
+</div>
