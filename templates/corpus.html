@@ -143,8 +143,62 @@ $task_5_skip.click(function() {
 
 $task_1_submit.click(function () {
     $task_1_input.prop('disabled', true).removeClass('text-info').addClass('text-muted');
-    // Task 1 Actions
-    // ...
+
+    // Identify Boundary Token IDs
+    var display_tokens = $task_1_input.data('display_tokens');
+    var submitted_tokens = $task_1_input.val().split(/\s+/);
+    var line_break_tokens = [];
+
+    var current_idx = -2;
+    for (var i=0; i < submitted_tokens.length; ++i) {
+        if (submitted_tokens[i] === "##") {
+            line_break_tokens.push(display_tokens[current_idx]);
+        } else {
+            current_idx += 1;
+        }
+    }
+
+    $.post("{{url_for('api')}}", {
+        action: "update_sentence_boundary",
+        line_id: $line_id_containers.html(),
+        boundaries: line_break_tokens.join(","),
+    },
+    function (response) {
+        if (response.success) {
+            $.notify({
+                message: "Successfully updated!"
+            }, {
+                type: "success"
+            });
+
+            var boundary_objects = [];
+            $.each(line_break_tokens, function(index, _token_id) {
+                boundary_objects.push({
+                    'token_id': _token_id,
+                    'line_id': $line_id_containers.html(),
+                    'annotator': "{{current_user.username}}",
+                    'is_deleted': false
+                });
+            })
+            // update local table
+            var current_row = $corpus_table.bootstrapTable('getRowByUniqueId', $line_id_containers.html());
+            current_row.marked = true;
+            current_row.boundary = boundary_objects;
+
+            $corpus_table.bootstrapTable('updateByUniqueId', {
+                line_id: current_row.line_id,
+                row: current_row
+            });
+        } else {
+            $.notify({
+                message: "Something went wrong!"
+            }, {
+                type: "danger"
+            });
+        }
+    },
+    'json');
+
     $task_2_tab.click();
     $task_2_input.prop('disabled', false).removeClass('text-muted').addClass('text-info').focus();
 });

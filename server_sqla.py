@@ -63,6 +63,7 @@ from models_sqla import (db, user_datastore,
                          CustomLoginForm, CustomRegisterForm,
                          Corpus, Chapter, Verse, Line, Token,
                          Lexicon,
+                         Boundary,
                          ActionLabel, ActorLabel, Action)
 from settings import app
 from utils.reverseproxied import ReverseProxied
@@ -460,6 +461,30 @@ def api():
     # ----------------------------------------------------------------------- #
 
     if action == "update_sentence_boundary":
+        line_id = request.form['line_id']
+        annotator_id = current_user.id
+        boundary_tokens = request.form['boundaries'].split(',')
+        boundary_tokens = [int(b) for b in boundary_tokens]
+
+        objects_to_update = []
+        existing_boundary_query = Boundary.query.filter(
+            Boundary.token.has(Token.line_id == line_id)
+        )
+        existing_boundaries = []
+        for existing_boundary in existing_boundary_query.all():
+            if existing_boundary.token_id not in boundary_tokens:
+                existing_boundary.is_deleted = True
+                objects_to_update.append(existing_boundary)
+            else:
+                existing_boundaries.append(existing_boundary.token_id)
+
+        for boundary_token in boundary_tokens:
+            if boundary_token not in existing_boundaries:
+                boundary = Boundary()
+                boundary.token_id = boundary_token
+                boundary.annotator_id = annotator_id
+                objects_to_update.append(boundary)
+
         api_response["data"] = None
         api_response["message"] = "update_sentence_boundary"
         return jsonify(api_response)

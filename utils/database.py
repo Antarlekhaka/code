@@ -14,6 +14,7 @@ from sqlalchemy.orm.relationships import RelationshipProperty
 
 from models_sqla import User, Role
 from models_sqla import Corpus, Chapter, Verse, Line, Token
+from models_sqla import Boundary
 
 ###############################################################################
 
@@ -142,19 +143,42 @@ def get_line_data(
             ],
             'tokens': [
                 {
-                    'id': token.analysis['ID'],
+                    'id': token.id,
+                    'relative_id': token.analysis['ID'],
                     'line_id': token.line_id,
                     'order': token.order,
                     'analysis': token.analysis
                 }
                 for token in line.tokens.all()
             ],
+            'boundary': [],
             'entity': [],
             'relation': [],
             'action': [],
-            'marked': False
+            'marked': False,
         }
-        for line in line_object_query
+        for line in line_object_query.limit(30)
     }
+
+    if annotator_ids is None:
+        boundary_query = Boundary.query.filter(
+            Boundary.token.has(Token.line_id.in_(line_ids))
+        )
+    else:
+        boundary_query = Boundary.query.filter(
+            Boundary.token.has(Token.line_id.in_(line_ids)),
+            Boundary.annotator_id.in_(annotator_ids)
+        )
+
+    for boundary in boundary_query.all():
+        data[boundary.token.line_id]['boundary'].append(
+            {
+                'id': boundary.id,
+                'token_id': boundary.token_id,
+                'line_id': boundary.token.line_id,
+                'annotator': boundary.annotator.username,
+                'is_deleted': boundary.is_deleted
+            }
+        )
 
     return data

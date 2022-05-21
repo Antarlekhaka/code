@@ -122,6 +122,21 @@ class RolesUsers(db.Model):
     role_id = Column('role_id', Integer, ForeignKey('role.id'))
 
 ###############################################################################
+
+
+class Boundary(db.Model):
+    id = Column(Integer, primary_key=True)
+    token_id = Column(Integer, ForeignKey('token.id'), nullable=False)
+    annotator_id = Column(Integer, ForeignKey('user.id'), nullable=False)
+    is_deleted = Column(Boolean, default=False, nullable=False)
+    updated_at = Column(DateTime, default=dt.utcnow, onupdate=dt.utcnow)
+
+    token = relationship('Token', foreign_keys=[token_id])
+    annotator = relationship(
+        'User', backref=backref('boundaries', lazy='dynamic')
+    )
+
+###############################################################################
 # Annotation Database Models
 
 
