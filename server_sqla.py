@@ -433,60 +433,89 @@ def api():
     # Action Authorization
 
     role_actions = {
-        'admin': [],
-        'annotator': [
-            "update_sentence_boundary", "update_multiword_type",
-            "update_action_graph", "update_coreference"
+        "admin": [],
+        "annotator": [
+            "update_sentence_boundary",
+            "update_multiword_type",
+            "update_anvaya",
+            "update_action_graph",
+            "update_coreference"
         ],
-        'curator': [],
-        'querier': []
+        "curator": [],
+        "querier": []
     }
     valid_actions = [
         action for actions in role_actions.values() for action in actions
     ]
 
     if action not in valid_actions:
-        api_response['message'] = "Invalid action."
+        api_response["message"] = "Invalid action."
         return jsonify(api_response)
 
     for role, actions in role_actions.items():
         if action in actions and not current_user.has_role(role):
-            api_response['message'] = "Insufficient permissions."
+            api_response["message"] = "Insufficient permissions."
             return jsonify(api_response)
 
     # ----------------------------------------------------------------------- #
 
-    api_response['success'] = True
+    api_response["success"] = True
+    api_response["style"] = "warning"
 
     # ----------------------------------------------------------------------- #
 
     if action == "update_sentence_boundary":
-        line_id = request.form['line_id']
+        line_id = request.form["line_id"]
         annotator_id = current_user.id
-        boundary_tokens = request.form['boundaries'].split(',')
-        boundary_tokens = [int(b) for b in boundary_tokens]
+        boundary_tokens = [
+            int(b.strip())
+            for b in request.form["boundaries"].split(",")
+            if b.strip()
+        ]
 
         objects_to_update = []
         existing_boundary_query = Boundary.query.filter(
-            Boundary.token.has(Token.line_id == line_id)
+            Boundary.token.has(Token.line_id == line_id),
+            Boundary.annotator_id == annotator_id
         )
-        existing_boundaries = []
-        for existing_boundary in existing_boundary_query.all():
-            if existing_boundary.token_id not in boundary_tokens:
-                existing_boundary.is_deleted = True
-                objects_to_update.append(existing_boundary)
-            else:
-                existing_boundaries.append(existing_boundary.token_id)
+        existing_boundary_tokens = {}
+        for _boundary in existing_boundary_query.all():
+            existing_boundary_tokens[_boundary.token_id] = _boundary
+            if _boundary.token_id not in boundary_tokens:
+                if not _boundary.is_deleted:
+                    _boundary.is_deleted = True
+                    objects_to_update.append(_boundary)
 
         for boundary_token in boundary_tokens:
-            if boundary_token not in existing_boundaries:
+            if boundary_token not in existing_boundary_tokens:
                 boundary = Boundary()
                 boundary.token_id = boundary_token
                 boundary.annotator_id = annotator_id
                 objects_to_update.append(boundary)
+            else:
+                boundary = existing_boundary_tokens[boundary_token]
+                if boundary.is_deleted:
+                    boundary.is_deleted = False
+                    objects_to_update.append(boundary)
+
+        try:
+            if objects_to_update:
+                db.session.bulk_save_objects(objects_to_update)
+                db.session.commit()
+                api_response["message"] = "Successfully updated!"
+                api_response["style"] = "success"
+            else:
+                api_response["message"] = "No changes were submitted."
+                api_response["style"] = "warning"
+            api_response["success"] = True
+        except Exception as e:
+            print(e)
+            print(request.form)
+            api_response["success"] = False
+            api_response["message"] = "Something went wrong!"
+            api_response["style"] = "danger"
 
         api_response["data"] = None
-        api_response["message"] = "update_sentence_boundary"
         return jsonify(api_response)
 
     # ----------------------------------------------------------------------- #
@@ -512,8 +541,8 @@ def api():
 
     # ----------------------------------------------------------------------- #
 
-    if action == 'custom_action':
-        api_response['data'] = None
+    if action == "custom_action":
+        api_response["data"] = None
         return jsonify(api_response)
 
 

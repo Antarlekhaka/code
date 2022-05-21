@@ -25,7 +25,7 @@ $corpus_table.on('expand-row.bs.table', function (e, index, row, $detail) {
     const end_index = (index < data.length - 2) ? (index + 2) : data.length - 1;
     const context = data.slice(start_index, end_index + 1);
 
-    var display_tokens = [];
+    var display_token_last_components = [];
     $.each(context, function(index, line){
         console.log(line.tokens);
         console.log(line.boundary);
@@ -34,12 +34,21 @@ $corpus_table.on('expand-row.bs.table', function (e, index, row, $detail) {
         var boundary_tokens = new Set();
 
         $.each(line.boundary, function(index, boundary) {
-            boundary_tokens.add(boundary.token_id);
+            if (!boundary.is_deleted) {
+                boundary_tokens.add(boundary.token_id);
+            }
         });
         $.each(line.tokens, function(index, token) {
             if (token.analysis['Word'] !== "_") {
+                var token_id = token.id;
+
+                if (token.relative_id instanceof Array) {
+                    // if token id is of composite word,
+                    // we want the marker to be after the last component
+                    token_id += token.relative_id[2] - token.relative_id[0] + 1;
+                }
                 if (line.line_id == row.line_id) {
-                    display_tokens.push(token.id);
+                    display_token_last_components.push(token_id);
                 }
                 line_text.push(token.analysis['Word']);
             }
@@ -59,7 +68,7 @@ $corpus_table.on('expand-row.bs.table', function (e, index, row, $detail) {
             task_1_text_after.push(actual_line_text);
         }
     });
-    $task_1_input.data('display_tokens', display_tokens);
+    $task_1_input.data('marker_positions', display_token_last_components);
     $task_1_input_before.val(task_1_text_before.join("\n"));
     $task_1_input_after.val(task_1_text_after.join("\n"));
 
