@@ -200,32 +200,90 @@ $task_1_submit.click(function () {
 $task_2_submit.click(function () {
     $task_2_input.prop('disabled', true).removeClass('text-info').addClass('text-muted');
     // Task 2 Actions
-    // ...
-    $task_3_tab.click();
-    $task_3_input.prop('disabled', false).removeClass('text-muted').addClass('text-info').focus();
+
+    $.post("{{url_for('api')}}", {
+        action: "update_multiword_type",
+        line_id: $line_id_containers.html(),
+    },
+    function (response) {
+        $.notify({
+            message: response.message
+        }, {
+            type: response.style
+        });
+
+        if (response.success) {
+            // ....
+            $task_3_tab.click();
+            $task_3_input.prop('disabled', false).removeClass('text-muted').addClass('text-info').focus();
+        }
+    });
 });
 $task_3_submit.click(function () {
     $task_3_input.prop('disabled', true).removeClass('text-info').addClass('text-muted');
     // Task 3 Actions
-    // ...
-    $task_4_tab.click();
-    $task_4_input.prop('disabled', false).removeClass('text-muted').addClass('text-info').focus();
+
+    $.post("{{url_for('api')}}", {
+        action: "update_anvaya",
+        line_id: $line_id_containers.html(),
+    },
+    function (response) {
+        $.notify({
+            message: response.message
+        }, {
+            type: response.style
+        });
+
+        if (response.success) {
+            // ....
+            $task_4_tab.click();
+            $task_4_input.prop('disabled', false).removeClass('text-muted').addClass('text-info').focus();
+        }
+    });
 });
 $task_4_submit.click(function () {
     $task_4_input.prop('disabled', true).removeClass('text-info').addClass('text-muted');
-    // Task 4 Actions
-    // ...
-    $task_5_tab.click();
-    $task_5_input.prop('disabled', false).removeClass('text-muted').addClass('text-info').focus();
+
+    $.post("{{url_for('api')}}", {
+        action: "update_action_graph",
+        line_id: $line_id_containers.html(),
+    },
+    function (response) {
+        $.notify({
+            message: response.message
+        }, {
+            type: response.style
+        });
+
+        if (response.success) {
+            // ....
+            $task_5_tab.click();
+            $task_5_input.prop('disabled', false).removeClass('text-muted').addClass('text-info').focus();
+        }
+    });
 });
 $task_5_submit.click(function() {
     $task_5_input.prop('disabled', true).removeClass('text-info').addClass('text-muted');
-    // Task 5 Actions
-    // ...
-    $task_1_tab.click();
-    $corpus_table.bootstrapTable('collapseAllRows');
-    $corpus_table.bootstrapTable('uncheckAll');
-    $corpus_table.bootstrapTable('expandRowByUniqueId', storage.getItem("next"));
+
+    $.post("{{url_for('api')}}", {
+        action: "update_coreference",
+        line_id: $line_id_containers.html(),
+    },
+    function (response) {
+        $.notify({
+            message: response.message
+        }, {
+            type: response.style
+        });
+
+        if (response.success) {
+            // ....
+            $task_1_tab.click();
+            $corpus_table.bootstrapTable('collapseAllRows');
+            $corpus_table.bootstrapTable('uncheckAll');
+            $corpus_table.bootstrapTable('expandRowByUniqueId', storage.getItem("next"));
+        }
+    });
 });
 </script>
 {% include "footer.html" %}

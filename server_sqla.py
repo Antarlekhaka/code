@@ -460,6 +460,7 @@ def api():
     # ----------------------------------------------------------------------- #
 
     api_response["success"] = True
+    api_response["message"] = "Under construction."
     api_response["style"] = "warning"
 
     # ----------------------------------------------------------------------- #
@@ -527,6 +528,13 @@ def api():
 
     # ----------------------------------------------------------------------- #
 
+    if action == "update_anvaya":
+        api_response["data"] = None
+        api_response["message"] = "update_anvaya"
+        return jsonify(api_response)
+
+    # ----------------------------------------------------------------------- #
+
     if action == "update_action_graph":
         api_response["data"] = None
         api_response["message"] = "update_action_graph"
@@ -544,6 +552,10 @@ def api():
     if action == "custom_action":
         api_response["data"] = None
         return jsonify(api_response)
+
+    # ----------------------------------------------------------------------- #
+
+    return jsonify(api_response)
 
 
 @webapp.route("/api/corpus/<int:chapter_id>")
