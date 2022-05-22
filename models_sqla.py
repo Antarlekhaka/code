@@ -151,8 +151,9 @@ class Anvaya(db.Model):
     updated_at = Column(DateTime, default=dt.utcnow, onupdate=dt.utcnow)
 
     boundary = relationship(
-        'Boundary', backref=backref('anvaya'), lazy='dynamic'
+        'Boundary', backref=backref('anvaya', lazy='dynamic')
     )
+    token = relationship('Token', foreign_keys=[token_id])
     annotator = relationship('User', backref=backref('anvaya', lazy='dynamic'))
     __table_args__ = (
          Index('anvaya_boundary_id_annotator_id_token_id',
