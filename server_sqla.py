@@ -476,7 +476,7 @@ def api():
 
         objects_to_update = []
         existing_boundary_query = Boundary.query.filter(
-            Boundary.token.has(Token.line_id == line_id),
+            Boundary.line_id == line_id,
             Boundary.annotator_id == annotator_id
         )
         existing_boundary_tokens = {}
@@ -490,6 +490,7 @@ def api():
         for boundary_token in boundary_tokens:
             if boundary_token not in existing_boundary_tokens:
                 boundary = Boundary()
+                boundary.line_id = line_id
                 boundary.token_id = boundary_token
                 boundary.annotator_id = annotator_id
                 objects_to_update.append(boundary)
