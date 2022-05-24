@@ -151,7 +151,7 @@ def get_line_data(
         )
 
     for boundary in boundary_query.all():
-        data[boundary.token.line_id]['boundary'].append(
+        data[boundary.line_id]['boundary'].append(
             {
                 'id': boundary.id,
                 'token_id': boundary.token_id,
