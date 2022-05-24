@@ -132,6 +132,8 @@ def get_line_data(
                 for token in line.tokens.all()
             ],
             'boundary': [],
+            'sentences': {},
+            'anvaya': {},
             'entity': [],
             'relation': [],
             'action': [],
@@ -159,6 +161,10 @@ def get_line_data(
                 'annotator': boundary.annotator.username,
                 'is_deleted': boundary.is_deleted
             }
+        )
+        data[boundary.line_id]['sentences'] = get_sentences(
+            boundary.line_id,
+            boundary.annotator_id
         )
 
     return data
