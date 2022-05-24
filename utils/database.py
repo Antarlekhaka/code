@@ -14,7 +14,7 @@ from sqlalchemy.orm.relationships import RelationshipProperty
 
 from models_sqla import User, Role
 from models_sqla import Corpus, Chapter, Verse, Line, Token
-from models_sqla import Boundary
+from models_sqla import Anvaya, Boundary
 
 ###############################################################################
 
@@ -162,3 +162,61 @@ def get_line_data(
         )
 
     return data
+
+
+def get_sentences(line_id: int, annotator_id: int) -> List[Token]:
+    """Get sentences (as a list of tokens) that end on the specific line
+
+    Parameters
+    ----------
+    line_id : int
+        Line ID
+    annotator_id : int
+        Annotator ID
+
+    Returns
+    -------
+    List[Token]
+        List of tokens in the sentence
+    """
+    sentences = {}
+
+    # boundaries present in the current line
+    boundaries = Boundary.query.filter(
+        Boundary.line_id == line_id,
+        Boundary.annotator_id == annotator_id,
+        Boundary.is_deleted == False  ## noqa # '== False' is required
+    ).order_by(Boundary.token_id).all()
+
+    if not boundaries:
+        return sentences
+
+    # previous boundary, which serves as the starting point
+    # of the first boundary in the current line
+    previous_boundary = Boundary.query.filter(
+        Boundary.line_id < line_id,
+        Boundary.annotator_id == annotator_id,
+        Boundary.is_deleted == False  ## noqa # '== False' is required
+    ).order_by(Boundary.token_id.desc()).first()
+
+    previous_boundary_token_id = (
+        previous_boundary.token_id if previous_boundary else -1
+    )
+
+    for boundary in boundaries:
+        tokens = Token.query.filter(
+            Token.id > previous_boundary_token_id,
+            Token.id <= boundary.token_id
+        ).order_by(Token.id).all()
+        sentences[boundary.id] = [
+            {
+                'id': token.id,
+                'sentence_id': boundary.id,
+                'boundary_id': boundary.id,
+                'analysis': token.analysis,
+            }
+            for token in tokens
+        ]
+        previous_boundary_token_id = boundary.token_id
+
+    return sentences
