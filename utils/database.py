@@ -48,7 +48,7 @@ def search_model(
 ###############################################################################
 
 
-def get_chapter_data(chapter_id: int, user: User) -> dict:
+def get_chapter_data(chapter_id: int, user: User, all: bool = False) -> dict:
     """Get Chapter Data
 
     Fetch line data for the lines belonging to the specified chapter.
@@ -61,6 +61,10 @@ def get_chapter_data(chapter_id: int, user: User) -> dict:
     user : User
         User object for the user associated with the request
         If the user has `annotate` permissions, annotations will be fetched
+    all : bool
+        If True, and the user has `curate` permission or `admin` role,
+        annotations by all the users will be fetched.
+        The default is False
 
     Returns
     -------
@@ -75,34 +79,19 @@ def get_chapter_data(chapter_id: int, user: User) -> dict:
         for line in verse.lines
     ]
     annotator_ids = []
-    fetch_nodes = False
-    fetch_relations = False
-    fetch_actions = False
+
     if user.has_permission('annotate'):
         annotator_ids = [user.id]
-        fetch_nodes = True
-        fetch_relations = True
-        fetch_actions = True
+
     if user.has_permission('curate') or user.has_role('admin'):
-        annotator_ids = None
-        fetch_nodes = True
-        fetch_relations = True
-        fetch_actions = True
-    return get_line_data(
-        line_ids,
-        annotator_ids=annotator_ids,
-        fetch_nodes=fetch_nodes,
-        fetch_relations=fetch_relations,
-        fetch_actions=fetch_actions
-    )
+        annotator_ids = None if all else [user.id]
+
+    return get_line_data(line_ids, annotator_ids=annotator_ids)
 
 
 def get_line_data(
     line_ids: List[int],
     annotator_ids: List[int] = None,
-    fetch_nodes: bool = False,
-    fetch_relations: bool = False,
-    fetch_actions: bool = False
 ) -> dict:
     """Get Line Data
 
@@ -116,15 +105,6 @@ def get_line_data(
         List of user IDs of annotators
         If None, annotations by all the users will be fetched.
         The default is None.
-    fetch_nodes : bool, optional
-        Fetch node annotations
-        The default is False.
-    fetch_relations : bool, optional
-        Fetch relationship annotations
-        The default is False.
-    fetch_actions : bool, optional
-        Fetch action annotations
-        The default is False.
 
     Returns
     -------
