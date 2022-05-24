@@ -7,7 +7,7 @@ Database Utility Functions
 ###############################################################################
 
 import logging
-from typing import List
+from typing import Dict, List
 
 from sqlalchemy.orm.properties import ColumnProperty
 from sqlalchemy.orm.relationships import RelationshipProperty
@@ -164,7 +164,7 @@ def get_line_data(
     return data
 
 
-def get_sentences(line_id: int, annotator_id: int) -> List[Token]:
+def get_sentences(line_id: int, annotator_id: int) -> Dict[int, List[Token]]:
     """Get sentences (as a list of tokens) that end on the specific line
 
     Parameters
@@ -176,8 +176,10 @@ def get_sentences(line_id: int, annotator_id: int) -> List[Token]:
 
     Returns
     -------
-    List[Token]
-        List of tokens in the sentence
+    Dict[int, List[Token]]
+        Dictionary
+        * `Boundary.id`s (also corresponding to sentences) as keys
+        * Lists of tokens in the sentences as values
     """
     sentences = {}
 
