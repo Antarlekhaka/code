@@ -142,11 +142,11 @@ def get_line_data(
 
     if annotator_ids is None:
         boundary_query = Boundary.query.filter(
-            Boundary.token.has(Token.line_id.in_(line_ids))
+            Boundary.line_id.in_(line_ids)
         )
     else:
         boundary_query = Boundary.query.filter(
-            Boundary.token.has(Token.line_id.in_(line_ids)),
+            Boundary.line_id.in_(line_ids),
             Boundary.annotator_id.in_(annotator_ids)
         )
 
@@ -155,7 +155,7 @@ def get_line_data(
             {
                 'id': boundary.id,
                 'token_id': boundary.token_id,
-                'line_id': boundary.token.line_id,
+                'line_id': boundary.line_id,
                 'annotator': boundary.annotator.username,
                 'is_deleted': boundary.is_deleted
             }
