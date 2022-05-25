@@ -39,7 +39,7 @@ $corpus_table.on('expand-row.bs.table', function (e, index, row, $detail) {
             }
         });
         $.each(line.tokens, function(index, token) {
-            if (token.analysis['Word'] !== "_") {
+            if (token.analysis.Word !== "_") {
                 var token_id = token.id;
 
                 if (token.relative_id instanceof Array) {
@@ -50,7 +50,7 @@ $corpus_table.on('expand-row.bs.table', function (e, index, row, $detail) {
                 if (line.line_id == row.line_id) {
                     display_token_last_components.push(token_id);
                 }
-                line_text.push(token.analysis['Word']);
+                line_text.push(token.analysis.Word);
             }
             if (boundary_tokens.has(token.id)) {
                 line_text.push("##");
@@ -104,7 +104,7 @@ $corpus_table.on('expand-row.bs.table', function (e, index, row, $detail) {
         var task_3_anvaya = ["# word\tid\torder"];
 
         $.each(tokens, function(idx, token) {
-            if (token.analysis.Word != "_") {
+            if (token.analysis.Word !== "_") {
                 task_3_token_words.push(token.analysis.Word);
                 task_3_token_ids.push(token.id);
                 task_3_anvaya.push(`${token.analysis.Word}\t${token.id}\t${idx + 1}`);
