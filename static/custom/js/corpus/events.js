@@ -94,8 +94,28 @@ $corpus_table.on('expand-row.bs.table', function (e, index, row, $detail) {
     $task_2_input.val(task_2_text.join("\n"));
 
     // Task 3
+    // NOTE: need to be called after Task 1 submit
+    // TODO: also need to check row.anvaya if it's available (previously annotated)
 
     var task_3_text = [];
+    for (const [boundary_id, tokens] of Object.entries(row.sentences)) {
+        var task_3_token_words = ["#"];
+        var task_3_token_ids = ["#"];
+        var task_3_anvaya = ["# word\tid\torder"];
+
+        $.each(tokens, function(idx, token) {
+            if (token.analysis.Word != "_") {
+                task_3_token_words.push(token.analysis.Word);
+                task_3_token_ids.push(token.id);
+                task_3_anvaya.push(`${token.analysis.Word}\t${token.id}\t${idx + 1}`);
+            }
+        });
+        task_3_text.push(task_3_token_words.join(" "));
+        task_3_text.push(task_3_token_ids.join(" "));
+        task_3_text = [...task_3_text, ...task_3_anvaya];
+        task_3_text.push("");
+    }
+
     $task_3_input.val(task_3_text.join("\n"));
 
     // Task 4
