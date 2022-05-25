@@ -126,8 +126,10 @@ class RolesUsers(db.Model):
 
 class Boundary(db.Model):
     id = Column(Integer, primary_key=True)
+    # ----------------------------------------------------------------------- #
     line_id = Column(Integer, ForeignKey('line.id'), nullable=False)
     token_id = Column(Integer, ForeignKey('token.id'), nullable=False)
+    # ----------------------------------------------------------------------- #
     annotator_id = Column(Integer, ForeignKey('user.id'), nullable=False)
     is_deleted = Column(Boolean, default=False, nullable=False)
     updated_at = Column(DateTime, default=dt.utcnow, onupdate=dt.utcnow)
@@ -143,11 +145,34 @@ class Boundary(db.Model):
     )
 
 
+class Multiword(db.Model):
+    id = Column(Integer, primary_key=True)
+    # ----------------------------------------------------------------------- #
+    token_id = Column(Integer, ForeignKey('token.id'), nullable=False)
+    label = Column(String(255), nullable=False)
+    # ----------------------------------------------------------------------- #
+    annotator_id = Column(Integer, ForeignKey('user.id'), nullable=False)
+    is_deleted = Column(Boolean, default=False, nullable=False)
+    updated_at = Column(DateTime, default=dt.utcnow, onupdate=dt.utcnow)
+
+    token = relationship('Token', foreign_keys=[token_id])
+    annotator = relationship(
+        'User', backref=backref('multiword', lazy='dynamic')
+    )
+
+    __table_args__ = (
+         Index('multiword_annotator_id_token_id',
+               'annotator_id', 'token_id', unique=True),
+    )
+
+
 class Anvaya(db.Model):
     id = Column(Integer, primary_key=True)
+    # ----------------------------------------------------------------------- #
     boundary_id = Column(Integer, ForeignKey('boundary.id'), nullable=False)
     token_id = Column(Integer, ForeignKey('token.id'), nullable=False)
     order = Column(Integer, nullable=False)
+    # ----------------------------------------------------------------------- #
     annotator_id = Column(Integer, ForeignKey('user.id'), nullable=False)
     is_deleted = Column(Boolean, default=False, nullable=False)
     updated_at = Column(DateTime, default=dt.utcnow, onupdate=dt.utcnow)
@@ -162,6 +187,54 @@ class Anvaya(db.Model):
                'boundary_id', 'annotator_id', 'token_id', unique=True),
     )
 
+
+class ActionGraph(db.Model):
+    id = Column(Integer, primary_key=True)
+    # ----------------------------------------------------------------------- #
+    boundary_id = Column(Integer, ForeignKey('boundary.id'), nullable=False)
+    src_id = Column(Integer, ForeignKey('token.id'), nullable=False)
+    label = Column(String(255), nullable=False)
+    dst_id = Column(Integer, ForeignKey('token.id'), nullable=False)
+    # ----------------------------------------------------------------------- #
+    annotator_id = Column(Integer, ForeignKey('user.id'), nullable=False)
+    is_deleted = Column(Boolean, default=False, nullable=False)
+    updated_at = Column(DateTime, default=dt.utcnow, onupdate=dt.utcnow)
+
+    src_token = relationship('Token', foreign_keys=[src_id])
+    dst_token = relationship('Token', foreign_keys=[dst_id])
+    boundary = relationship(
+        'Boundary', backref=backref('actiongraph', lazy='dynamic')
+    )
+    annotator = relationship(
+        'User', backref=backref('actiongraph', lazy='dynamic')
+    )
+
+    __table_args__ = (
+         Index('actiongraph_annotator_id_src_id_dst_id',
+               'annotator_id', 'src_id', 'dst_id', unique=True),
+    )
+
+
+class Coreference(db.Model):
+    id = Column(Integer, primary_key=True)
+    # ----------------------------------------------------------------------- #
+    src_id = Column(Integer, ForeignKey('token.id'), nullable=False)
+    dst_id = Column(Integer, ForeignKey('token.id'), nullable=False)
+    # ----------------------------------------------------------------------- #
+    annotator_id = Column(Integer, ForeignKey('user.id'), nullable=False)
+    is_deleted = Column(Boolean, default=False, nullable=False)
+    updated_at = Column(DateTime, default=dt.utcnow, onupdate=dt.utcnow)
+
+    src_token = relationship('Token', foreign_keys=[src_id])
+    dst_token = relationship('Token', foreign_keys=[dst_id])
+    annotator = relationship(
+        'User', backref=backref('coreference', lazy='dynamic')
+    )
+
+    __table_args__ = (
+         Index('coreference_annotator_id_src_id_dst_id',
+               'annotator_id', 'src_id', 'dst_id', unique=True),
+    )
 
 ###############################################################################
 # Annotation Database Models
