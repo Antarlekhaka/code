@@ -103,11 +103,13 @@ $corpus_table.on('expand-row.bs.table', function (e, index, row, $detail) {
         var task_3_token_ids = ["#"];
         var task_3_anvaya = ["# word\tid\torder"];
 
+        var order = 0;
         $.each(tokens, function(idx, token) {
             if (token.analysis.Word !== "_") {
+                order += 1;
                 task_3_token_words.push(token.analysis.Word);
                 task_3_token_ids.push(token.id);
-                task_3_anvaya.push(`${token.analysis.Word}\t${token.id}\t${idx + 1}`);
+                task_3_anvaya.push(`${token.analysis.Word}\t${token.id}\t${order}`);
             }
         });
         task_3_text.push(task_3_token_words.join(" "));
