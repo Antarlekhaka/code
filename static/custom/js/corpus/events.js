@@ -9,8 +9,8 @@ $corpus_table.on('check.bs.table', function (e, row, $element) {
 });
 
 $corpus_table.on('expand-row.bs.table', function (e, index, row, $detail) {
-    $line_id_containers.html(row.line_id);
-    storage.setItem("next", parseInt(row.line_id) + 1);
+    $verse_id_containers.html(row.verse_id);
+    storage.setItem("next", parseInt(row.verse_id) + 1);
 
     const data = $corpus_table.bootstrapTable('getData');
 
@@ -21,51 +21,56 @@ $corpus_table.on('expand-row.bs.table', function (e, index, row, $detail) {
     var task_1_text_before = [];
     var task_1_text_after = [];
 
-    const start_index = (index > 2) ? (index - 2) : 0;
-    const end_index = (index < data.length - 2) ? (index + 2) : data.length - 1;
+    const start_index = (index > 1) ? (index - 1) : 0;
+    const end_index = (index < data.length - 1) ? (index + 1) : data.length - 1;
     const context = data.slice(start_index, end_index + 1);
 
     var display_token_last_components = [];
-    $.each(context, function(index, line){
-        console.log(line.tokens);
-        console.log(line.boundary);
+    $.each(context, function(verse_index, verse){
+        console.log(verse.tokens);
+        console.log(verse.boundary);
 
-        var line_text = [`${line.line_id}`];
+        var verse_text = [`${verse.verse_id}`];
         var boundary_tokens = new Set();
 
-        $.each(line.boundary, function(index, boundary) {
+        $.each(verse.boundary, function(boundary_index, boundary) {
             if (!boundary.is_deleted) {
                 boundary_tokens.add(boundary.token_id);
             }
         });
-        $.each(line.tokens, function(index, token) {
-            if (token.analysis.Word !== "_") {
-                var token_id = token.id;
+        $.each(verse.tokens, function(verse_index, line_tokens) {
+            verse_text.push("\t");
+            $.each(line_tokens, function(token_index, token) {
+                if (token.analysis.Word !== "_") {
+                    var token_id = token.id;
 
-                if (token.relative_id instanceof Array) {
-                    // if token id is of composite word,
-                    // we want the marker to be after the last component
-                    token_id += token.relative_id[2] - token.relative_id[0] + 1;
+                    if (token.relative_id instanceof Array) {
+                        // if token id is of composite word,
+                        // we want the marker to be after the last component
+                        token_id += token.relative_id[2] - token.relative_id[0] + 1;
+                    }
+                    if (verse.verse_id == row.verse_id) {
+                        display_token_last_components.push(token_id);
+                    }
+                    verse_text.push(token.analysis.Word);
                 }
-                if (line.line_id == row.line_id) {
-                    display_token_last_components.push(token_id);
+                if (boundary_tokens.has(token.id)) {
+                    verse_text.push("##");
                 }
-                line_text.push(token.analysis.Word);
-            }
-            if (boundary_tokens.has(token.id)) {
-                line_text.push("##");
+            });
+            if (verse_index < verse.tokens.length - 1) {
+                verse_text.push("\n");
             }
         });
-        var actual_line_text = line_text.join(" ");
-
-        if (line.line_id < row.line_id) {
-            task_1_text_before.push(actual_line_text);
+        var actual_verse_text = verse_text.join(" ");
+        if (verse.verse_id < row.verse_id) {
+            task_1_text_before.push(actual_verse_text);
         }
-        if (line.line_id == row.line_id) {
-            task_1_text.push(actual_line_text);
+        if (verse.verse_id == row.verse_id) {
+            task_1_text.push(actual_verse_text);
         }
-        if (line.line_id > row.line_id) {
-            task_1_text_after.push(actual_line_text);
+        if (verse.verse_id > row.verse_id) {
+            task_1_text_after.push(actual_verse_text);
         }
     });
     $task_1_input.data('marker_positions', display_token_last_components);
@@ -144,7 +149,7 @@ $corpus_table.on('expand-row.bs.table', function (e, index, row, $detail) {
 });
 
 $corpus_table.on('page-change.bs.table', function (e, number, size) {
-    $line_id_containers.html("None");
+    $verse_id_containers.html("None");
 
     $("textarea").prop('disabled', true).removeClass('text-info').addClass('text-muted');
     $task_1_input_before.val("");

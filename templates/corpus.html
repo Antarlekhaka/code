@@ -8,7 +8,7 @@
                 data-url="{{url_for('api_corpus', chapter_id=data.chapter_id)}}"
                 data-response-handler="response_handler"
                 data-toolbar="#corpus-title"
-                data-unique-id="line_id"
+                data-unique-id="verse_id"
                 data-cache="false"
                 data-search="true"
                 data-search-highlight="true"
@@ -22,7 +22,7 @@
                 data-click-to-select="true"
                 data-detail-view="true"
                 data-detail-view-icon="false"
-                data-detail-formatter="{{config.line_detail_formatter}}_line_detail_formatter"
+                data-detail-formatter="{{config.row_detail_formatter}}_row_detail_formatter"
                 data-row-attributes="row_attribute_handler"
                 data-key-events="true"
                 data-sticky-header="true"
@@ -31,13 +31,13 @@
                 <thead>
                     <tr>
                         <th scope="col" data-field="edit" data-radio="true"></th>
-                        <th scope="col" data-field="line_id" data-sortable="true">
+                        <!-- <th scope="col" data-field="line_id" data-sortable="true">
                             Line
-                        </th>
-                        <th scope="col" data-field="verse_id" data-visible="false">
+                        </th> -->
+                        <th scope="col" data-field="verse_id">
                             Verse
                         </th>
-                        <th scope="col" data-field="line">
+                        <th scope="col" data-field="text" data-formatter="column_text_formatter">
                             Text
                         </th>
                         <th scope="col" data-field="marked" data-align="center" data-formatter="column_marked_formatter" data-card-visible="false">
@@ -172,7 +172,7 @@ $task_1_submit.click(function () {
 
     $.post(api_url, {
         action: "update_sentence_boundary",
-        line_id: $line_id_containers.html(),
+        verse_id: $verse_id_containers.html(),
         boundaries: line_break_tokens.join(","),
     },
     function (response) {
@@ -187,18 +187,18 @@ $task_1_submit.click(function () {
             $.each(line_break_tokens, function(index, _token_id) {
                 boundary_objects.push({
                     'token_id': _token_id,
-                    'line_id': $line_id_containers.html(),
+                    'verse_id': $verse_id_containers.html(),
                     'annotator': current_username,
                     'is_deleted': false
                 });
             })
             // update local table
-            var current_row = $corpus_table.bootstrapTable('getRowByUniqueId', $line_id_containers.html());
+            var current_row = $corpus_table.bootstrapTable('getRowByUniqueId', $verse_id_containers.html());
             current_row.marked = true;
             current_row.boundary = boundary_objects;
 
             $corpus_table.bootstrapTable('updateByUniqueId', {
-                line_id: current_row.line_id,
+                verse_id: current_row.verse_id,
                 row: current_row
             });
 
@@ -215,7 +215,7 @@ $task_2_submit.click(function () {
 
     $.post(api_url, {
         action: "update_multiword_type",
-        line_id: $line_id_containers.html(),
+        verse_id: $verse_id_containers.html(),
     },
     function (response) {
         $.notify({
@@ -237,7 +237,7 @@ $task_3_submit.click(function () {
 
     $.post(api_url, {
         action: "update_anvaya",
-        line_id: $line_id_containers.html(),
+        verse_id: $verse_id_containers.html(),
     },
     function (response) {
         $.notify({
@@ -258,7 +258,7 @@ $task_4_submit.click(function () {
 
     $.post(api_url, {
         action: "update_action_graph",
-        line_id: $line_id_containers.html(),
+        verse_id: $verse_id_containers.html(),
     },
     function (response) {
         $.notify({
@@ -279,7 +279,7 @@ $task_5_submit.click(function() {
 
     $.post(api_url, {
         action: "update_coreference",
-        line_id: $line_id_containers.html(),
+        verse_id: $verse_id_containers.html(),
     },
     function (response) {
         $.notify({

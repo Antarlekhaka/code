@@ -3,40 +3,46 @@ function response_handler(response) {
     return response.data;
 }
 
-function generic_line_detail_formatter(index, row) {
-    var html = [
-        '<div class="table-responsive-sm"><table class="table table-striped">'
-    ];
+function generic_row_detail_formatter(index, row) {
+    var html = ['<div class="table-responsive-sm">'];
 
     var rows = {};
     if(!row.analysis) {
         html.push('<tr><td>No details available.</td></tr>');
     } else {
-        var first_word = row.analysis[0];
-        for (const k in first_word) {
-            if (k == "ID") {
-                continue;
-            }
-            rows[k] = [];
-        }
-        for (const word of row.analysis) {
-            for (const [k, v] of Object.entries(word)) {
+        for (const analysis of row.analysis) {
+            html.push('<table class="table table-striped">');
+            var first_word = analysis[0];
+            for (const k in first_word) {
                 if (k == "ID") {
                     continue;
                 }
-                rows[k].push(v);
+                rows[k] = [];
+            }
+            for (const word of analysis) {
+                for (const [k, v] of Object.entries(word)) {
+                    if (k == "ID") {
+                        continue;
+                    }
+                    rows[k].push(v);
+                }
+            }
+            for (const [name, data] of Object.entries(rows)) {
+                html.push(`<tr><th scope="row">${name}</th><td>${data.join("</td><td>")}</td></tr>`);
             }
         }
-        for (const [name, data] of Object.entries(rows)) {
-            html.push(`<tr><th scope="row">${name}</th><td>${data.join("</td><td>")}</td></tr>`);
-        }
+        html.push('</table>')
     }
-    html.push('</table></div>')
+    html.push("</div>");
     return html.join("\n");
 }
 
 function column_marked_formatter(value, row) {
     return value ? '<i class="fa fa-check"></i>' : '';
+}
+
+function column_text_formatter(value, row, index, field) {
+    return value.join("<br>");
 }
 
 function setup_sortable() {

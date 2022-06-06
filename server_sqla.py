@@ -466,7 +466,7 @@ def api():
     # ----------------------------------------------------------------------- #
 
     if action == "update_sentence_boundary":
-        line_id = request.form["line_id"]
+        verse_id = request.form["verse_id"]
         annotator_id = current_user.id
         boundary_tokens = [
             int(b.strip())
@@ -476,7 +476,7 @@ def api():
 
         objects_to_update = []
         existing_boundary_query = Boundary.query.filter(
-            Boundary.line_id == line_id,
+            Boundary.verse_id == verse_id,
             Boundary.annotator_id == annotator_id
         )
         existing_boundary_tokens = {}
@@ -490,7 +490,7 @@ def api():
         for boundary_token in boundary_tokens:
             if boundary_token not in existing_boundary_tokens:
                 boundary = Boundary()
-                boundary.line_id = line_id
+                boundary.verse_id = verse_id
                 boundary.token_id = boundary_token
                 boundary.annotator_id = annotator_id
                 objects_to_update.append(boundary)

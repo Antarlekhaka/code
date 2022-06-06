@@ -73,10 +73,9 @@ def get_chapter_data(chapter_id: int, user: User, all: bool = False) -> dict:
     """
     chapter = Chapter.query.get(chapter_id)
 
-    line_ids = [
-        line.id
+    verse_ids = [
+        verse.id
         for verse in chapter.verses
-        for line in verse.lines
     ]
     annotator_ids = []
 
@@ -86,7 +85,7 @@ def get_chapter_data(chapter_id: int, user: User, all: bool = False) -> dict:
     if user.has_permission('curate') or user.has_role('admin'):
         annotator_ids = None if all else [user.id]
 
-    return get_line_data(line_ids, annotator_ids=annotator_ids)
+    return get_verse_data(verse_ids, annotator_ids=annotator_ids)
 
 
 def get_line_data(
@@ -170,13 +169,113 @@ def get_line_data(
     return data
 
 
-def get_sentences(line_id: int, annotator_id: int) -> Dict[int, List[Token]]:
+def get_verse_data(
+    verse_ids: List[int],
+    annotator_ids: List[int] = None,
+) -> dict:
+    """Get Verse Data
+
+    Fetch content, linguistic information and annotations
+
+    Parameters
+    ----------
+    verse_ids : List[int]
+        List of verse IDs
+    annotator_ids : List[int], optional
+        List of user IDs of annotators
+        If None, annotations by all the users will be fetched.
+        The default is None.
+
+    Returns
+    -------
+    dict
+        Line data, keyed by line IDs
+    """
+    line_object_query = Line.query.filter(Line.verse_id.in_(verse_ids))
+    data = {}
+
+    for line in line_object_query.limit(30):
+        verse_id = line.verse_id
+        if not data.get(verse_id):
+            data[verse_id] = {
+                'verse_id': verse_id,
+                'text': [line.text],
+                'analysis': [[
+                    token.analysis
+                    for token in line.tokens.all()
+                ]],
+                'tokens': [[
+                    {
+                        'id': token.id,
+                        'relative_id': token.analysis['ID'],
+                        'verse_id': verse_id,
+                        'line_id': token.line_id,
+                        'order': token.order,
+                        'analysis': token.analysis
+                    }
+                    for token in line.tokens.all()
+                ]],
+                'boundary': [],
+                'sentences': {},
+                'anvaya': {},
+                'entity': [],
+                'relation': [],
+                'action': [],
+                'marked': False,
+            }
+        else:
+            data[verse_id]['text'].append(line.text)
+            data[verse_id]['analysis'].append([
+                token.analysis
+                for token in line.tokens.all()
+            ])
+            data[verse_id]['tokens'].append([
+                {
+                    'id': token.id,
+                    'relative_id': token.analysis['ID'],
+                    'verse_id': verse_id,
+                    'line_id': token.line_id,
+                    'order': token.order,
+                    'analysis': token.analysis
+                }
+                for token in line.tokens.all()
+            ])
+
+    if annotator_ids is None:
+        boundary_query = Boundary.query.filter(
+            Boundary.verse_id.in_(verse_ids)
+        )
+    else:
+        boundary_query = Boundary.query.filter(
+            Boundary.verse_id.in_(verse_ids),
+            Boundary.annotator_id.in_(annotator_ids)
+        )
+
+    for boundary in boundary_query.all():
+        data[boundary.verse_id]['boundary'].append(
+            {
+                'id': boundary.id,
+                'token_id': boundary.token_id,
+                'verse_id': boundary.verse_id,
+                'annotator': boundary.annotator.username,
+                'is_deleted': boundary.is_deleted
+            }
+        )
+        data[boundary.verse_id]['sentences'] = get_sentences(
+            boundary.verse_id,
+            boundary.annotator_id
+        )
+
+    return data
+
+
+def get_sentences(verse_id: int, annotator_id: int) -> Dict[int, List[Token]]:
     """Get sentences (as a list of tokens) that end on the specific line
 
     Parameters
     ----------
-    line_id : int
-        Line ID
+    verse_id : int
+        Verse ID
     annotator_id : int
         Annotator ID
 
@@ -191,9 +290,9 @@ def get_sentences(line_id: int, annotator_id: int) -> Dict[int, List[Token]]:
 
     # boundaries present in the current line
     boundaries = Boundary.query.filter(
-        Boundary.line_id == line_id,
+        Boundary.verse_id == verse_id,
         Boundary.annotator_id == annotator_id,
-        Boundary.is_deleted == False  ## noqa # '== False' is required
+        Boundary.is_deleted == False  # noqa # '== False' is required
     ).order_by(Boundary.token_id).all()
 
     if not boundaries:
@@ -202,9 +301,9 @@ def get_sentences(line_id: int, annotator_id: int) -> Dict[int, List[Token]]:
     # previous boundary, which serves as the starting point
     # of the first boundary in the current line
     previous_boundary = Boundary.query.filter(
-        Boundary.line_id < line_id,
+        Boundary.verse_id < verse_id,
         Boundary.annotator_id == annotator_id,
-        Boundary.is_deleted == False  ## noqa # '== False' is required
+        Boundary.is_deleted == False  # noqa # '== False' is required
     ).order_by(Boundary.token_id.desc()).first()
 
     previous_boundary_token_id = (

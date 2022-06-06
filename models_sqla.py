@@ -127,14 +127,16 @@ class RolesUsers(db.Model):
 class Boundary(db.Model):
     id = Column(Integer, primary_key=True)
     # ----------------------------------------------------------------------- #
-    line_id = Column(Integer, ForeignKey('line.id'), nullable=False)
+    verse_id = Column(Integer, ForeignKey('verse.id'), nullable=False)
     token_id = Column(Integer, ForeignKey('token.id'), nullable=False)
     # ----------------------------------------------------------------------- #
     annotator_id = Column(Integer, ForeignKey('user.id'), nullable=False)
     is_deleted = Column(Boolean, default=False, nullable=False)
     updated_at = Column(DateTime, default=dt.utcnow, onupdate=dt.utcnow)
 
-    line = relationship('Line', backref=backref('boundaries', lazy='dynamic'))
+    verse = relationship(
+        'Verse', backref=backref('boundaries', lazy='dynamic')
+    )
     token = relationship('Token', foreign_keys=[token_id])
     annotator = relationship(
         'User', backref=backref('boundaries', lazy='dynamic')

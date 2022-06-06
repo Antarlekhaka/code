@@ -1,6 +1,6 @@
 const $corpus_table = $("#corpus_viewer");
 
-const $line_id_containers = $(".line-id-container");
+const $verse_id_containers = $(".verse-id-container");
 
 const $task_1_tab = $("#task-1-tab");
 const $task_2_tab = $("#task-2-tab");
