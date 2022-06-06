@@ -98,27 +98,38 @@ $corpus_table.on('expand-row.bs.table', function (e, index, row, $detail) {
     // TODO: also need to check row.anvaya if it's available (previously annotated)
 
     var task_3_text = [];
+    $task_3_anvaya_container.html("");
     for (const [boundary_id, tokens] of Object.entries(row.sentences)) {
-        var task_3_token_words = ["#"];
-        var task_3_token_ids = ["#"];
-        var task_3_anvaya = ["# word\tid\torder"];
+        // var task_3_token_words = ["#"];
+        // var task_3_token_ids = ["#"];
+        // var task_3_anvaya = ["# word\tid\torder"];
 
         var order = 0;
         $.each(tokens, function(idx, token) {
             if (token.analysis.Word !== "_") {
                 order += 1;
-                task_3_token_words.push(token.analysis.Word);
-                task_3_token_ids.push(token.id);
-                task_3_anvaya.push(`${token.analysis.Word}\t${token.id}\t${order}`);
+                // task_3_token_words.push(token.analysis.Word);
+                // task_3_token_ids.push(token.id);
+                // task_3_anvaya.push(`${token.analysis.Word}\t${token.id}\t${order}`);
+
+                var $token = $("<span>", {
+                    id: `token-${token.id}`,
+                    class: "btn btn-light mr-1 mb-1",
+                    disabled: null
+                });
+                $token.html(token.analysis.Word);
+                $task_3_anvaya_container.append($token);
+                console.log("Trying to append");
             }
         });
-        task_3_text.push(task_3_token_words.join(" "));
-        task_3_text.push(task_3_token_ids.join(" "));
-        task_3_text = [...task_3_text, ...task_3_anvaya];
-        task_3_text.push("");
+        // task_3_text.push(task_3_token_words.join(" "));
+        // task_3_text.push(task_3_token_ids.join(" "));
+        // task_3_text = [...task_3_text, ...task_3_anvaya];
+        // task_3_text.push("");
     }
+    setup_sortable();
 
-    $task_3_input.val(task_3_text.join("\n"));
+    // $task_3_input.val(task_3_text.join("\n"));
 
     // Task 4
     var task_4_text = [];
@@ -140,7 +151,7 @@ $corpus_table.on('page-change.bs.table', function (e, number, size) {
     $task_1_input_after.val("");
     $task_1_input.val("");
     $task_2_input.val("");
-    $task_3_input.val("");
+    // $task_3_input.val("");
     $task_4_input.val("");
     $task_5_input.val("");
 });

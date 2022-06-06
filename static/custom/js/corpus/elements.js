@@ -11,6 +11,8 @@ const $task_5_tab = $("#task-5-tab");
 const $task_1_input_before = $("#task-1-input-before");
 const $task_1_input_after = $("#task-1-input-after")
 
+const $task_3_anvaya_container = $("#anvaya-container");
+
 const $task_1_input = $("#task-1-input");
 const $task_2_input = $("#task-2-input");
 const $task_3_input = $("#task-3-input");

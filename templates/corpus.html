@@ -93,12 +93,23 @@
     </div>
 </div>
 
+<script>
+    // used in individual tasks
+    const api_url = "{{url_for('api')}}";
+    const current_username = "{{current_user.username}}";
+</script>
 <script src="{{url_for('static', filename='custom/js/corpus/elements.js')}}"></script>
 <script src="{{url_for('static', filename='custom/js/corpus/events.js')}}"></script>
 <script src="{{url_for('static', filename='custom/js/corpus/functions.js')}}"></script>
 
 <script>
 /* ********************  Skip Actions ******************** */
+
+$('a[data-toggle="tab"]').on('shown.bs.tab', function (event) {
+    const active_tab = event.target;
+    const previous_tab = event.relatedTarget;
+    console.log(active_tab);
+});
 
 $task_1_skip.click(function () {
     $task_1_input.prop('disabled', true).removeClass('text-info').addClass('text-muted');
@@ -112,10 +123,11 @@ $task_2_skip.click(function () {
     // Task 2 Actions
     // ...
     $task_3_tab.click();
-    $task_3_input.prop('disabled', false).removeClass('text-muted').addClass('text-info').focus();
+    // $task_3_input.prop('disabled', false).removeClass('text-muted').addClass('text-info').focus();
+
 });
 $task_3_skip.click(function () {
-    $task_3_input.prop('disabled', true).removeClass('text-info').addClass('text-muted');
+    // $task_3_input.prop('disabled', true).removeClass('text-info').addClass('text-muted');
     // Task 3 Skip Actions
     // ...
     $task_4_tab.click();
@@ -158,7 +170,7 @@ $task_1_submit.click(function () {
         }
     }
 
-    $.post("{{url_for('api')}}", {
+    $.post(api_url, {
         action: "update_sentence_boundary",
         line_id: $line_id_containers.html(),
         boundaries: line_break_tokens.join(","),
@@ -176,7 +188,7 @@ $task_1_submit.click(function () {
                 boundary_objects.push({
                     'token_id': _token_id,
                     'line_id': $line_id_containers.html(),
-                    'annotator': "{{current_user.username}}",
+                    'annotator': current_username,
                     'is_deleted': false
                 });
             })
@@ -201,7 +213,7 @@ $task_2_submit.click(function () {
     $task_2_input.prop('disabled', true).removeClass('text-info').addClass('text-muted');
     // Task 2 Actions
 
-    $.post("{{url_for('api')}}", {
+    $.post(api_url, {
         action: "update_multiword_type",
         line_id: $line_id_containers.html(),
     },
@@ -215,15 +227,15 @@ $task_2_submit.click(function () {
         if (response.success) {
             // ....
             $task_3_tab.click();
-            $task_3_input.prop('disabled', false).removeClass('text-muted').addClass('text-info').focus();
+            // $task_3_input.prop('disabled', false).removeClass('text-muted').addClass('text-info').focus();
         }
     });
 });
 $task_3_submit.click(function () {
-    $task_3_input.prop('disabled', true).removeClass('text-info').addClass('text-muted');
+    // $task_3_input.prop('disabled', true).removeClass('text-info').addClass('text-muted');
     // Task 3 Actions
 
-    $.post("{{url_for('api')}}", {
+    $.post(api_url, {
         action: "update_anvaya",
         line_id: $line_id_containers.html(),
     },
@@ -244,7 +256,7 @@ $task_3_submit.click(function () {
 $task_4_submit.click(function () {
     $task_4_input.prop('disabled', true).removeClass('text-info').addClass('text-muted');
 
-    $.post("{{url_for('api')}}", {
+    $.post(api_url, {
         action: "update_action_graph",
         line_id: $line_id_containers.html(),
     },
@@ -265,7 +277,7 @@ $task_4_submit.click(function () {
 $task_5_submit.click(function() {
     $task_5_input.prop('disabled', true).removeClass('text-info').addClass('text-muted');
 
-    $.post("{{url_for('api')}}", {
+    $.post(api_url, {
         action: "update_coreference",
         line_id: $line_id_containers.html(),
     },

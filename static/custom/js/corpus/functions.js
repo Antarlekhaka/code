@@ -39,6 +39,23 @@ function column_marked_formatter(value, row) {
     return value ? '<i class="fa fa-check"></i>' : '';
 }
 
+function setup_sortable() {
+    $('.sortable').sortable({
+        placeholderClass: 'btn btn-secondary px-3 mb-1 mr-1'
+    }).bind('sortupdate', function(e, ui) {
+        // ui.item contains the current dragged element.
+        // Triggered when the user stopped sorting and the DOM position has changed.
+        var anvaya_order = [];
+        $(this).children().each(function (){
+            anvaya_order.push(this.id);
+        });
+        if (typeof(Storage) !== "undefined") {
+            localStorage.setItem("anvaya_order", JSON.stringify(anvaya_order));
+            console.log("Anvaya-order saved: " + anvaya_order);
+        }
+    });
+}
+
 // function entity_formatter(root, type, li_classes = "", annotator = "") {
 //     var entity_value = [root, type].join('$');
 //     var li_class = 'list-group-item';
