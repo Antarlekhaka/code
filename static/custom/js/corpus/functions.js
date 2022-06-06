@@ -41,7 +41,11 @@ function column_marked_formatter(value, row) {
 
 function setup_sortable() {
     $('.sortable').sortable({
-        placeholderClass: 'btn btn-secondary px-3 mb-1 mr-1'
+        opacity: 0.75,
+        revert: true,
+        cursor: "move",
+        tolerance: "pointer",
+        placeholderClass: 'btn btn-secondary px-4 mb-1 mr-1'
     }).bind('sortupdate', function(e, ui) {
         // ui.item contains the current dragged element.
         // Triggered when the user stopped sorting and the DOM position has changed.
