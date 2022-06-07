@@ -436,7 +436,7 @@ def api():
         "admin": [],
         "annotator": [
             "update_sentence_boundary",
-            "update_multiword_type",
+            "update_named_entity",
             "update_anvaya",
             "update_action_graph",
             "update_coreference"
@@ -533,9 +533,9 @@ def api():
 
     # ----------------------------------------------------------------------- #
 
-    if action == "update_multiword_type":
+    if action == "update_named_entity":
         api_response["data"] = None
-        api_response["message"] = "update_multiword_type"
+        api_response["message"] = "update_named_entity"
         return jsonify(api_response)
 
     # ----------------------------------------------------------------------- #

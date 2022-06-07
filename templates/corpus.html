@@ -214,7 +214,7 @@ $task_2_submit.click(function () {
     // Task 2 Actions
 
     $.post(api_url, {
-        action: "update_multiword_type",
+        action: "update_named_entity",
         verse_id: $verse_id_containers.html(),
     },
     function (response) {

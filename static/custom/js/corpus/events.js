@@ -83,21 +83,6 @@ $corpus_table.on('expand-row.bs.table', function (e, index, row, $detail) {
 
     // Task 2
     var task_2_text = [];
-
-
-    $.each(row.tokens, function(index, token) {
-        // console.log(token);
-        if (token.relative_id instanceof Array) {
-            var next_token = row.tokens[index + 1];
-            var token_type = "sandhi";
-            if (next_token.analysis.Features.indexOf("Cpd") > -1) {
-                var token_type = "samAsa";
-            }
-
-            task_2_text.push(`${token.line_id}\t${token.relative_id.join("")}\t${token.analysis.Word}\t${token_type}`);
-        }
-    });
-
     $task_2_input.val(task_2_text.join("\n"));
 
     // Task 3
