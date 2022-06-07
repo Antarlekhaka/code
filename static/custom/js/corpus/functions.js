@@ -59,10 +59,7 @@ function setup_sortable() {
         $(this).children().each(function (){
             anvaya_order.push(this.id);
         });
-        if (typeof(Storage) !== "undefined") {
-            localStorage.setItem("anvaya_order", JSON.stringify(anvaya_order));
-            console.log("Anvaya-order saved: " + anvaya_order);
-        }
+        $(this).data("anvaya", anvaya_order);
     });
 }
 

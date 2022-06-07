@@ -27,7 +27,9 @@ $corpus_table.on('expand-row.bs.table', function (e, index, row, $detail) {
 
     var display_token_last_components = [];
     $.each(context, function(verse_index, verse){
+        console.log("Verse Tokens:");
         console.log(verse.tokens);
+        console.log("Verse Boundary:");
         console.log(verse.boundary);
 
         var verse_text = [`${verse.verse_id}`];
@@ -102,35 +104,29 @@ $corpus_table.on('expand-row.bs.table', function (e, index, row, $detail) {
     // NOTE: need to be called after Task 1 submit
     // TODO: also need to check row.anvaya if it's available (previously annotated)
 
-    var task_3_text = [];
     $task_3_anvaya_container.html("");
-    for (const [boundary_id, tokens] of Object.entries(row.sentences)) {
-        // var task_3_token_words = ["#"];
-        // var task_3_token_ids = ["#"];
-        // var task_3_anvaya = ["# word\tid\torder"];
+    for (const [boundary_id, sentence_tokens] of Object.entries(row.sentences)) {
+        var $sentence = $("<div>", {
+            id: `boundary-${boundary_id}`,
+            class: "sortable border border-secondary px-1 pt-1 m-1 rounded"
+        });
+        $task_3_anvaya_container.append($sentence);
 
-        var order = 0;
-        $.each(tokens, function(idx, token) {
+        const token_order = row.anvaya[boundary_id] || Object.keys(sentence_tokens);
+        console.log("Token Order:");
+        console.log(token_order);
+        for (const token_id of token_order) {
+            token = sentence_tokens[token_id];
             if (token.analysis.Word !== "_") {
-                order += 1;
-                // task_3_token_words.push(token.analysis.Word);
-                // task_3_token_ids.push(token.id);
-                // task_3_anvaya.push(`${token.analysis.Word}\t${token.id}\t${order}`);
-
                 var $token = $("<span>", {
                     id: `token-${token.id}`,
                     class: "btn btn-light mr-1 mb-1",
-                    disabled: null
+                    title: `ID: ${token.id}`
                 });
                 $token.html(token.analysis.Word);
-                $task_3_anvaya_container.append($token);
-                console.log("Trying to append");
+                $sentence.append($token);
             }
-        });
-        // task_3_text.push(task_3_token_words.join(" "));
-        // task_3_text.push(task_3_token_ids.join(" "));
-        // task_3_text = [...task_3_text, ...task_3_anvaya];
-        // task_3_text.push("");
+        };
     }
     setup_sortable();
 

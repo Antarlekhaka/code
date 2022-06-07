@@ -235,9 +235,17 @@ $task_3_submit.click(function () {
     // $task_3_input.prop('disabled', true).removeClass('text-info').addClass('text-muted');
     // Task 3 Actions
 
+    var anvaya_data = {}
+    $('.sortable').each(function(sentence_index, sentence_element) {
+        const boundary_id = sentence_element.id;
+        anvaya_data[boundary_id] = $(sentence_element).data("anvaya");
+    });
+    console.log(anvaya_data);
+
     $.post(api_url, {
         action: "update_anvaya",
         verse_id: $verse_id_containers.html(),
+        anvaya: JSON.stringify(anvaya_data)
     },
     function (response) {
         $.notify({

@@ -172,8 +172,7 @@ class Anvaya(db.Model):
     id = Column(Integer, primary_key=True)
     # ----------------------------------------------------------------------- #
     boundary_id = Column(Integer, ForeignKey('boundary.id'), nullable=False)
-    token_id = Column(Integer, ForeignKey('token.id'), nullable=False)
-    order = Column(Integer, nullable=False)
+    anvaya_order = Column(JSON, nullable=False)
     # ----------------------------------------------------------------------- #
     annotator_id = Column(Integer, ForeignKey('user.id'), nullable=False)
     is_deleted = Column(Boolean, default=False, nullable=False)
@@ -182,11 +181,10 @@ class Anvaya(db.Model):
     boundary = relationship(
         'Boundary', backref=backref('anvaya', lazy='dynamic')
     )
-    token = relationship('Token', foreign_keys=[token_id])
     annotator = relationship('User', backref=backref('anvaya', lazy='dynamic'))
     __table_args__ = (
-         Index('anvaya_boundary_id_annotator_id_token_id',
-               'boundary_id', 'annotator_id', 'token_id', unique=True),
+         Index('anvaya_boundary_id_annotator_id',
+               'boundary_id', 'annotator_id', unique=True),
     )
 
 

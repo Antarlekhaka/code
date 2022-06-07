@@ -63,7 +63,7 @@ from models_sqla import (db, user_datastore,
                          CustomLoginForm, CustomRegisterForm,
                          Corpus, Chapter, Verse, Line, Token,
                          Lexicon,
-                         Boundary,
+                         Anvaya, Boundary,
                          ActionLabel, ActorLabel, Action)
 from settings import app
 from utils.reverseproxied import ReverseProxied
@@ -475,6 +475,10 @@ def api():
         ]
 
         objects_to_update = []
+        # IDs of objects that'll be deleted
+        # We must also delete anvaya for these
+        object_ids_delete = []
+
         existing_boundary_query = Boundary.query.filter(
             Boundary.verse_id == verse_id,
             Boundary.annotator_id == annotator_id
@@ -486,6 +490,13 @@ def api():
                 if not _boundary.is_deleted:
                     _boundary.is_deleted = True
                     objects_to_update.append(_boundary)
+                    object_ids_delete.append(_boundary.id)
+
+        Anvaya.query.filter(
+            Anvaya.boundary_id.in_(object_ids_delete)
+        ).update({
+            Anvaya.is_deleted: True
+        })
 
         for boundary_token in boundary_tokens:
             if boundary_token not in existing_boundary_tokens:
@@ -530,8 +541,69 @@ def api():
     # ----------------------------------------------------------------------- #
 
     if action == "update_anvaya":
+        verse_id = request.form["verse_id"]
+        annotator_id = current_user.id
+        anvaya = json.loads(request.form["anvaya"])
+
+        anvaya_order = {}
+        boundary_ids = []
+
+        for dom_boundary_id, dom_token_ids in anvaya.items():
+            m1 = re.match(r'boundary-([0-9]+)$', dom_boundary_id)
+            if not m1:
+                api_response["message"] = "Invalid boundary ID."
+                api_response["style"] = "danger"
+                api_response["success"] = False
+                break
+            boundary_id = int(m1.group(1))
+            boundary_ids.append(boundary_id)
+
+            _order = []
+            for dom_token_id in dom_token_ids:
+                m2 = re.match(r'token-([0-9]+)$', dom_token_id)
+                if m2:
+                    _order.append(int(m2.group(1)))
+            anvaya_order[boundary_id] = _order
+
+        objects_to_update = []
+        existing_anvaya_query = Anvaya.query.filter(
+            Anvaya.boundary_id.in_(boundary_ids),
+            Anvaya.annotator_id == annotator_id
+        )
+        existing_sentences = {}
+        for _anvaya in existing_anvaya_query.all():
+            existing_sentences[_anvaya.boundary_id] = _anvaya
+            if _anvaya.is_deleted:
+                _anvaya.is_deleted = False
+                _anvaya.anvaya_order = anvaya_order[_anvaya.boundary_id]
+                objects_to_update.append(_anvaya)
+
+        for boundary_id in boundary_ids:
+            if boundary_id not in existing_sentences:
+                anvaya = Anvaya()
+                anvaya.boundary_id = boundary_id
+                anvaya.anvaya_order = anvaya_order[boundary_id]
+                anvaya.annotator_id = annotator_id
+                objects_to_update.append(anvaya)
+
+        try:
+            if objects_to_update:
+                db.session.bulk_save_objects(objects_to_update)
+                db.session.commit()
+                api_response["message"] = "Successfully updated!"
+                api_response["style"] = "success"
+            else:
+                api_response["message"] = "No changes were submitted."
+                api_response["style"] = "warning"
+            api_response["success"] = True
+        except Exception as e:
+            print(e)
+            print(request.form)
+            api_response["success"] = False
+            api_response["message"] = "Something went wrong!"
+            api_response["style"] = "danger"
+
         api_response["data"] = None
-        api_response["message"] = "update_anvaya"
         return jsonify(api_response)
 
     # ----------------------------------------------------------------------- #

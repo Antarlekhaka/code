@@ -252,7 +252,8 @@ def get_verse_data(
         )
 
     for boundary in boundary_query.all():
-        data[boundary.verse_id]['boundary'].append(
+        verse_id = boundary.verse_id
+        data[verse_id]['boundary'].append(
             {
                 'id': boundary.id,
                 'token_id': boundary.token_id,
@@ -261,15 +262,22 @@ def get_verse_data(
                 'is_deleted': boundary.is_deleted
             }
         )
-        data[boundary.verse_id]['sentences'] = get_sentences(
-            boundary.verse_id,
-            boundary.annotator_id
+        data[verse_id]['sentences'] = get_sentences(
+            verse_id, boundary.annotator_id
         )
+        anvaya = Anvaya.query.filter(
+            Anvaya.boundary_id == boundary.id,
+            Anvaya.is_deleted == False  # noqa
+        ).first()
+        if anvaya:
+            data[verse_id]['anvaya'][boundary.id] = anvaya.anvaya_order
 
     return data
 
 
-def get_sentences(verse_id: int, annotator_id: int) -> Dict[int, List[Token]]:
+def get_sentences(
+    verse_id: int, annotator_id: int
+) -> Dict[int, Dict[int, Token]]:
     """Get sentences (as a list of tokens) that end on the specific line
 
     Parameters
@@ -281,10 +289,10 @@ def get_sentences(verse_id: int, annotator_id: int) -> Dict[int, List[Token]]:
 
     Returns
     -------
-    Dict[int, List[Token]]
+    Dict[int, Dict[int, Token]]
         Dictionary
         * `Boundary.id`s (also corresponding to sentences) as keys
-        * Lists of tokens in the sentences as values
+        * Dictionary of (token_id, tokens) in the sentences as values
     """
     sentences = {}
 
@@ -315,15 +323,15 @@ def get_sentences(verse_id: int, annotator_id: int) -> Dict[int, List[Token]]:
             Token.id > previous_boundary_token_id,
             Token.id <= boundary.token_id
         ).order_by(Token.id).all()
-        sentences[boundary.id] = [
-            {
+        sentences[boundary.id] = {
+            token.id: {
                 'id': token.id,
                 'sentence_id': boundary.id,
                 'boundary_id': boundary.id,
                 'analysis': token.analysis,
             }
             for token in tokens
-        ]
+        }
         previous_boundary_token_id = boundary.token_id
 
     return sentences
