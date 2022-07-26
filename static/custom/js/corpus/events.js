@@ -8,6 +8,7 @@ $corpus_table.on('check.bs.table', function (e, row, $element) {
     $corpus_table.bootstrapTable('expandRow', $element.data('index'));
 });
 
+
 $corpus_table.on('expand-row.bs.table', function (e, index, row, $detail) {
     $verse_id_containers.html(row.verse_id);
     storage.setItem("next", parseInt(row.verse_id) + 1);
@@ -36,14 +37,12 @@ $corpus_table.on('expand-row.bs.table', function (e, index, row, $detail) {
         var boundary_tokens = new Set();
 
         $.each(verse.boundary, function(boundary_index, boundary) {
-            if (!boundary.is_deleted) {
-                boundary_tokens.add(boundary.token_id);
-            }
+            boundary_tokens.add(boundary.token_id);
         });
         $.each(verse.tokens, function(verse_index, line_tokens) {
             verse_text.push("\t");
             $.each(line_tokens, function(token_index, token) {
-                if (token.analysis.Word !== "_") {
+                if (token.text !== "_") {
                     var token_id = token.id;
 
                     if (token.relative_id instanceof Array) {
@@ -54,7 +53,7 @@ $corpus_table.on('expand-row.bs.table', function (e, index, row, $detail) {
                     if (verse.verse_id == row.verse_id) {
                         display_token_last_components.push(token_id);
                     }
-                    verse_text.push(token.analysis.Word);
+                    verse_text.push(token.text);
                 }
                 if (boundary_tokens.has(token.id)) {
                     verse_text.push("##");
@@ -82,40 +81,16 @@ $corpus_table.on('expand-row.bs.table', function (e, index, row, $detail) {
     $task_1_input.val(task_1_text.join("\n"));
 
     // Task 2
-    var task_2_text = [];
-    $task_2_input.val(task_2_text.join("\n"));
-
-    // Task 3
     // NOTE: need to be called after Task 1 submit
     // TODO: also need to check row.anvaya if it's available (previously annotated)
+    setup_anvaya(row.verse_id);
 
-    $task_3_anvaya_container.html("");
-    for (const [boundary_id, sentence_tokens] of Object.entries(row.sentences)) {
-        var $sentence = $("<div>", {
-            id: `boundary-${boundary_id}`,
-            class: "sortable border border-secondary px-1 pt-1 m-1 rounded"
-        });
-        $task_3_anvaya_container.append($sentence);
+    // $task_2_input.val(task_2_text.join("\n"));
 
-        const token_order = row.anvaya[boundary_id] || Object.keys(sentence_tokens);
-        console.log("Token Order:");
-        console.log(token_order);
-        for (const token_id of token_order) {
-            token = sentence_tokens[token_id];
-            if (token.analysis.Word !== "_") {
-                var $token = $("<span>", {
-                    id: `token-${token.id}`,
-                    class: "btn btn-light mr-1 mb-1",
-                    title: `ID: ${token.id}`
-                });
-                $token.html(token.analysis.Word);
-                $sentence.append($token);
-            }
-        };
-    }
-    setup_sortable();
-
+    // Task 3
+    // var task_3_text = [];
     // $task_3_input.val(task_3_text.join("\n"));
+    setup_named_entity(row.verse_id);
 
     // Task 4
     var task_4_text = [];
@@ -136,8 +111,8 @@ $corpus_table.on('page-change.bs.table', function (e, number, size) {
     $task_1_input_before.val("");
     $task_1_input_after.val("");
     $task_1_input.val("");
-    $task_2_input.val("");
-    // $task_3_input.val("");
+    // $task_2_input.val("");
+    $task_3_input.val("");
     $task_4_input.val("");
     $task_5_input.val("");
 });

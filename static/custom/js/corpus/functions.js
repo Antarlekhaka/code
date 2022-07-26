@@ -7,19 +7,19 @@ function generic_row_detail_formatter(index, row) {
     var html = ['<div class="table-responsive-sm">'];
 
     var rows = {};
-    if(!row.analysis) {
+    if(!row.display) {
         html.push('<tr><td>No details available.</td></tr>');
     } else {
-        for (const analysis of row.analysis) {
+        for (const display of row.display) {
             html.push('<table class="table table-striped">');
-            var first_word = analysis[0];
+            var first_word = display[0];
             for (const k in first_word) {
                 if (k == "ID") {
                     continue;
                 }
                 rows[k] = [];
             }
-            for (const word of analysis) {
+            for (const word of display) {
                 for (const [k, v] of Object.entries(word)) {
                     if (k == "ID") {
                         continue;
@@ -43,6 +43,18 @@ function column_marked_formatter(value, row) {
 
 function column_text_formatter(value, row, index, field) {
     return value.join("<br>");
+}
+
+function update_row_data(unique_id) {
+    const verse_data_url = sample_verse_data_url.replace('0', unique_id);
+    $.get(verse_data_url, function (data) {
+        $corpus_table.bootstrapTable('updateByUniqueId', {
+            id: unique_id,
+            row: data[unique_id],
+            replace: true
+        });
+    }, 'json');
+    console.log(`Verse data updated for ID: ${unique_id}`);
 }
 
 function setup_sortable() {

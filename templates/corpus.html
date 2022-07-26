@@ -5,7 +5,7 @@
         <div class="col-sm-7">
             <span id="corpus-title" class="lead"></span>
             <table id="corpus_viewer" class="table table-bordered table-hover" data-toggle="table"
-                data-url="{{url_for('api_corpus', chapter_id=data.chapter_id)}}"
+                data-url="{{url_for('api_chapter', chapter_id=data.chapter_id)}}"
                 data-response-handler="response_handler"
                 data-toolbar="#corpus-title"
                 data-unique-id="verse_id"
@@ -92,15 +92,54 @@
         </div>
     </div>
 </div>
+<!-- Add Token Modal -- BEGIN -->
+<div class="modal fade" id="add-token-modal" tabindex="-1" aria-labelledby="add-token-modal-label" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="add-token-modal-label">Add Token</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <table class="table">
+                    <tr>
+                        <td>Text</td>
+                        <td><input type="text" class="form-control" name="token-text" id="add-token-text"
+                                placeholder="Text"></td>
+                    </tr>
+                    <tr>
+                        <td>Lemma</td>
+                        <td><input type="text" class="form-control" name="token-lemma" id="add-token-lemma"
+                                placeholder="Lemma"></td>
+                    </tr>
+                    <tr>
+                        <td>Analysis</td>
+                        <td><input type="text" class="form-control" name="token-analysis" id="add-token-analysis"
+                                placeholder="Analysis"></td>
+                    </tr>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary">Add</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Add Token Modal -- END -->
 
 <script>
     // used in individual tasks
     const api_url = "{{url_for('api')}}";
+    const sample_verse_data_url = "{{url_for('api_verse', verse_id=0)}}";
     const current_username = "{{current_user.username}}";
 </script>
 <script src="{{url_for('static', filename='custom/js/corpus/elements.js')}}"></script>
-<script src="{{url_for('static', filename='custom/js/corpus/events.js')}}"></script>
 <script src="{{url_for('static', filename='custom/js/corpus/functions.js')}}"></script>
+<script src="{{url_for('static', filename='custom/js/corpus/tasks.js')}}"></script>
+<script src="{{url_for('static', filename='custom/js/corpus/events.js')}}"></script>
 
 <script>
 /* ********************  Skip Actions ******************** */
@@ -116,19 +155,18 @@ $task_1_skip.click(function () {
     // Task 1 Skip Actions
     // ...
     $task_2_tab.click();
-    $task_2_input.prop('disabled', false).removeClass('text-muted').addClass('text-info').focus();
+    // $task_2_input.prop('disabled', false).removeClass('text-muted').addClass('text-info').focus();
 });
 $task_2_skip.click(function () {
-    $task_2_input.prop('disabled', true).removeClass('text-info').addClass('text-muted');
-    // Task 2 Actions
+    // $task_2_input.prop('disabled', true).removeClass('text-info').addClass('text-muted');
+    // Task 2 Skip Actions
     // ...
     $task_3_tab.click();
-    // $task_3_input.prop('disabled', false).removeClass('text-muted').addClass('text-info').focus();
-
+    $task_3_input.prop('disabled', false).removeClass('text-muted').addClass('text-info').focus();
 });
 $task_3_skip.click(function () {
-    // $task_3_input.prop('disabled', true).removeClass('text-info').addClass('text-muted');
-    // Task 3 Skip Actions
+    $task_3_input.prop('disabled', true).removeClass('text-info').addClass('text-muted');
+    // Task 3 Actions
     // ...
     $task_4_tab.click();
     $task_4_input.prop('disabled', false).removeClass('text-muted').addClass('text-info').focus();
@@ -182,18 +220,19 @@ $task_1_submit.click(function () {
             type: response.style
         });
 
-        if (response.success) {
+        if (response.changes) {
+            const verse_id = $verse_id_containers.html();
+
+            /*
             var boundary_objects = [];
             $.each(line_break_tokens, function(index, _token_id) {
                 boundary_objects.push({
                     'token_id': _token_id,
-                    'verse_id': $verse_id_containers.html(),
+                    'verse_id': verse_id,
                     'annotator': current_username,
-                    'is_deleted': false
                 });
-            })
-            // update local table
-            var current_row = $corpus_table.bootstrapTable('getRowByUniqueId', $verse_id_containers.html());
+            });
+            var current_row = $corpus_table.bootstrapTable('getRowByUniqueId', verse_id);
             current_row.marked = true;
             current_row.boundary = boundary_objects;
 
@@ -201,21 +240,39 @@ $task_1_submit.click(function () {
                 verse_id: current_row.verse_id,
                 row: current_row
             });
+            */
+
+            // update local table
+            update_row_data(verse_id);
 
             // move to the next task
             $task_2_tab.click();
-            $task_2_input.prop('disabled', false).removeClass('text-muted').addClass('text-info').focus();
+
+            // next task is anvaya, therefore,
+            setup_anvaya(verse_id);
+
+            // don't need this because there's no $task_2_input;
+            // $task_2_input.prop('disabled', false).removeClass('text-muted').addClass('text-info').focus();
         }
     },
     'json');
 });
 $task_2_submit.click(function () {
-    $task_2_input.prop('disabled', true).removeClass('text-info').addClass('text-muted');
+    // $task_2_input.prop('disabled', true).removeClass('text-info').addClass('text-muted');
     // Task 2 Actions
 
+    const verse_id = $verse_id_containers.html();
+    var anvaya_data = {}
+    $('.sortable').each(function(sentence_index, sentence_element) {
+        const boundary_id = sentence_element.id;
+        anvaya_data[boundary_id] = $(sentence_element).data("anvaya");
+    });
+    console.log(anvaya_data);
+
     $.post(api_url, {
-        action: "update_named_entity",
-        verse_id: $verse_id_containers.html(),
+        action: "update_anvaya",
+        verse_id: verse_id,
+        anvaya: JSON.stringify(anvaya_data)
     },
     function (response) {
         $.notify({
@@ -226,26 +283,19 @@ $task_2_submit.click(function () {
 
         if (response.success) {
             // ....
+            setup_named_entity(verse_id);
             $task_3_tab.click();
-            // $task_3_input.prop('disabled', false).removeClass('text-muted').addClass('text-info').focus();
+            $task_3_input.prop('disabled', false).removeClass('text-muted').addClass('text-info').focus();
         }
     });
 });
 $task_3_submit.click(function () {
-    // $task_3_input.prop('disabled', true).removeClass('text-info').addClass('text-muted');
+    $task_3_input.prop('disabled', true).removeClass('text-info').addClass('text-muted');
     // Task 3 Actions
 
-    var anvaya_data = {}
-    $('.sortable').each(function(sentence_index, sentence_element) {
-        const boundary_id = sentence_element.id;
-        anvaya_data[boundary_id] = $(sentence_element).data("anvaya");
-    });
-    console.log(anvaya_data);
-
     $.post(api_url, {
-        action: "update_anvaya",
+        action: "update_named_entity",
         verse_id: $verse_id_containers.html(),
-        anvaya: JSON.stringify(anvaya_data)
     },
     function (response) {
         $.notify({

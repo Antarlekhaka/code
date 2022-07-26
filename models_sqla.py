@@ -8,15 +8,29 @@ Created on Sun Mar 07 13:08:36 2021
 
 ###############################################################################
 
+import sqlite3
 from datetime import datetime as dt
 from sqlalchemy import (Boolean, DateTime, Column, Integer, String, Text,
-                        ForeignKey, JSON, Enum, Index)
+                        ForeignKey, JSON, Enum, Index, event)
 from sqlalchemy.orm import relationship, backref
-
+from sqlalchemy.engine import Engine
 
 from flask_sqlalchemy import SQLAlchemy
 from flask_security import UserMixin, RoleMixin, SQLAlchemyUserDatastore
 from flask_security.forms import LoginForm, RegisterForm, StringField, Required
+
+###############################################################################
+# Foreign Key Support for SQLite3
+
+
+@event.listens_for(Engine, "connect")
+def set_sqlite_pragma(dbapi_connection, connection_record):
+    if type(dbapi_connection) is sqlite3.Connection:
+        # play well with other database backends
+        cursor = dbapi_connection.cursor()
+        cursor.execute("PRAGMA foreign_keys=ON")
+        cursor.close()
+
 
 ###############################################################################
 # Create database connection object
@@ -31,7 +45,7 @@ class Corpus(db.Model):
     id = Column(Integer, primary_key=True)
     name = Column(String(255), nullable=False)
     scheme = Column(
-        Enum('devanagari', 'velthuis', 'iast', 'slp1', 'hk'),
+        Enum('devanagari', 'velthuis', 'iast', 'itrans', 'slp1', 'hk', 'wx'),
         default='devanagari', nullable=False
     )
     description = Column(String(255), nullable=False)
@@ -44,8 +58,10 @@ class Chapter(db.Model):
     name = Column(String(255), nullable=False)
     description = Column(String(255), nullable=False)
 
-    corpus = relationship('Corpus',
-                          backref=backref('chapters', lazy='dynamic'))
+    corpus = relationship(
+        'Corpus',
+        backref=backref('chapters', cascade='all,delete-orphan', lazy='dynamic')
+    )
 
 
 class Verse(db.Model):
@@ -53,8 +69,10 @@ class Verse(db.Model):
     chapter_id = Column(Integer, ForeignKey('chapter.id', ondelete='CASCADE'),
                         nullable=False, index=True)
 
-    chapter = relationship('Chapter',
-                           backref=backref('verses', lazy='dynamic'))
+    chapter = relationship(
+        'Chapter',
+        backref=backref('verses', cascade='all,delete-orphan', lazy='dynamic')
+    )
 
 
 class Line(db.Model):
@@ -63,17 +81,27 @@ class Line(db.Model):
                       nullable=False, index=True)
     text = Column(Text, nullable=False)
 
-    verse = relationship('Verse', backref=backref('lines', lazy='dynamic'))
+    verse = relationship(
+        'Verse',
+        backref=backref('lines', cascade='all,delete-orphan', lazy='dynamic')
+    )
 
 
 class Token(db.Model):
     id = Column(Integer, primary_key=True)
     line_id = Column(Integer, ForeignKey('line.id', ondelete='CASCADE'),
                      nullable=False, index=True)
+    inner_id = Column(String(255), nullable=False)
     order = Column(Integer, nullable=False)
+    text = Column(String(255), nullable=False)
+    lemma = Column(String(255), nullable=False)
     analysis = Column(JSON, nullable=False)
+    display = Column(JSON, nullable=False)
 
-    line = relationship('Line', backref=backref('tokens', lazy='dynamic'))
+    line = relationship(
+        'Line',
+        backref=backref('tokens', cascade='all,delete-orphan', lazy='dynamic')
+    )
     __table_args__ = (
         Index('token_line_id_order', 'line_id', 'order', unique=True),
     )
@@ -131,7 +159,6 @@ class Boundary(db.Model):
     token_id = Column(Integer, ForeignKey('token.id'), nullable=False)
     # ----------------------------------------------------------------------- #
     annotator_id = Column(Integer, ForeignKey('user.id'), nullable=False)
-    is_deleted = Column(Boolean, default=False, nullable=False)
     updated_at = Column(DateTime, default=dt.utcnow, onupdate=dt.utcnow)
 
     verse = relationship(
@@ -150,20 +177,24 @@ class Boundary(db.Model):
 class Anvaya(db.Model):
     id = Column(Integer, primary_key=True)
     # ----------------------------------------------------------------------- #
-    boundary_id = Column(Integer, ForeignKey('boundary.id'), nullable=False)
-    anvaya_order = Column(JSON, nullable=False)
+    boundary_id = Column(
+        Integer, ForeignKey('boundary.id', ondelete='CASCADE'), nullable=False
+    )
+    token_id = Column(Integer, ForeignKey('token.id'), nullable=False)
+    order = Column(Integer, nullable=False)
     # ----------------------------------------------------------------------- #
     annotator_id = Column(Integer, ForeignKey('user.id'), nullable=False)
-    is_deleted = Column(Boolean, default=False, nullable=False)
     updated_at = Column(DateTime, default=dt.utcnow, onupdate=dt.utcnow)
 
     boundary = relationship(
-        'Boundary', backref=backref('anvaya', lazy='dynamic')
+        'Boundary',
+        backref=backref('anvaya', cascade='all,delete-orphan', lazy='dynamic')
     )
+    token = relationship('Token', backref=backref('token', lazy='dynamic'))
     annotator = relationship('User', backref=backref('anvaya', lazy='dynamic'))
     __table_args__ = (
-         Index('anvaya_boundary_id_annotator_id',
-               'boundary_id', 'annotator_id', unique=True),
+         Index('anvaya_boundary_id_annotator_id_token_id',
+               'boundary_id', 'annotator_id', 'token_id', unique=True),
     )
 
 

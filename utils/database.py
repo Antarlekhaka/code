@@ -116,17 +116,20 @@ def get_line_data(
             'line_id': line.id,
             'verse_id': line.verse_id,
             'line': line.text,
-            'analysis': [
-                token.analysis
+            'display': [
+                token.display
                 for token in line.tokens.all()
             ],
             'tokens': [
                 {
                     'id': token.id,
-                    'relative_id': token.analysis['ID'],
+                    'inner_id': token.inner_id,
                     'line_id': token.line_id,
                     'order': token.order,
-                    'analysis': token.analysis
+                    'text': token.text,
+                    'lemma': token.lemma,
+                    'analysis': token.analysis,
+                    # 'display': token.display
                 }
                 for token in line.tokens.all()
             ],
@@ -158,7 +161,6 @@ def get_line_data(
                 'token_id': boundary.token_id,
                 'line_id': boundary.line_id,
                 'annotator': boundary.annotator.username,
-                'is_deleted': boundary.is_deleted
             }
         )
         data[boundary.line_id]['sentences'] = get_sentences(
@@ -191,6 +193,7 @@ def get_verse_data(
     dict
         Line data, keyed by line IDs
     """
+    annotator_ids = annotator_ids or []
     line_object_query = Line.query.filter(Line.verse_id.in_(verse_ids))
     data = {}
 
@@ -200,18 +203,21 @@ def get_verse_data(
             data[verse_id] = {
                 'verse_id': verse_id,
                 'text': [line.text],
-                'analysis': [[
-                    token.analysis
+                'display': [[
+                    token.display
                     for token in line.tokens.all()
                 ]],
                 'tokens': [[
                     {
                         'id': token.id,
-                        'relative_id': token.analysis['ID'],
+                        'inner_id': token.inner_id,
                         'verse_id': verse_id,
                         'line_id': token.line_id,
                         'order': token.order,
-                        'analysis': token.analysis
+                        'text': token.text,
+                        'lemma': token.lemma,
+                        'analysis': token.analysis,
+                        # 'display': token.display
                     }
                     for token in line.tokens.all()
                 ]],
@@ -225,18 +231,21 @@ def get_verse_data(
             }
         else:
             data[verse_id]['text'].append(line.text)
-            data[verse_id]['analysis'].append([
-                token.analysis
+            data[verse_id]['display'].append([
+                token.display
                 for token in line.tokens.all()
             ])
             data[verse_id]['tokens'].append([
                 {
                     'id': token.id,
-                    'relative_id': token.analysis['ID'],
+                    'inner_id': token.inner_id,
                     'verse_id': verse_id,
                     'line_id': token.line_id,
                     'order': token.order,
-                    'analysis': token.analysis
+                    'text': token.text,
+                    'lemma': token.lemma,
+                    'analysis': token.analysis,
+                    # 'display': token.display,
                 }
                 for token in line.tokens.all()
             ])
@@ -244,12 +253,12 @@ def get_verse_data(
     if annotator_ids is None:
         boundary_query = Boundary.query.filter(
             Boundary.verse_id.in_(verse_ids)
-        )
+        ).order_by(Boundary.token_id)
     else:
         boundary_query = Boundary.query.filter(
             Boundary.verse_id.in_(verse_ids),
             Boundary.annotator_id.in_(annotator_ids)
-        )
+        ).order_by(Boundary.token_id)
 
     for boundary in boundary_query.all():
         verse_id = boundary.verse_id
@@ -259,18 +268,20 @@ def get_verse_data(
                 'token_id': boundary.token_id,
                 'verse_id': boundary.verse_id,
                 'annotator': boundary.annotator.username,
-                'is_deleted': boundary.is_deleted
             }
         )
         data[verse_id]['sentences'] = get_sentences(
             verse_id, boundary.annotator_id
         )
-        anvaya = Anvaya.query.filter(
+        anvaya_query = Anvaya.query.filter(
             Anvaya.boundary_id == boundary.id,
-            Anvaya.is_deleted == False  # noqa
-        ).first()
+            Anvaya.annotator_id.in_(annotator_ids)
+        ).order_by(Anvaya.order)
+        anvaya = anvaya_query.all()
         if anvaya:
-            data[verse_id]['anvaya'][boundary.id] = anvaya.anvaya_order
+            data[verse_id]['anvaya'][boundary.id] = [
+                a.token_id for a in anvaya
+            ]
 
     return data
 
@@ -300,7 +311,6 @@ def get_sentences(
     boundaries = Boundary.query.filter(
         Boundary.verse_id == verse_id,
         Boundary.annotator_id == annotator_id,
-        Boundary.is_deleted == False  # noqa # '== False' is required
     ).order_by(Boundary.token_id).all()
 
     if not boundaries:
@@ -311,7 +321,6 @@ def get_sentences(
     previous_boundary = Boundary.query.filter(
         Boundary.verse_id < verse_id,
         Boundary.annotator_id == annotator_id,
-        Boundary.is_deleted == False  # noqa # '== False' is required
     ).order_by(Boundary.token_id.desc()).first()
 
     previous_boundary_token_id = (
@@ -328,6 +337,9 @@ def get_sentences(
                 'id': token.id,
                 'sentence_id': boundary.id,
                 'boundary_id': boundary.id,
+                'order': token.order,
+                'text': token.text,
+                'lemma': token.lemma,
                 'analysis': token.analysis,
             }
             for token in tokens

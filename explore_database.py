@@ -22,7 +22,7 @@ from models_sqla import Anvaya, Boundary
 from settings import app
 
 from utils.database import (
-    search_model, get_sentences, get_line_data, get_chapter_data
+    search_model, get_sentences, get_verse_data, get_chapter_data
 )
 
 ###############################################################################

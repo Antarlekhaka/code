@@ -1,3 +1,11 @@
 {% set task_id = "2" %}
-{% set title = "Named Entity Recognition" %}
+{% set title = "Anvaya" %}
 {% extends "task_base.html" %}
+{% block extra_header %}
+<button type="button" id="add-token-button" class="btn btn-primary float-right" data-toggle="modal" data-target="#add-token-modal" title="Add Token">
+    <i class="fa fa-plus"></i>
+</button>
+{% endblock %}
+{% block body %}
+<div id="anvaya-container"></div>
+{% endblock %}

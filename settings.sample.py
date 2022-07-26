@@ -35,7 +35,7 @@ APPLICATION_CONFIG = {
         "wx", "slp1", "optitrans", "kolkata"
     ],
     "unnamed_prefix": "X",
-    "line_detail_formatter": "generic"
+    "row_detail_formatter": "generic"
 }
 
 # --------------------------------------------------------------------------- #
@@ -53,7 +53,7 @@ CONTACTS = [
 # HTML About
 
 ABOUT = """
-"Antarlekha" is a framework for annotation of multiple linguistic tasks
+"Antarlekhaka" is a framework for annotation of multiple linguistic tasks
 such as sentence boundaries, segmentation, action graph and coreference
 resolution.
 """

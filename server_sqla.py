@@ -32,6 +32,7 @@ __version__ = "1.0"
 
 ###############################################################################
 
+from multiprocessing import synchronize
 import os
 import re
 import glob
@@ -67,7 +68,7 @@ from models_sqla import (db, user_datastore,
                          ActionLabel, ActorLabel, Action)
 from settings import app
 from utils.reverseproxied import ReverseProxied
-from utils.database import get_line_data, get_chapter_data
+from utils.database import get_verse_data, get_chapter_data
 from utils.conllu import DigitalCorpusSanskrit
 
 ###############################################################################
@@ -270,7 +271,16 @@ def inject_global_constants():
             ActorLabel.is_deleted == False  # noqa # '== False' is required
         ).with_entities(
             ActorLabel.id, ActorLabel.label, ActorLabel.description
-        ).all()
+        ).all(),
+        'entity_types': [
+            ("CHAR", "Character"),
+            ("ORG", "Organization"),
+            ("LOC", "Location"),
+            ("GPE", "Geo-Political Entity"),
+            ("TIME", "Time"),
+            ("NUM", "Numeric"),
+            ("CURR", "Currency"),
+        ]
     }
     return {
         'title': app.title,
@@ -418,6 +428,24 @@ def show_home():
 # Action Endpoints
 
 
+@webapp.route("/api/search/analysis/<string:token_text>")
+@auth_required()
+def api_search_token(token_text: str):
+    search_query = Token.query.filter(
+        Token.text == token_text
+    ).group_by(Token.analysis)
+    analyses = [
+        token.analysis for token in search_query
+    ]
+    return jsonify({
+        'text': token_text,
+        'matches': analyses
+    })
+
+
+# --------------------------------------------------------------------------- #
+
+
 @webapp.route("/api", methods=["POST"])
 @auth_required()
 def api():
@@ -436,10 +464,11 @@ def api():
         "admin": [],
         "annotator": [
             "update_sentence_boundary",
-            "update_named_entity",
+            "add_token",
             "update_anvaya",
+            "update_named_entity",
             "update_action_graph",
-            "update_coreference"
+            "update_coreference",
         ],
         "curator": [],
         "querier": []
@@ -475,41 +504,107 @@ def api():
         ]
 
         objects_to_update = []
-        # IDs of objects that'll be deleted
-        # We must also delete anvaya for these
+        # If there's any change between existing tokens and marked tokens,
+        # delete  all existing boundary tokens from this verse
+        # Anvaya also gets deleted as (CASCADE)
         object_ids_delete = []
 
         existing_boundary_query = Boundary.query.filter(
             Boundary.verse_id == verse_id,
             Boundary.annotator_id == annotator_id
         )
-        existing_boundary_tokens = {}
-        for _boundary in existing_boundary_query.all():
-            existing_boundary_tokens[_boundary.token_id] = _boundary
-            if _boundary.token_id not in boundary_tokens:
-                if not _boundary.is_deleted:
-                    _boundary.is_deleted = True
-                    objects_to_update.append(_boundary)
-                    object_ids_delete.append(_boundary.id)
+        existing_boundary_tokens = [
+            _boundary.token_id
+            for _boundary in existing_boundary_query.all()
+        ]
+        if set(existing_boundary_tokens) != set(boundary_tokens):
+            existing_boundary_query.delete(synchronize_session=False)
 
-        Anvaya.query.filter(
-            Anvaya.boundary_id.in_(object_ids_delete)
-        ).update({
-            Anvaya.is_deleted: True
-        })
-
-        for boundary_token in boundary_tokens:
-            if boundary_token not in existing_boundary_tokens:
+            for boundary_token in boundary_tokens:
                 boundary = Boundary()
                 boundary.verse_id = verse_id
                 boundary.token_id = boundary_token
                 boundary.annotator_id = annotator_id
                 objects_to_update.append(boundary)
+
+        try:
+            if object_ids_delete:
+                Boundary.query.filter(
+                    Boundary.id.in_(object_ids_delete)
+                ).delete(synchronize_session=False)
+
+            if objects_to_update:
+                db.session.bulk_save_objects(objects_to_update)
+
+            if object_ids_delete or objects_to_update:
+                db.session.commit()
+                api_response["message"] = "Successfully updated!"
+                api_response["style"] = "success"
+                api_response["changes"] = True
             else:
-                boundary = existing_boundary_tokens[boundary_token]
-                if boundary.is_deleted:
-                    boundary.is_deleted = False
-                    objects_to_update.append(boundary)
+                api_response["message"] = "No changes were submitted."
+                api_response["style"] = "warning"
+            api_response["success"] = True
+        except Exception as e:
+            print(e)
+            print(request.form)
+            api_response["success"] = False
+            api_response["message"] = "Something went wrong!"
+            api_response["style"] = "danger"
+
+        api_response["data"] = None
+        return jsonify(api_response)
+
+    # ----------------------------------------------------------------------- #
+
+    if action == "add_token":
+        api_response["data"] = None
+        api_response["message"] = "add_token"
+        return jsonify(api_response)
+
+    # ----------------------------------------------------------------------- #
+
+    if action == "update_anvaya":
+        verse_id = request.form["verse_id"]
+        annotator_id = current_user.id
+        anvaya = json.loads(request.form["anvaya"])
+
+        anvaya_order = {}
+        boundary_ids = []
+
+        for dom_boundary_id, dom_token_ids in anvaya.items():
+            m1 = re.match(r'boundary-([0-9]+)$', dom_boundary_id)
+            if not m1:
+                api_response["message"] = "Invalid boundary ID."
+                api_response["style"] = "danger"
+                api_response["success"] = False
+                break
+            boundary_id = int(m1.group(1))
+            boundary_ids.append(boundary_id)
+
+            _order = []
+            for dom_token_id in dom_token_ids:
+                m2 = re.match(r'token-button-([0-9]+)$', dom_token_id)
+                if m2:
+                    _order.append(int(m2.group(1)))
+            anvaya_order[boundary_id] = _order
+
+        objects_to_update = []
+
+        existing_anvaya_query = Anvaya.query.filter(
+            Anvaya.boundary_id.in_(boundary_ids),
+            Anvaya.annotator_id == annotator_id
+        )
+        existing_anvaya_query.delete(synchronize_session=False)
+
+        for boundary_id, token_ids in anvaya_order.items():
+            for order_id, token_id in enumerate(token_ids, start=1):
+                anvaya = Anvaya()
+                anvaya.boundary_id = boundary_id
+                anvaya.token_id = token_id
+                anvaya.order = order_id
+                anvaya.annotator_id = annotator_id
+                objects_to_update.append(anvaya)
 
         try:
             if objects_to_update:
@@ -540,74 +635,6 @@ def api():
 
     # ----------------------------------------------------------------------- #
 
-    if action == "update_anvaya":
-        verse_id = request.form["verse_id"]
-        annotator_id = current_user.id
-        anvaya = json.loads(request.form["anvaya"])
-
-        anvaya_order = {}
-        boundary_ids = []
-
-        for dom_boundary_id, dom_token_ids in anvaya.items():
-            m1 = re.match(r'boundary-([0-9]+)$', dom_boundary_id)
-            if not m1:
-                api_response["message"] = "Invalid boundary ID."
-                api_response["style"] = "danger"
-                api_response["success"] = False
-                break
-            boundary_id = int(m1.group(1))
-            boundary_ids.append(boundary_id)
-
-            _order = []
-            for dom_token_id in dom_token_ids:
-                m2 = re.match(r'token-([0-9]+)$', dom_token_id)
-                if m2:
-                    _order.append(int(m2.group(1)))
-            anvaya_order[boundary_id] = _order
-
-        objects_to_update = []
-        existing_anvaya_query = Anvaya.query.filter(
-            Anvaya.boundary_id.in_(boundary_ids),
-            Anvaya.annotator_id == annotator_id
-        )
-        existing_sentences = {}
-        for _anvaya in existing_anvaya_query.all():
-            existing_sentences[_anvaya.boundary_id] = _anvaya
-            if _anvaya.is_deleted:
-                _anvaya.is_deleted = False
-                _anvaya.anvaya_order = anvaya_order[_anvaya.boundary_id]
-                objects_to_update.append(_anvaya)
-
-        for boundary_id in boundary_ids:
-            if boundary_id not in existing_sentences:
-                anvaya = Anvaya()
-                anvaya.boundary_id = boundary_id
-                anvaya.anvaya_order = anvaya_order[boundary_id]
-                anvaya.annotator_id = annotator_id
-                objects_to_update.append(anvaya)
-
-        try:
-            if objects_to_update:
-                db.session.bulk_save_objects(objects_to_update)
-                db.session.commit()
-                api_response["message"] = "Successfully updated!"
-                api_response["style"] = "success"
-            else:
-                api_response["message"] = "No changes were submitted."
-                api_response["style"] = "warning"
-            api_response["success"] = True
-        except Exception as e:
-            print(e)
-            print(request.form)
-            api_response["success"] = False
-            api_response["message"] = "Something went wrong!"
-            api_response["style"] = "danger"
-
-        api_response["data"] = None
-        return jsonify(api_response)
-
-    # ----------------------------------------------------------------------- #
-
     if action == "update_action_graph":
         api_response["data"] = None
         api_response["message"] = "update_action_graph"
@@ -631,9 +658,12 @@ def api():
     return jsonify(api_response)
 
 
-@webapp.route("/api/corpus/<int:chapter_id>")
+# --------------------------------------------------------------------------- #
+
+
+@webapp.route("/api/chapter/<int:chapter_id>")
 @auth_required()
-def api_corpus(chapter_id):
+def api_chapter(chapter_id):
     chapter = Chapter.query.get(chapter_id)
     if chapter is None:
         return jsonify({
@@ -647,6 +677,23 @@ def api_corpus(chapter_id):
         'data': list(data.values())
     }
     return jsonify(response)
+
+# --------------------------------------------------------------------------- #
+
+
+@webapp.route("/api/verse/<int:verse_id>")
+@auth_required()
+def api_verse(verse_id):
+    verse = Verse.query.get(verse_id)
+    if verse is None:
+        return jsonify({})
+
+    annotator_ids = []
+    if current_user.has_permission('annotate'):
+        annotator_ids = [current_user.id]
+
+    data = get_verse_data([verse_id], annotator_ids=annotator_ids)
+    return jsonify(data)
 
 # --------------------------------------------------------------------------- #
 
@@ -914,16 +961,13 @@ def action():
                     "text": line.metadata["text"],
                     "tokens": [
                         {
-                            "ID": token.get("id") or "",
-                            "Word": token.get("form") or "",
-                            "Padapāṭha": token.get("unsandhied") or "",
-                            "Lemma": token.get("lemma") or "",
-                            "UPOS": token.get("upos") or "",
-                            "XPOS": token.get("xpos") or "",
-                            "Features": "<br>".join(
-                                f"{k}={v}"
-                                for k, v in (token.get("feats") or {}).items()
-                            )
+                            "id": token.get("id") or "",
+                            "form": token.get("form") or "",
+                            "unsandhied": token.get("unsandhied") or "",
+                            "lemma": token.get("lemma") or "",
+                            "upos": token.get("upos") or "",
+                            "xpos": token.get("xpos") or "",
+                            "feats": token.get("feats") or {}
                         }
                         for token in line
                     ]
@@ -958,11 +1002,35 @@ def action():
                         line.verse = verse
                         line.text = _line.get('text', '')
 
-                        for _idx, _token in enumerate(_line["tokens"]):
+                        for _idx, _token in enumerate(
+                            _line["tokens"], start=1
+                        ):
+                            inner_id = _token["id"]
+                            inner_id = (
+                                "".join(map(str, inner_id))
+                                if isinstance(inner_id, list)
+                                else str(inner_id)
+                            )
+                            del _token["id"]
+
                             token = Token()
-                            token.order = _idx
+                            token.inner_id = inner_id
+                            token.order = _idx * 10
                             token.line = line
+                            token.text = _token["form"]
+                            token.lemma = _token["lemma"]
                             token.analysis = _token
+                            token.display = {
+                                "Word": _token["form"],
+                                "Padapāṭha": _token["unsandhied"],
+                                "Lemma": _token["lemma"],
+                                "UPOS": _token["upos"],
+                                "XPOS": _token["xpos"],
+                                "Features": "<br>".join(
+                                    f"{k}={v}"
+                                    for k, v in _token["feats"].items()
+                                )
+                            }
                             db.session.add(token)
 
             except Exception as e:

@@ -1,6 +1,18 @@
 {% set task_id = "3" %}
-{% set title = "Anvaya" %}
+{% set title = "Named Entity Recognition" %}
 {% extends "task_base.html" %}
+{% from "macros.html" import render_named_entity_row %}
 {% block body %}
-<div id="anvaya-container"></div>
+<div id="entity-container">
+    <table id="entity-table" class="table"></table>
+    <hr class="border-secondary">
+    <table id="non-entity-table" class="table bg-light"></table>
+</div>
+<div class="sample-input" hidden="true">
+    <select id="sample-entity-type" title="Select Entity Type" class="form-control selectpicker" data-live-search="false">
+        {% for _label, _description in constants.entity_types %}
+        <option value="{{_label}}">{{_description}}</option>
+        {% endfor %}
+    </select>
+</div>
 {% endblock %}
