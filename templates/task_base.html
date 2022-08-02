@@ -3,7 +3,7 @@
         {% block header %}{{title}}{% endblock %}
         {% block extra_header %}{% endblock %}
     </div>
-    <div class="card-body">
+    <div class="card-body p-1 m-1">
         {% block body %}
         <textarea id="task-{{task_id}}-input" class="form-control text-muted text-monospace" placeholder="Annotation" rows="{{rows or '9'}}" required disabled></textarea>
         {% endblock %}

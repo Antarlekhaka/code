@@ -1,3 +1,15 @@
 {% set task_id = "5" %}
 {% set title = "Co-reference Resolution" %}
 {% extends "task_base.html" %}
+{% block body %}
+<div id="coreference-container">
+</div>
+<div class="sample-input" hidden="true">
+    <table>
+        <tr id="sample-coreference-row">
+            <td></td>
+            <td></td>
+        </tr>
+    </table>
+</div>
+{% endblock %}

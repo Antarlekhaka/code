@@ -198,6 +198,31 @@ class Anvaya(db.Model):
     )
 
 
+class Entity(db.Model):
+    id = Column(Integer, primary_key=True)
+    # ----------------------------------------------------------------------- #
+    verse_id = Column(Integer, ForeignKey('verse.id'), nullable=False)
+    token_id = Column(Integer, ForeignKey('token.id'), nullable=False)
+    label_id = Column(Integer, ForeignKey('entity_label.id'), nullable=False)
+    # ----------------------------------------------------------------------- #
+    annotator_id = Column(Integer, ForeignKey('user.id'), nullable=False)
+    is_deleted = Column(Boolean, default=False, nullable=False)
+    updated_at = Column(DateTime, default=dt.utcnow, onupdate=dt.utcnow)
+
+    verse = relationship(
+        'Verse', backref=backref('entities', lazy='dynamic')
+    )
+    token = relationship('Token', foreign_keys=[token_id])
+    label = relationship('EntityLabel', backref=backref('entities'))
+    annotator = relationship(
+        'User', backref=backref('entities', lazy='dynamic')
+    )
+    __table_args__ = (
+         Index('entity_token_id_annotator_id',
+               'token_id', 'annotator_id', unique=True),
+    )
+
+
 class ActionGraph(db.Model):
     id = Column(Integer, primary_key=True)
     # ----------------------------------------------------------------------- #
@@ -256,20 +281,28 @@ class Lexicon(db.Model):
     transliteration = Column(Text)
 
 
-class NodeLabel(db.Model):
-    __tablename__ = 'node_label'
+# class NodeLabel(db.Model):
+#     __tablename__ = 'node_label'
+#     id = Column(Integer, primary_key=True)
+#     label = Column(String(255), nullable=False)
+#     description = Column(String(255))
+#     is_deleted = Column(Boolean, default=False, nullable=False)
+
+
+class EntityLabel(db.Model):
+    __tablename__ = 'entity_label'
     id = Column(Integer, primary_key=True)
     label = Column(String(255), nullable=False)
     description = Column(String(255))
     is_deleted = Column(Boolean, default=False, nullable=False)
 
 
-class RelationLabel(db.Model):
-    __tablename__ = 'relation_label'
-    id = Column(Integer, primary_key=True)
-    label = Column(String(255), nullable=False)
-    description = Column(String(255))
-    is_deleted = Column(Boolean, default=False, nullable=False)
+# class RelationLabel(db.Model):
+#     __tablename__ = 'relation_label'
+#     id = Column(Integer, primary_key=True)
+#     label = Column(String(255), nullable=False)
+#     description = Column(String(255))
+#     is_deleted = Column(Boolean, default=False, nullable=False)
 
 
 class ActorLabel(db.Model):
@@ -288,52 +321,52 @@ class ActionLabel(db.Model):
     is_deleted = Column(Boolean, default=False, nullable=False)
 
 
-class Node(db.Model):
-    id = Column(Integer, primary_key=True)
-    line_id = Column(Integer, ForeignKey('line.id'), nullable=False)
-    annotator_id = Column(Integer, ForeignKey('user.id'), nullable=False)
-    lexicon_id = Column(Integer, ForeignKey('lexicon.id'), nullable=False)
-    label_id = Column(Integer, ForeignKey('node_label.id'), nullable=False)
-    is_deleted = Column(Boolean, default=False, nullable=False)
-    updated_at = Column(DateTime, default=dt.utcnow, onupdate=dt.utcnow)
+# class Node(db.Model):
+#     id = Column(Integer, primary_key=True)
+#     line_id = Column(Integer, ForeignKey('line.id'), nullable=False)
+#     annotator_id = Column(Integer, ForeignKey('user.id'), nullable=False)
+#     lexicon_id = Column(Integer, ForeignKey('lexicon.id'), nullable=False)
+#     label_id = Column(Integer, ForeignKey('node_label.id'), nullable=False)
+#     is_deleted = Column(Boolean, default=False, nullable=False)
+#     updated_at = Column(DateTime, default=dt.utcnow, onupdate=dt.utcnow)
 
-    annotator = relationship('User', backref=backref('nodes', lazy='dynamic'))
-    line = relationship('Line', backref=backref('nodes', lazy='dynamic'))
-    lemma = relationship('Lexicon', backref=backref('nodes'))
-    label = relationship('NodeLabel', backref=backref('nodes'))
+#     annotator = relationship('User', backref=backref('nodes', lazy='dynamic'))
+#     line = relationship('Line', backref=backref('nodes', lazy='dynamic'))
+#     lemma = relationship('Lexicon', backref=backref('nodes'))
+#     label = relationship('NodeLabel', backref=backref('nodes'))
 
-    __table_args__ = (
-        Index('node_line_id_annotator_id_lexicon_id_label_id',
-              'line_id', 'annotator_id', 'lexicon_id', 'label_id',
-              unique=True),
-    )
+#     __table_args__ = (
+#         Index('node_line_id_annotator_id_lexicon_id_label_id',
+#               'line_id', 'annotator_id', 'lexicon_id', 'label_id',
+#               unique=True),
+#     )
 
 
-class Relation(db.Model):
-    id = Column(Integer, primary_key=True)
-    line_id = Column(Integer, ForeignKey('line.id'), nullable=False)
-    annotator_id = Column(Integer, ForeignKey('user.id'), nullable=False)
-    src_id = Column(Integer, ForeignKey('lexicon.id'), nullable=False)
-    dst_id = Column(Integer, ForeignKey('lexicon.id'), nullable=False)
-    label_id = Column(Integer, ForeignKey('relation_label.id'), nullable=False)
-    detail = Column(String(255))
+# class Relation(db.Model):
+#     id = Column(Integer, primary_key=True)
+#     line_id = Column(Integer, ForeignKey('line.id'), nullable=False)
+#     annotator_id = Column(Integer, ForeignKey('user.id'), nullable=False)
+#     src_id = Column(Integer, ForeignKey('lexicon.id'), nullable=False)
+#     dst_id = Column(Integer, ForeignKey('lexicon.id'), nullable=False)
+#     label_id = Column(Integer, ForeignKey('relation_label.id'), nullable=False)
+#     detail = Column(String(255))
 
-    is_deleted = Column(Boolean, default=False, nullable=False)
-    updated_at = Column(DateTime, default=dt.utcnow, onupdate=dt.utcnow)
+#     is_deleted = Column(Boolean, default=False, nullable=False)
+#     updated_at = Column(DateTime, default=dt.utcnow, onupdate=dt.utcnow)
 
-    annotator = relationship(
-        'User', backref=backref('relations', lazy='dynamic')
-    )
-    line = relationship('Line', backref=backref('relations', lazy='dynamic'))
-    src_lemma = relationship('Lexicon', foreign_keys=[src_id])
-    dst_lemma = relationship('Lexicon', foreign_keys=[dst_id])
-    label = relationship('RelationLabel', backref=backref('relations'))
+#     annotator = relationship(
+#         'User', backref=backref('relations', lazy='dynamic')
+#     )
+#     line = relationship('Line', backref=backref('relations', lazy='dynamic'))
+#     src_lemma = relationship('Lexicon', foreign_keys=[src_id])
+#     dst_lemma = relationship('Lexicon', foreign_keys=[dst_id])
+#     label = relationship('RelationLabel', backref=backref('relations'))
 
-    __table_args__ = (
-        Index('relation_line_id_annotator_id_src_id_dst_id_label_id_detail',
-              'line_id', 'annotator_id',
-              'src_id', 'dst_id', 'label_id', 'detail', unique=True),
-    )
+#     __table_args__ = (
+#         Index('relation_line_id_annotator_id_src_id_dst_id_label_id_detail',
+#               'line_id', 'annotator_id',
+#               'src_id', 'dst_id', 'label_id', 'detail', unique=True),
+#     )
 
 
 class Action(db.Model):

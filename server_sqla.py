@@ -32,7 +32,6 @@ __version__ = "1.0"
 
 ###############################################################################
 
-from multiprocessing import synchronize
 import os
 import re
 import glob
@@ -65,7 +64,8 @@ from models_sqla import (db, user_datastore,
                          Corpus, Chapter, Verse, Line, Token,
                          Lexicon,
                          Anvaya, Boundary,
-                         ActionLabel, ActorLabel, Action)
+                         ActionLabel, ActorLabel, Action,
+                         EntityLabel, Entity)
 from settings import app
 from utils.reverseproxied import ReverseProxied
 from utils.database import get_verse_data, get_chapter_data
@@ -262,6 +262,11 @@ def inject_global_constants():
                         for theme in theme_js_files])
 
     CONSTANTS = {
+        'entity_labels': EntityLabel.query.filter(
+            EntityLabel.is_deleted == False  # noqa # '== False' is required
+        ).with_entities(
+            EntityLabel.id, EntityLabel.label, EntityLabel.description
+        ).order_by(EntityLabel.label).all(),
         'action_labels': ActionLabel.query.filter(
             ActionLabel.is_deleted == False  # noqa # '== False' is required
         ).with_entities(
@@ -272,15 +277,15 @@ def inject_global_constants():
         ).with_entities(
             ActorLabel.id, ActorLabel.label, ActorLabel.description
         ).all(),
-        'entity_types': [
-            ("CHAR", "Character"),
-            ("ORG", "Organization"),
-            ("LOC", "Location"),
-            ("GPE", "Geo-Political Entity"),
-            ("TIME", "Time"),
-            ("NUM", "Numeric"),
-            ("CURR", "Currency"),
-        ]
+        # 'entity_labels': [
+        #     ("CHAR", "Character"),
+        #     ("ORG", "Organization"),
+        #     ("LOC", "Location"),
+        #     ("GPE", "Geo-Political Entity"),
+        #     ("TIME", "Time"),
+        #     ("NUM", "Numeric"),
+        #     ("CURR", "Currency"),
+        # ]
     }
     return {
         'title': app.title,
@@ -495,7 +500,7 @@ def api():
     # ----------------------------------------------------------------------- #
 
     if action == "update_sentence_boundary":
-        verse_id = request.form["verse_id"]
+        verse_id = int(request.form["verse_id"])
         annotator_id = current_user.id
         boundary_tokens = [
             int(b.strip())
@@ -507,6 +512,7 @@ def api():
         # If there's any change between existing tokens and marked tokens,
         # delete  all existing boundary tokens from this verse
         # Anvaya also gets deleted as (CASCADE)
+        # TODO: also delete Anvaya related to the next boundary
         object_ids_delete = []
 
         existing_boundary_query = Boundary.query.filter(
@@ -565,7 +571,7 @@ def api():
     # ----------------------------------------------------------------------- #
 
     if action == "update_anvaya":
-        verse_id = request.form["verse_id"]
+        verse_id = int(request.form["verse_id"])
         annotator_id = current_user.id
         anvaya = json.loads(request.form["anvaya"])
 
@@ -629,8 +635,69 @@ def api():
     # ----------------------------------------------------------------------- #
 
     if action == "update_named_entity":
+        verse_id = int(request.form["verse_id"])
+        annotator_id = current_user.id
+        entity_data = json.loads(request.form["entity_data"])
+
+        objects_to_update = []
+        try:
+            entity_data = {
+                int(k.split('-')[-1]): int(v)
+                for k, v in entity_data.items()
+                if re.match(r'entity-selector-([0-9]+)$', k)
+            }
+        except Exception:
+            api_response["success"] = False
+            api_response["message"] = "Invalid data."
+            api_response["style"] = "danger"
+            return jsonify(api_response)
+
+        existing_entities = Entity.query.filter(
+            Entity.verse_id == verse_id,
+            Entity.annotator_id == annotator_id,
+        ).all()
+        existing_entity_token_ids = [
+            entity.token_id
+            for entity in existing_entities
+        ]
+        for entity in existing_entities:
+            if entity.token_id not in entity_data:
+                entity.is_deleted = True
+                objects_to_update.append(entity)
+            else:
+                if entity.label_id != entity_data[entity.token_id]:
+                    entity.label_id != entity_data[entity.token_id]
+                entity.is_deleted = False
+
+        for token_id, label_id in entity_data.items():
+            if token_id in existing_entity_token_ids:
+                continue
+            entity = Entity()
+            entity.verse_id = verse_id
+            entity.token_id = token_id
+            entity.label_id = label_id
+            entity.annotator_id = annotator_id
+            entity.is_deleted = False
+            objects_to_update.append(entity)
+
+        try:
+            if objects_to_update:
+                db.session.bulk_save_objects(objects_to_update)
+                db.session.commit()
+                api_response["message"] = "Successfully updated!"
+                api_response["style"] = "success"
+            else:
+                api_response["message"] = "No changes were submitted."
+                api_response["style"] = "warning"
+            api_response["success"] = True
+        except Exception as e:
+            print(e)
+            print(request.form)
+            api_response["success"] = False
+            api_response["message"] = "Something went wrong!"
+            api_response["style"] = "danger"
+
         api_response["data"] = None
-        api_response["message"] = "update_named_entity"
         return jsonify(api_response)
 
     # ----------------------------------------------------------------------- #
@@ -719,6 +786,9 @@ def action():
         ],
         'admin': [
             'user_role_add', 'user_role_remove',
+
+            # Named Entity Type
+            'entity_type_add', 'entity_type_remove',
 
             # Action
             'action_type_add', 'action_type_remove',
@@ -840,6 +910,7 @@ def action():
     # Ontology
 
     if action in [
+        'entity_type_add', 'entity_type_remove',
         'action_type_add', 'action_type_remove',
         'actor_type_add', 'actor_type_remove',
     ]:
@@ -852,6 +923,7 @@ def action():
         object_label_desc = request.form.get(f'{object_name}_label_description')
 
         MODELS = {
+            'entity': (EntityLabel, Entity, 'label_id'),
             'action': (ActionLabel, Action, 'label_id'),
             'actor': (ActorLabel, Action, 'actor_label_id')
         }
@@ -1008,7 +1080,7 @@ def action():
                             inner_id = _token["id"]
                             inner_id = (
                                 "".join(map(str, inner_id))
-                                if isinstance(inner_id, list)
+                                if isinstance(inner_id, (list, tuple))
                                 else str(inner_id)
                             )
                             del _token["id"]

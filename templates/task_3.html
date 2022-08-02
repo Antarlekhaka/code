@@ -1,17 +1,20 @@
 {% set task_id = "3" %}
 {% set title = "Named Entity Recognition" %}
 {% extends "task_base.html" %}
-{% from "macros.html" import render_named_entity_row %}
 {% block body %}
 <div id="entity-container">
+    <form class="scroll-small" id="entity-form">
     <table id="entity-table" class="table"></table>
-    <hr class="border-secondary">
+    </form>
+    <hr class="border-secondary m-1">
+    <div class="scroll-small">
     <table id="non-entity-table" class="table bg-light"></table>
+    </div>
 </div>
 <div class="sample-input" hidden="true">
-    <select id="sample-entity-type" title="Select Entity Type" class="form-control selectpicker" data-live-search="false">
-        {% for _label, _description in constants.entity_types %}
-        <option value="{{_label}}">{{_description}}</option>
+    <select id="sample-entity-type" title="Select Entity Type" class="form-control selectpicker" data-show-subtext="true" data-live-search="true" required>
+        {% for _id, _label, _description in constants.entity_labels %}
+        <option value="{{_id}}" data-subtext="{{_description}}">{{_label}}</option>
         {% endfor %}
     </select>
 </div>

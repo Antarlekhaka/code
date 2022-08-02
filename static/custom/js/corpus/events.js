@@ -97,8 +97,8 @@ $corpus_table.on('expand-row.bs.table', function (e, index, row, $detail) {
     $task_4_input.val(task_4_text.join("\n"));
 
     // Task 5
-    var task_5_text = [];
-    $task_5_input.val(task_5_text.join("\n"));
+    // var task_5_text = [];
+    // $task_5_input.val(task_5_text.join("\n"));
 
     // Enable + Focus on Task 1
     $task_1_input.prop('disabled', false).removeClass('text-muted').addClass('text-info').focus();
@@ -112,7 +112,11 @@ $corpus_table.on('page-change.bs.table', function (e, number, size) {
     $task_1_input_after.val("");
     $task_1_input.val("");
     // $task_2_input.val("");
-    $task_3_input.val("");
+    // $task_3_input.val("");
     $task_4_input.val("");
-    $task_5_input.val("");
+    // $task_5_input.val("");
+});
+
+$task_2_add_token_button.click(function () {
+
 });

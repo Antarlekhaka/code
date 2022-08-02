@@ -136,6 +136,22 @@
             content: "\f107";
             font-weight: 900;
         }
+        .disable-element {
+            pointer-events: none !important;
+            -webkit-user-select: none; /* Safari */
+            -ms-user-select: none; /* IE 10 and IE 11 */
+            user-select: none; /* Standard syntax */
+        }
+        .overlay {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            background-color: rgba(0, 0, 0, 0.4);
+            display: block;
+            z-index: 2;
+          }
     </style>
 </head>
 

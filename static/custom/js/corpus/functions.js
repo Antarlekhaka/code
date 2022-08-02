@@ -45,36 +45,6 @@ function column_text_formatter(value, row, index, field) {
     return value.join("<br>");
 }
 
-function update_row_data(unique_id) {
-    const verse_data_url = sample_verse_data_url.replace('0', unique_id);
-    $.get(verse_data_url, function (data) {
-        $corpus_table.bootstrapTable('updateByUniqueId', {
-            id: unique_id,
-            row: data[unique_id],
-            replace: true
-        });
-    }, 'json');
-    console.log(`Verse data updated for ID: ${unique_id}`);
-}
-
-function setup_sortable() {
-    $('.sortable').sortable({
-        opacity: 0.75,
-        revert: true,
-        cursor: "move",
-        tolerance: "pointer",
-        placeholderClass: 'btn btn-secondary px-4 mb-1 mr-1'
-    }).bind('sortupdate', function(e, ui) {
-        // ui.item contains the current dragged element.
-        // Triggered when the user stopped sorting and the DOM position has changed.
-        var anvaya_order = [];
-        $(this).children().each(function (){
-            anvaya_order.push(this.id);
-        });
-        $(this).data("anvaya", anvaya_order);
-    });
-}
-
 // function entity_formatter(root, type, li_classes = "", annotator = "") {
 //     var entity_value = [root, type].join('$');
 //     var li_class = 'list-group-item';

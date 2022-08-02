@@ -13,7 +13,9 @@ const $task_1_input_before = $("#task-1-input-before");
 const $task_1_input_after = $("#task-1-input-after")
 
 const $task_2_anvaya_container = $("#anvaya-container");
+const $task_2_add_token_button = $("#add-token");
 
+const $task_3_form = $("#entity-form");
 const $task_3_entity_table = $("#entity-table");
 const $task_3_non_entity_table = $("#non-entity-table");
 const task_3_sample_entity_type = $("#sample-entity-type");
