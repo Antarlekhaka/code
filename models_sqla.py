@@ -96,15 +96,20 @@ class Token(db.Model):
     text = Column(String(255), nullable=False)
     lemma = Column(String(255), nullable=False)
     analysis = Column(JSON, nullable=False)
-    display = Column(JSON, nullable=False)
+    display = Column(JSON, nullable=True)
+
+    annotator_id = Column(Integer, ForeignKey('user.id'), nullable=True)
 
     line = relationship(
         'Line',
         backref=backref('tokens', cascade='all,delete-orphan', lazy='dynamic')
     )
-    __table_args__ = (
-        Index('token_line_id_order', 'line_id', 'order', unique=True),
+    annotator = relationship(
+        'User', backref=backref('tokens', lazy='dynamic')
     )
+    # __table_args__ = (
+    #     Index('token_line_id_order', 'line_id', 'order', unique=True),
+    # )
 
 
 ###############################################################################

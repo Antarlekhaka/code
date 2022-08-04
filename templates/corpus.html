@@ -103,16 +103,17 @@
                 </button>
             </div>
             <div class="modal-body">
+                <form id="add-token-form">
                 <table class="table">
                     <tr>
                         <td>Text</td>
                         <td><input type="text" class="form-control" name="token-text" id="add-token-text"
-                                placeholder="Text"></td>
+                                placeholder="Text" required></td>
                     </tr>
                     <tr>
                         <td>Lemma</td>
                         <td><input type="text" class="form-control" name="token-lemma" id="add-token-lemma"
-                                placeholder="Lemma"></td>
+                                placeholder="Lemma" required></td>
                     </tr>
                     <tr>
                         <td>Analysis</td>
@@ -120,6 +121,7 @@
                                 placeholder="Analysis"></td>
                     </tr>
                 </table>
+                </form>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>

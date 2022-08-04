@@ -67,9 +67,11 @@ from models_sqla import (db, user_datastore,
                          ActionLabel, ActorLabel, Action,
                          EntityLabel, Entity)
 from settings import app
+
 from utils.reverseproxied import ReverseProxied
 from utils.database import get_verse_data, get_chapter_data
 from utils.conllu import DigitalCorpusSanskrit
+from utils.heuristic import get_anvaya
 
 ###############################################################################
 
@@ -469,7 +471,7 @@ def api():
         "admin": [],
         "annotator": [
             "update_sentence_boundary",
-            "add_token",
+            "add_token", "remove_token",
             "update_anvaya",
             "update_named_entity",
             "update_action_graph",
@@ -508,12 +510,12 @@ def api():
             if b.strip()
         ]
 
+        perform_update = False
         objects_to_update = []
         # If there's any change between existing tokens and marked tokens,
         # delete  all existing boundary tokens from this verse
         # Anvaya also gets deleted as (CASCADE)
         # TODO: also delete Anvaya related to the next boundary
-        object_ids_delete = []
 
         existing_boundary_query = Boundary.query.filter(
             Boundary.verse_id == verse_id,
@@ -524,6 +526,7 @@ def api():
             for _boundary in existing_boundary_query.all()
         ]
         if set(existing_boundary_tokens) != set(boundary_tokens):
+            perform_update = True
             existing_boundary_query.delete(synchronize_session=False)
 
             for boundary_token in boundary_tokens:
@@ -534,15 +537,9 @@ def api():
                 objects_to_update.append(boundary)
 
         try:
-            if object_ids_delete:
-                Boundary.query.filter(
-                    Boundary.id.in_(object_ids_delete)
-                ).delete(synchronize_session=False)
-
-            if objects_to_update:
-                db.session.bulk_save_objects(objects_to_update)
-
-            if object_ids_delete or objects_to_update:
+            if perform_update:
+                if objects_to_update:
+                    db.session.bulk_save_objects(objects_to_update)
                 db.session.commit()
                 api_response["message"] = "Successfully updated!"
                 api_response["style"] = "success"
@@ -564,8 +561,40 @@ def api():
     # ----------------------------------------------------------------------- #
 
     if action == "add_token":
+        verse_id = int(request.form["verse_id"])
+        annotator_id = current_user.id
+        token_data = json.loads(request.form["token_data"])
+
+        # associate added tokens with the first line of the verse
+        _line = Line.query.filter(Line.verse_id == verse_id).first()
+        _line_id = _line.id
+
+        lowest_order = Token.query.filter(
+            Token.line_id == _line_id
+        ).order_by(Token.order).first().order
+
+        token = Token()
+        token.line_id = _line_id
+        token.inner_id = "custom"  # TODO: not unique, is that an issue?
+        token.order = min(lowest_order, 0) - 1
+        token.text = token_data['text']
+        token.lemma = token_data['lemma']
+        token.analysis = token_data['analysis']
+        token.annotator_id = annotator_id
+
+        try:
+            db.session.add(token)
+            db.session.commit()
+            api_response["message"] = f"Token '{token_data['lemma']}' added!"
+            api_response["style"] = "success"
+            api_response["changes"] = True
+        except Exception as e:
+            print(e)
+            api_response["success"] = False
+            api_response["message"] = "Something went wrong!"
+            api_response["style"] = "danger"
+
         api_response["data"] = None
-        api_response["message"] = "add_token"
         return jsonify(api_response)
 
     # ----------------------------------------------------------------------- #
@@ -739,6 +768,14 @@ def api_chapter(chapter_id):
         })
 
     data = get_chapter_data(chapter_id, current_user)
+    for verse_id, verse_data in data.items():
+        if verse_data['anvaya']:
+            for sentence_id, sentence_anvaya in verse_data['anvaya'].items():
+                if not sentence_anvaya:
+                    verse_data['anvaya'][sentence_id] = get_anvaya(
+                        verse_data['sentences'][sentence_id]
+                    )
+
     response = {
         'title': f"{chapter.corpus.name} - {chapter.name}",
         'data': list(data.values())

@@ -88,89 +88,6 @@ def get_chapter_data(chapter_id: int, user: User, all: bool = False) -> dict:
     return get_verse_data(verse_ids, annotator_ids=annotator_ids)
 
 
-def get_line_data(
-    line_ids: List[int],
-    annotator_ids: List[int] = None,
-) -> dict:
-    """Get Line Data
-
-    Fetch content, linguistic information and annotations
-
-    Parameters
-    ----------
-    line_ids : List[int]
-        List of line IDs
-    annotator_ids : List[int], optional
-        List of user IDs of annotators
-        If None, annotations by all the users will be fetched.
-        The default is None.
-
-    Returns
-    -------
-    dict
-        Line data, keyed by line IDs
-    """
-    line_object_query = Line.query.filter(Line.id.in_(line_ids))
-    data = {
-        line.id: {
-            'line_id': line.id,
-            'verse_id': line.verse_id,
-            'line': line.text,
-            'display': [
-                token.display
-                for token in line.tokens.all()
-            ],
-            'tokens': [
-                {
-                    'id': token.id,
-                    'inner_id': token.inner_id,
-                    'line_id': token.line_id,
-                    'order': token.order,
-                    'text': token.text,
-                    'lemma': token.lemma,
-                    'analysis': token.analysis,
-                    # 'display': token.display
-                }
-                for token in line.tokens.all()
-            ],
-            'boundary': [],
-            'sentences': {},
-            'anvaya': {},
-            'entity': [],
-            'relation': [],
-            'action': [],
-            'marked': False,
-        }
-        for line in line_object_query.limit(30)
-    }
-
-    if annotator_ids is None:
-        boundary_query = Boundary.query.filter(
-            Boundary.line_id.in_(line_ids)
-        )
-    else:
-        boundary_query = Boundary.query.filter(
-            Boundary.line_id.in_(line_ids),
-            Boundary.annotator_id.in_(annotator_ids)
-        )
-
-    for boundary in boundary_query.all():
-        data[boundary.line_id]['boundary'].append(
-            {
-                'id': boundary.id,
-                'token_id': boundary.token_id,
-                'line_id': boundary.line_id,
-                'annotator': boundary.annotator.username,
-            }
-        )
-        data[boundary.line_id]['sentences'] = get_sentences(
-            boundary.line_id,
-            boundary.annotator_id
-        )
-
-    return data
-
-
 def get_verse_data(
     verse_ids: List[int],
     annotator_ids: List[int] = None,
@@ -206,6 +123,8 @@ def get_verse_data(
                 'display': [[
                     token.display
                     for token in line.tokens.all()
+                    if not token.annotator_id
+                    # tokens that do not have annotator_id are original
                 ]],
                 'tokens': [[
                     {
@@ -217,7 +136,8 @@ def get_verse_data(
                         'text': token.text,
                         'lemma': token.lemma,
                         'analysis': token.analysis,
-                        # 'display': token.display
+                        # 'display': token.display,
+                        'annotator_id': token.annotator_id
                     }
                     for token in line.tokens.all()
                 ]],
@@ -234,6 +154,8 @@ def get_verse_data(
             data[verse_id]['display'].append([
                 token.display
                 for token in line.tokens.all()
+                if not token.annotator_id
+                # tokens that do not have annotator_id are original
             ])
             data[verse_id]['tokens'].append([
                 {
@@ -246,6 +168,7 @@ def get_verse_data(
                     'lemma': token.lemma,
                     'analysis': token.analysis,
                     # 'display': token.display,
+                    'annotator_id': token.annotator_id
                 }
                 for token in line.tokens.all()
             ])
@@ -278,10 +201,9 @@ def get_verse_data(
             Anvaya.annotator_id.in_(annotator_ids)
         ).order_by(Anvaya.order)
         anvaya = anvaya_query.all()
-        if anvaya:
-            data[verse_id]['anvaya'][boundary.id] = [
-                a.token_id for a in anvaya
-            ]
+        data[verse_id]['anvaya'][boundary.id] = [
+            a.token_id for a in anvaya
+        ]
 
     return data
 
@@ -307,7 +229,7 @@ def get_sentences(
     """
     sentences = {}
 
-    # boundaries present in the current line
+    # boundaries present in the current verse
     boundaries = Boundary.query.filter(
         Boundary.verse_id == verse_id,
         Boundary.annotator_id == annotator_id,
@@ -326,12 +248,28 @@ def get_sentences(
     previous_boundary_token_id = (
         previous_boundary.token_id if previous_boundary else -1
     )
-
+    # ----------------------------------------------------------------------- #
+    extra_tokens = Token.query.filter(
+        Token.line.has(Line.verse_id == verse_id),
+        Token.annotator_id != None  # noqa
+    ).all()
+    sentences['extra'] = {
+        token.id: {
+            'id': token.id,
+            'text': token.text,
+            'lemma': token.lemma,
+            'analysis': token.analysis,
+            'annotator_id': token.annotator_id
+        }
+        for token in extra_tokens
+    }
+    # ----------------------------------------------------------------------- #
     for boundary in boundaries:
         tokens = Token.query.filter(
             Token.id > previous_boundary_token_id,
             Token.id <= boundary.token_id
         ).order_by(Token.id).all()
+
         sentences[boundary.id] = {
             token.id: {
                 'id': token.id,
@@ -341,6 +279,7 @@ def get_sentences(
                 'text': token.text,
                 'lemma': token.lemma,
                 'analysis': token.analysis,
+                'annotator_id': token.annotator_id
             }
             for token in tokens
         }

@@ -1,8 +1,9 @@
 /* ********************************** */
 // Task Related Functions, Events etc.
 /* ********************************** */
+// Note: Variables in capital are declared in the HTML template.
 
-function update_row_data(unique_id) {
+function update_row_data(unique_id, _callback) {
     const verse_data_url = SAMPLE_VERSE_DATA_URL.replace('0', unique_id);
     $.get(verse_data_url, function (data) {
         $corpus_table.bootstrapTable('updateByUniqueId', {
@@ -10,6 +11,7 @@ function update_row_data(unique_id) {
             row: data[unique_id],
             replace: true
         });
+        _callback(unique_id);
     }, 'json');
     console.log(`Verse data updated for ID: ${unique_id}`);
 }
@@ -89,13 +91,12 @@ $task_1_submit.click(function () {
             */
 
             // update local table
-            update_row_data(verse_id);
+            // next task is anvaya, therefore,
+
+            update_row_data(verse_id, setup_anvaya);
 
             // move to the next task
             $task_2_tab.click();
-
-            // next task is anvaya, therefore,
-            setup_anvaya(verse_id);
 
             // don't need this because there's no $task_2_input;
             // $task_2_input.prop('disabled', false).removeClass('text-muted').addClass('text-info').focus();
@@ -111,13 +112,24 @@ $task_1_submit.click(function () {
 
 // Setup-2
 function setup_sortable() {
+    $('.connected-sortable').sortable({
+        opacity: 0.75,
+        revert: true,
+        cursor: "move",
+        tolerance: "pointer",
+        placeholder: 'btn btn-secondary py-3 px-5 mb-1 mr-1',
+        connectWith: ".sortable"
+    }).on("sortremove", function(e, ui) {
+        var toggle_id = ui.item[0].id.replace("button", "toggle");
+        $(`#${toggle_id}`).prop("disabled", false);
+    });
     $('.sortable').sortable({
         opacity: 0.75,
         revert: true,
         cursor: "move",
         tolerance: "pointer",
-        placeholderClass: 'btn btn-secondary px-4 mb-1 mr-1'
-    }).bind('sortupdate', function(e, ui) {
+        placeholder: 'btn btn-secondary py-3 px-5 mb-1 mr-1',
+    }).on("sortstop sortreceive", function(e, ui) {
         // ui.item contains the current dragged element.
         // Triggered when the user stopped sorting and the DOM position has changed.
         var anvaya_order = [];
@@ -125,6 +137,7 @@ function setup_sortable() {
             anvaya_order.push(this.id);
         });
         $(this).data("anvaya", anvaya_order);
+        console.log("Saved Order: " + anvaya_order);
     });
 }
 
@@ -132,24 +145,64 @@ function setup_anvaya(verse_id) {
     const row = $corpus_table.bootstrapTable('getRowByUniqueId', verse_id);
 
     $task_2_anvaya_container.html("");
-    for (const [boundary_id, sentence_tokens] of Object.entries(row.sentences)) {
-        var $sentence = $("<div>", {
-            id: `boundary-${boundary_id}`,
-            class: "sortable border border-success px-1 pt-1 m-1 rounded"
-        });
-        var $unused = $("<div>", {
-            id: `unused-${boundary_id}`,
-            class: "border border-danger px-1 pt-1 m-1 rounded"
-        })
-        $task_2_anvaya_container.append($sentence);
-        $task_2_anvaya_container.append($unused);
+    const $extra = $("<div>", {
+        id: `extra-${verse_id}`,
+        class: "border px-1 pt-1 m-1 rounded connected-sortable",
+        style: "background-color: #eeeeff; border-color: #aaaaff !important;"
+    });
+    $task_2_anvaya_container.append($extra);
+    const extra_tokens = row.sentences['extra'];
 
+    var used_extra_tokens = [];
+    for (const [boundary_id, sentence_tokens] of Object.entries(row.sentences)) {
+        if (boundary_id == "extra") {
+            continue;
+        }
+        console.log(boundary_id);
+        console.log(sentence_tokens);
+        for (const token_id of row.anvaya[boundary_id]) {
+            if (extra_tokens.hasOwnProperty(token_id)) {
+                used_extra_tokens.push(token_id);
+            }
+        }
+    }
+    for (const [boundary_id, sentence_tokens] of Object.entries(row.sentences)) {
         console.log(row);
-        const token_order = row.anvaya[boundary_id] || Object.keys(sentence_tokens);
-        console.log("Token Order:");
-        console.log(token_order);
+        var token_order;
+        if (boundary_id != "extra") {
+            token_order = row.anvaya[boundary_id];
+            // ensure in server_sqla.py that row.anvaya isn't empty
+            // either it is annotated anvaya, or it's obtained via heuristic
+        } else {
+            // order doesn't really matter, just need extra tokens
+            token_order = Object.keys(sentence_tokens);
+        }
+        console.log("Token Order: " + token_order);
+
+        const $sentence = $("<div>", {
+            id: `boundary-${boundary_id}`,
+            class: "sortable border px-1 pt-1 m-1 rounded",
+            style: "background-color: #eeffee; border-color: #aaffaa !important;"
+        });
+        const $unused = $("<div>", {
+            id: `unused-${boundary_id}`,
+            class: "border px-1 pt-1 m-1 rounded",
+            style: "background-color: #ffeeee; border-color: #ffaaaa !important;"
+        });
+        if (boundary_id != "extra") {
+            $task_2_anvaya_container.append($sentence);
+            $task_2_anvaya_container.append($unused);
+        }
+
         for (const token_id of token_order) {
-            const token = sentence_tokens[token_id];
+            var token;
+            if (sentence_tokens.hasOwnProperty(token_id)) {
+                token = sentence_tokens[token_id];
+            } else if (extra_tokens.hasOwnProperty(token_id)) {
+                token = extra_tokens[token_id];
+            } else {
+                console.log("Something weird happened. Token is neither part of sentence, nor extra.");
+            }
             var token_class = "btn btn-light";
             var token_text = token.text;
 
@@ -160,10 +213,16 @@ function setup_anvaya(verse_id) {
             const $token_button = $("<div>", {
                 id: `token-button-${token.id}`,
                 role: "group",
-                class: "btn-group mr-1 mb-1",
+                class: "btn-group mr-1 mb-1 border border-secondary rounded",
             });
-            $sentence.append($token_button);
 
+            if (boundary_id == "extra") {
+                if (!used_extra_tokens.includes(token.id)) {
+                    $extra.append($token_button);
+                }
+            } else {
+                $sentence.append($token_button);
+            }
             const $token = $("<span>", {
                 id: `token-${token.id}`,
                 class: token_class,
@@ -172,30 +231,67 @@ function setup_anvaya(verse_id) {
             });
             $token_button.append($token);
 
-            const $token_toggle = $("<span>", {
-                id: `token-toggle-${token.id}`,
-                name: "token-toggle",
-                class: "btn btn-secondary exclude-token",
-                html: '<i class="fa fa-times"></i>',
-                on: {
-                    click: function() {
-                        if ($(this).hasClass("exclude-token")) {
-                            $(this).removeClass("exclude-token");
-                            $(this).removeClass("btn-secondary");
-                            $(this).addClass("btn-info");
-                            $(this).html('<i class="fa fa-plus"></i>');
-                            $(`#unused-${boundary_id}`).append($(this).parent());
-                        } else {
-                            $(this).removeClass("btn-info");
-                            $(this).addClass("btn-secondary");
-                            $(this).addClass("exclude-token");
-                            $(this).html('<i class="fa fa-times"></i>');
-                            $(`#boundary-${boundary_id}`).append($(this).parent());
+            if (token.annotator_id == null) {
+                const $token_toggle = $("<button>", {
+                    id: `token-toggle-${token.id}`,
+                    name: "token-toggle",
+                    class: "btn btn-secondary exclude-token",
+                    html: '<i class="fa fa-times"></i>',
+                    on: {
+                        click: function() {
+                            if ($(this).hasClass("exclude-token")) {
+                                $(this).removeClass("exclude-token");
+                                $(this).removeClass("btn-secondary");
+                                $(this).addClass("btn-info");
+                                $(this).html('<i class="fa fa-plus"></i>');
+                                $(`#unused-${boundary_id}`).append($(this).parent());
+                            } else {
+                                $(this).removeClass("btn-info");
+                                $(this).addClass("btn-secondary");
+                                $(this).addClass("exclude-token");
+                                $(this).html('<i class="fa fa-times"></i>');
+                                $(`#boundary-${boundary_id}`).append($(this).parent());
+                            }
+                            $(".sortable").trigger("sortstop");
                         }
                     }
-                }
-            });
-            $token_button.append($token_toggle);
+                });
+                $token_button.append($token_toggle);
+            } else  {
+                const $token_toggle = $("<button>", {
+                    id: `token-toggle-${token.id}`,
+                    name: "token-toggle",
+                    class: "btn btn-secondary include-token",
+                    html: '<i class="fa fa-times"></i>',
+                    disabled: true,
+                    on: {
+                        click: function() {
+                            $(`#extra-${verse_id}`).append($(this).parent());
+                            $(this).prop("disabled", true);
+                            $(".sortable").trigger("sortstop");
+                        }
+                    }
+                });
+                $token_button.append($token_toggle);
+
+                const $token_remove = $("<button>", {
+                    id: `token-remove-${token.id}`,
+                    name: "token-remove",
+                    class: "btn btn-danger",
+                    html: '<i class="fas fa-trash-alt"></i>',
+                    on: {
+                        click: function() {
+                            // remove token
+                            $.notify({
+                                message: "Token Removal Message. (not-performed)"
+                            }, {
+                                type: "warning"
+                            });
+                        }
+                    }
+                });
+                $token_button.append($token_remove);
+            }
         };
     }
     setup_sortable();
@@ -204,8 +300,37 @@ function setup_anvaya(verse_id) {
 /* Task-2 Actions */
 
 // Add Token
-$task_2_add_token_button.click(function() {
+$add_token_button.click(function() {
+    if (!$add_token_form[0].checkValidity()) {
+        $add_token_form[0].reportValidity();
+        return;
+    }
+    const verse_id = $verse_id_containers.html();
+    const token_text = $("#add-token-text").val();
+    const token_lemma = $("#add-token-lemma").val();
+    const token_analysis = $("#add-token-analysis").val();
+    const token_data = {
+        text: token_text,
+        lemma: token_lemma,
+        analysis: token_analysis,
+    }
+    $add_token_modal.modal('hide');
+    $.post(API_URL, {
+        action: "add_token",
+        verse_id: verse_id,
+        token_data: JSON.stringify(token_data)
+    },
+    function (response) {
+        $.notify({
+            message: response.message
+        }, {
+            type: response.style
+        });
 
+        if (response.success) {
+            update_row_data(verse_id, setup_anvaya);
+        }
+    });
 });
 
 // Skip-2
@@ -243,8 +368,12 @@ $task_2_submit.click(function () {
         });
 
         if (response.success) {
-            // ....
-            setup_named_entity(verse_id);
+            update_row_data(verse_id, setup_named_entity);
+            // is this required?
+            // yes, if the entities are to be shown in anvaya order or so,
+            // otherwise, there's no dependence on anvaya task, and ideally, shouldn't be
+            // called conditionally
+
             $task_3_tab.click();
             // don't need this because there's no $task_3_input;
             // $task_3_input.prop('disabled', false).removeClass('text-muted').addClass('text-info').focus();

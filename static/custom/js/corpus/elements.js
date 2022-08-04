@@ -1,5 +1,4 @@
 const $corpus_table = $("#corpus_viewer");
-const $add_token = $("#add-token-button");
 
 const $verse_id_containers = $(".verse-id-container");
 
@@ -13,7 +12,10 @@ const $task_1_input_before = $("#task-1-input-before");
 const $task_1_input_after = $("#task-1-input-after")
 
 const $task_2_anvaya_container = $("#anvaya-container");
-const $task_2_add_token_button = $("#add-token");
+const $add_token_modal = $('#add-token-modal');
+const $add_token_form = $("#add-token-form");
+const $add_token_button = $("#add-token");
+const $add_token_modal_button = $("#add-token-modal-button");
 
 const $task_3_form = $("#entity-form");
 const $task_3_entity_table = $("#entity-table");

@@ -11,6 +11,7 @@ $corpus_table.on('check.bs.table', function (e, row, $element) {
 
 $corpus_table.on('expand-row.bs.table', function (e, index, row, $detail) {
     $verse_id_containers.html(row.verse_id);
+    $add_token_modal_button.prop('disabled', false);
     storage.setItem("next", parseInt(row.verse_id) + 1);
 
     const data = $corpus_table.bootstrapTable('getData');
@@ -42,6 +43,11 @@ $corpus_table.on('expand-row.bs.table', function (e, index, row, $detail) {
         $.each(verse.tokens, function(verse_index, line_tokens) {
             verse_text.push("\t");
             $.each(line_tokens, function(token_index, token) {
+                if (token.annotator_id != null) {
+                    return;
+                    // "return;" in each() == "continue;"
+                    // "return false;" in each() == "break;"
+                }
                 if (token.text !== "_") {
                     var token_id = token.id;
 
@@ -106,7 +112,7 @@ $corpus_table.on('expand-row.bs.table', function (e, index, row, $detail) {
 
 $corpus_table.on('page-change.bs.table', function (e, number, size) {
     $verse_id_containers.html("None");
-
+    $add_token_modal_button.prop('disabled', true);
     $("textarea").prop('disabled', true).removeClass('text-info').addClass('text-muted');
     $task_1_input_before.val("");
     $task_1_input_after.val("");
@@ -115,8 +121,4 @@ $corpus_table.on('page-change.bs.table', function (e, number, size) {
     // $task_3_input.val("");
     $task_4_input.val("");
     // $task_5_input.val("");
-});
-
-$task_2_add_token_button.click(function () {
-
 });

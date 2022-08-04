@@ -16,7 +16,7 @@ from sqlalchemy.orm import class_mapper
 from models_sqla import db
 from models_sqla import User, Role
 from models_sqla import Corpus, Chapter, Verse, Line, Token
-from models_sqla import Lexicon, NodeLabel, RelationLabel, Node, Relation
+from models_sqla import Lexicon  # , NodeLabel, RelationLabel, Node, Relation
 from models_sqla import Anvaya, Boundary
 
 from settings import app
@@ -41,7 +41,7 @@ webapp.app_context().push()
 MODELS = {}
 
 for model in [User, Role, Corpus, Chapter, Verse, Line, Token,
-              Lexicon, NodeLabel, RelationLabel, Node, Relation,
+              Lexicon,  # NodeLabel, RelationLabel, Node, Relation,
               Anvaya, Boundary]:
     name = re.sub(r'(?<!^)(?=[A-Z])', '_', model.__name__).lower()
     MODELS[name] = model
