@@ -16,6 +16,8 @@ from models_sqla import User, Role
 from models_sqla import Corpus, Chapter, Verse, Line, Token
 from models_sqla import Anvaya, Boundary
 
+from utils.heuristic import get_anvaya
+
 ###############################################################################
 
 LOGGER = logging.getLogger(__name__)
@@ -200,9 +202,16 @@ def get_verse_data(
             Anvaya.boundary_id == boundary.id,
             Anvaya.annotator_id.in_(annotator_ids)
         ).order_by(Anvaya.order)
-        anvaya = anvaya_query.all()
+        sentence_anvaya = anvaya_query.all()
+
+        # if anvaya doesn't exist, apply heuristic
+        if not sentence_anvaya:
+            sentence_anvaya = get_anvaya(
+                data[verse_id]['sentences'][boundary.id]
+            )
+
         data[verse_id]['anvaya'][boundary.id] = [
-            a.token_id for a in anvaya
+            a.token_id for a in sentence_anvaya
         ]
 
     return data

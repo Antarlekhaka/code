@@ -32,6 +32,7 @@ __version__ = "1.0"
 
 ###############################################################################
 
+from multiprocessing import synchronize
 import os
 import re
 import glob
@@ -71,7 +72,6 @@ from settings import app
 from utils.reverseproxied import ReverseProxied
 from utils.database import get_verse_data, get_chapter_data
 from utils.conllu import DigitalCorpusSanskrit
-from utils.heuristic import get_anvaya
 
 ###############################################################################
 
@@ -527,8 +527,28 @@ def api():
         ]
         if set(existing_boundary_tokens) != set(boundary_tokens):
             perform_update = True
+
+            # delete existing boundary markers from current verse
+            # NOTE: this *could* be improved to only delete the changed one
+            # but every change in boundary marker affects the boundary AFTER it
+            # as well, (and only that), and while adding multiple boundary
+            # markers, this can get complicated, so, delete all
             existing_boundary_query.delete(synchronize_session=False)
 
+            # delete the first boundary marker after the current verse
+            next_boundary = Boundary.query.filter(
+                Boundary.verse_id > verse_id,
+                Boundary.annotator_id == annotator_id,
+            ).order_by(Boundary.token_id).first()
+
+            if next_boundary:
+                anvaya_of_next_boundary_query = Anvaya.query.filter(
+                    Anvaya.boundary_id == next_boundary.id,
+                    Anvaya.annotator_id == annotator_id
+                )
+                anvaya_of_next_boundary_query.delete(synchronize_session=False)
+
+            # add new boundary markers
             for boundary_token in boundary_tokens:
                 boundary = Boundary()
                 boundary.verse_id = verse_id
@@ -768,13 +788,6 @@ def api_chapter(chapter_id):
         })
 
     data = get_chapter_data(chapter_id, current_user)
-    for verse_id, verse_data in data.items():
-        if verse_data['anvaya']:
-            for sentence_id, sentence_anvaya in verse_data['anvaya'].items():
-                if not sentence_anvaya:
-                    verse_data['anvaya'][sentence_id] = get_anvaya(
-                        verse_data['sentences'][sentence_id]
-                    )
 
     response = {
         'title': f"{chapter.corpus.name} - {chapter.name}",
