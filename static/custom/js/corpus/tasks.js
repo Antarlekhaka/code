@@ -400,10 +400,27 @@ function setup_named_entity(verse_id) {
     $task_3_entity_table.html("");
     $task_3_non_entity_table.html("");
 
+    // TODO: ad-hoc code, update properly
+    var existing_entities = [];
+    var existing_labels = {};
+    for (const entity of row.entity) {
+        existing_entities.push(entity.token_id);
+        existing_labels[entity.token_id] = entity.label_id;
+    }
+    console.log(existing_labels);
+
     for (const line_tokens  of row.tokens) {
         for (const token of line_tokens) {
+            var is_entity = false;
+            var entity_label_id = null;
             const $entity_row = $("<tr>", {});
-            $task_3_non_entity_table.append($entity_row);
+            if (existing_entities.includes(token.id)) {
+                $task_3_entity_table.append($entity_row);
+                is_entity = true;
+                entity_label_id = existing_labels[token.id];
+            } else {
+                $task_3_non_entity_table.append($entity_row);
+            }
 
             var token_text = token.text;
             var token_class = "btn btn-light";
@@ -431,19 +448,27 @@ function setup_named_entity(verse_id) {
             $entity_type_cell.append($entity_selector_element);
 
             const entity_selector_id = `entity-selector-${token.id}`;
-            $entity_selector_element.attr("id", entity_selector_id),
-            $entity_selector_element.selectpicker('hide');
+            $entity_selector_element.attr("id", entity_selector_id);
+
+            if (is_entity) {
+                $entity_selector_element.selectpicker('val', entity_label_id);
+            } else {
+                $entity_selector_element.selectpicker('hide');
+            }
 
             const $entity_toggle_cell = $("<td>", {
                 class: "col-sm-1",
             });
             $entity_row.append($entity_toggle_cell);
 
+            var entity_class = (is_entity) ? "btn btn-secondary" : "btn btn-info include-entity";
+            var entity_html = (is_entity) ? '<i class="fa fa-plus"></i>' : '<i class="fa fa-times"></i>';
+
             const $entity_toggle = $("<span>", {
                 id: `entity-toggle-${token.id}`,
                 name: "entity-toggle",
-                class: "btn btn-info include-entity",
-                html: '<i class="fa fa-plus"></i>',
+                class: entity_class,
+                html: entity_html,
                 on: {
                     click: function() {
                         const select_selector = `#${entity_selector_id}`;

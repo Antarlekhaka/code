@@ -14,7 +14,7 @@ from sqlalchemy.orm.relationships import RelationshipProperty
 
 from models_sqla import User, Role
 from models_sqla import Corpus, Chapter, Verse, Line, Token
-from models_sqla import Anvaya, Boundary
+from models_sqla import Anvaya, Boundary, Entity
 
 from utils.heuristic import get_anvaya
 
@@ -116,6 +116,12 @@ def get_verse_data(
     line_object_query = Line.query.filter(Line.verse_id.in_(verse_ids))
     data = {}
 
+    # TODO: Consider rewriting with a focus on Verse instead of Line
+    # TODO: Remember to remove .limit(30)
+    # NOTE: Line ID is important for tokens
+    # Do we want to change the database structure to remove Line table
+    # altogether and only keep only a line_id field in Verse table?
+
     for line in line_object_query.limit(30):
         verse_id = line.verse_id
         if not data.get(verse_id):
@@ -142,11 +148,33 @@ def get_verse_data(
                         'annotator_id': token.annotator_id
                     }
                     for token in line.tokens.all()
+                    if (
+                        token.annotator_id is None or
+                        token.annotator_id in annotator_ids
+                    )
+                    # NOTE: now tokens also have annotator_id,
+                    # so, may be directly fetch with annotator_id or null
+                    # (instead of doing this in Python)
+                    # (null is needed for tokens from original corpus)
+                    # Could also consider keeping original tokens in 'tokens'
+                    # and adding a '_tokens' for custom tokens
                 ]],
                 'boundary': [],
                 'sentences': {},
                 'anvaya': {},
-                'entity': [],
+                'entity': [
+                    {
+                        'id': entity.id,
+                        'token_id': entity.token_id,
+                        'label_id': entity.label_id,
+                        'annotator_id': entity.annotator_id,
+                        'is_deleted': entity.is_deleted
+                    }
+                    for entity in Entity.query.filter(
+                        Entity.verse_id == verse_id,
+                        Entity.annotator_id.in_(annotator_ids)
+                    ).all()
+                ],
                 'relation': [],
                 'action': [],
                 'marked': False,
@@ -173,6 +201,10 @@ def get_verse_data(
                     'annotator_id': token.annotator_id
                 }
                 for token in line.tokens.all()
+                if (
+                    token.annotator_id is None or
+                    token.annotator_id in annotator_ids
+                )
             ])
 
     if annotator_ids is None:
