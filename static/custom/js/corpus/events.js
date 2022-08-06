@@ -12,6 +12,8 @@ $corpus_table.on('check.bs.table', function (e, row, $element) {
 $corpus_table.on('expand-row.bs.table', function (e, index, row, $detail) {
     $verse_id_containers.html(row.verse_id);
     $add_token_modal_button.prop('disabled', false);
+    $refresh_verse_buttons.prop('disabled', false);
+
     storage.setItem("next", parseInt(row.verse_id) + 1);
 
     const data = $corpus_table.bootstrapTable('getData');
@@ -113,7 +115,9 @@ $corpus_table.on('expand-row.bs.table', function (e, index, row, $detail) {
 $corpus_table.on('page-change.bs.table', function (e, number, size) {
     $verse_id_containers.html("None");
     $add_token_modal_button.prop('disabled', true);
+    $refresh_verse_buttons.prop('disabled', true);
     $("textarea").prop('disabled', true).removeClass('text-info').addClass('text-muted');
+
     $task_1_input_before.val("");
     $task_1_input_after.val("");
     $task_1_input.val("");

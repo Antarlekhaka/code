@@ -1,6 +1,7 @@
 const $corpus_table = $("#corpus_viewer");
 
 const $verse_id_containers = $(".verse-id-container");
+const $refresh_verse_buttons = $(".refresh-verse");
 
 const $task_1_tab = $("#task-1-tab");
 const $task_2_tab = $("#task-2-tab");

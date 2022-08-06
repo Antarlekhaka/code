@@ -21,7 +21,6 @@ ANVAYA_XPOS_ORDER = ["CAD", "CX", "CNG", "V"]
 
 
 def get_anvaya(token_list: Dict[int, Dict]) -> List[int]:
-    print(token_list)
     case_order = []
     xpos_order = []
     used = set()
@@ -54,4 +53,4 @@ def get_anvaya(token_list: Dict[int, Dict]) -> List[int]:
     anvaya_order.extend(xpos_order)
     assert set(token_list) == set(anvaya_order)
 
-    return case_order
+    return anvaya_order

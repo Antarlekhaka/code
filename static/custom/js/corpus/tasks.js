@@ -3,7 +3,7 @@
 /* ********************************** */
 // Note: Variables in capital are declared in the HTML template.
 
-function update_row_data(unique_id, _callback) {
+function refresh_row_data(unique_id, _callback) {
     const verse_data_url = SAMPLE_VERSE_DATA_URL.replace('0', unique_id);
     $.get(verse_data_url, function (data) {
         $corpus_table.bootstrapTable('updateByUniqueId', {
@@ -11,7 +11,9 @@ function update_row_data(unique_id, _callback) {
             row: data[unique_id],
             replace: true
         });
-        _callback(unique_id);
+        if (_callback) {
+            _callback(unique_id);
+        }
     }, 'json');
     console.log(`Verse data updated for ID: ${unique_id}`);
 }
@@ -21,6 +23,11 @@ $('a[data-toggle="tab"]').on('shown.bs.tab', function (event) {
     const active_tab = event.target;
     const previous_tab = event.relatedTarget;
     console.log(active_tab);
+});
+
+$refresh_verse_buttons.click(function() {
+    const verse_id = $verse_id_containers.html();
+    refresh_row_data(verse_id);
 });
 
 /* ********************************** BEGIN Task 1 ********************************** */
@@ -93,7 +100,7 @@ $task_1_submit.click(function () {
             // update local table
             // next task is anvaya, therefore,
 
-            update_row_data(verse_id, setup_anvaya);
+            refresh_row_data(verse_id, setup_anvaya);
 
             // move to the next task
             $task_2_tab.click();
@@ -328,7 +335,7 @@ $add_token_button.click(function() {
         });
 
         if (response.success) {
-            update_row_data(verse_id, setup_anvaya);
+            refresh_row_data(verse_id, setup_anvaya);
         }
     });
 });
@@ -368,7 +375,7 @@ $task_2_submit.click(function () {
         });
 
         if (response.success) {
-            update_row_data(verse_id, setup_named_entity);
+            refresh_row_data(verse_id, setup_named_entity);
             // is this required?
             // yes, if the entities are to be shown in anvaya order or so,
             // otherwise, there's no dependence on anvaya task, and ideally, shouldn't be

@@ -202,17 +202,16 @@ def get_verse_data(
             Anvaya.boundary_id == boundary.id,
             Anvaya.annotator_id.in_(annotator_ids)
         ).order_by(Anvaya.order)
-        sentence_anvaya = anvaya_query.all()
-
+        sentence_anvaya = [
+            a.token_id for a in anvaya_query.all()
+        ]
         # if anvaya doesn't exist, apply heuristic
         if not sentence_anvaya:
             sentence_anvaya = get_anvaya(
                 data[verse_id]['sentences'][boundary.id]
             )
 
-        data[verse_id]['anvaya'][boundary.id] = [
-            a.token_id for a in sentence_anvaya
-        ]
+        data[verse_id]['anvaya'][boundary.id] = sentence_anvaya
 
     return data
 
