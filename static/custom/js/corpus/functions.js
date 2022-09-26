@@ -4,13 +4,14 @@ function response_handler(response) {
 }
 
 function generic_row_detail_formatter(index, row) {
-    var html = ['<div class="table-responsive-sm">'];
+    var html = [];
 
     var rows = {};
     if(!row.display) {
         html.push('<tr><td>No details available.</td></tr>');
     } else {
         for (const display of row.display) {
+            html.push('<div class="table-responsive">')
             html.push('<table class="table table-striped">');
             var first_word = display[0];
             for (const k in first_word) {
@@ -30,15 +31,34 @@ function generic_row_detail_formatter(index, row) {
             for (const [name, data] of Object.entries(rows)) {
                 html.push(`<tr><th scope="row">${name}</th><td>${data.join("</td><td>")}</td></tr>`);
             }
+            html.push('</table>');
+            html.push('</div>');
         }
-        html.push('</table>')
     }
-    html.push("</div>");
     return html.join("\n");
 }
 
 function column_marked_formatter(value, row) {
-    return value ? '<i class="fa fa-check"></i>' : '';
+    value = Math.round(Math.random() * 5);
+    const percent = Math.round(value / 5 * 100);
+    const title = value < 5 ? `Task ${value}` : "Complete";
+
+    var $progress_bar_container = $("<div />", {
+        class: "progress"
+    });
+    var $progress_bar = $("<div />", {
+        class: "progress-bar progress-bar-striped bg-success",
+        role: "progressbar",
+        title: title,
+        style: `width: ${percent}%`
+    });
+    $progress_bar.attr("aria-valuenow", percent);
+    $progress_bar.attr("aria-valuemin", "0");
+    $progress_bar.attr("aria-valuemax", "100");
+    $progress_bar_container.append($progress_bar);
+    return $progress_bar_container.wrapAll("<div>").parent().html();
+
+    // return value ? '<i class="fa fa-check"></i>' : '';
 }
 
 function column_text_formatter(value, row, index, field) {

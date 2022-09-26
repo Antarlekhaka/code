@@ -1,0 +1,17 @@
+{% set task_id = "7" %}
+{% set title = "Discourse Graph" %}
+{% extends "task_base.html" %}
+{% block body %}
+<div id="intersentence-connection-container">
+    <form id="intersentence-connection-form">
+        <div id="intersentence-connection-input-container"></div>
+    </form>
+</div>
+<!-- Sample Elements (Hidden) -->
+<div id="sample-intersentence-connection-input-container" hidden="true">
+    <div id="sample-intersentence-connection-input" class="card border-secondary">
+        <div class="card-body">
+        </div>
+    </div>
+</div>
+{% endblock %}

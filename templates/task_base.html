@@ -1,7 +1,7 @@
 <div class="card">
     <div class="card-header">
         {% block header %}{{title}}{% endblock %}
-        <button class="btn btn-sm btn-primary float-right ml-1 refresh-verse" disabled>
+        <button class="btn btn-sm btn-primary float-right ml-1 refresh-verse" title="Refresh Verse Data" disabled>
             <i class="fa fa-sync"></i>
         </button>
         {% block extra_header %}{% endblock %}
@@ -10,7 +10,6 @@
         {% block body %}
         <textarea id="task-{{task_id}}-input" class="form-control text-muted text-monospace" placeholder="Annotation" rows="{{rows or '9'}}" required disabled></textarea>
         {% endblock %}
-        {% block extra_body %}{% endblock %}
     </div>
     <div class="card-footer">
         {% block footer %}
@@ -19,9 +18,6 @@
         </button>
         <button id="task-{{task_id}}-submit" class="btn btn-primary float-right">
             Submit
-        </button>
-        <button id="task-{{task_id}}-skip" class="mr-1 btn btn-secondary float-right">
-            Skip
         </button>
         {% endblock %}
         {% block extra_footer %}{% endblock %}

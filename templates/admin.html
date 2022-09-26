@@ -229,12 +229,11 @@
                         </form>
                     </div>
                 </div>
-                <div class="card disable-element" style="border-top-left-radius: 0; border-top-right-radius: 0;">
+                <div class="card" style="border-top-left-radius: 0; border-top-right-radius: 0;">
                     <div class="card-header">
                         Relation
                     </div>
                     <div class="card-body">
-                        <div class="overlay"></div>
                         <form class="form" method=POST enctype=multipart/form-data action="{{url_for('action')}}">
                             <input type="hidden" name="csrf_token" value={{csrf_token()}}>
                             <div class="form-group">
@@ -269,10 +268,11 @@
             </div>
         </div>
     </div>
-    <div class="card mt-2">
+    <div class="card disable-element mt-2">
         <div class="card-header lead">
             Actions
         </div>
+        <div class="overlay"></div>
         <div class="card-body p-0">
             <div class="card-group">
                 <div class="card" style="border-top-left-radius: 0; border-top-right-radius: 0;">

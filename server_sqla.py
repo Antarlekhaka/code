@@ -32,7 +32,6 @@ __version__ = "1.0"
 
 ###############################################################################
 
-from multiprocessing import synchronize
 import os
 import re
 import glob
@@ -48,7 +47,7 @@ from flask_security import (Security, auth_required, permissions_required,
                             hash_password, current_user, user_registered,
                             user_authenticated)
 from flask_security.utils import uia_email_mapper
-from sqlalchemy import or_, and_
+# from sqlalchemy import or_, and_
 
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
@@ -58,15 +57,16 @@ from flask_wtf import CSRFProtect
 from flask_mail import Mail
 from flask_migrate import Migrate
 
-from indic_transliteration.sanscript import transliterate
+# from indic_transliteration.sanscript import transliterate
 
 from models_sqla import (db, user_datastore,
                          CustomLoginForm, CustomRegisterForm,
                          Corpus, Chapter, Verse, Line, Token,
-                         Lexicon,
-                         Anvaya, Boundary,
-                         ActionLabel, ActorLabel, Action,
-                         EntityLabel, Entity)
+                         Progress, Anvaya, Boundary,
+                         EntityLabel, Entity,
+                         RelationLabel, TokenGraph,
+                         SentenceLabel,
+                         DiscourseLabel,)
 from settings import app
 
 from utils.reverseproxied import ReverseProxied
@@ -176,31 +176,6 @@ DCS = DigitalCorpusSanskrit()
 # Database Utlity Functions
 
 
-def get_lexicon(lemma: str) -> int:
-    lexicon = Lexicon.query.filter(Lexicon.lemma == lemma).one_or_none()
-    if lexicon:
-        return lexicon.id
-
-
-def create_lexicon(lemma: str) -> int:
-    transliterations = [
-        f"##{transliterate(lemma, 'devanagari', scheme)}"
-        if not lemma.startswith(app.config['unnamed_prefix']) else ''
-        for scheme in app.config['schemes']
-    ]
-    transliteration = ''.join(transliterations)
-    lexicon = Lexicon()
-    lexicon.lemma = lemma
-    if transliteration:
-        lexicon.transliteration = transliteration
-    db.session.add(lexicon)
-    db.session.flush()
-    return lexicon.id
-
-
-def get_or_create_lexicon(lemma: str) -> int:
-    return get_lexicon(lemma) or create_lexicon(lemma)
-
 ###############################################################################
 # Hooks
 
@@ -269,16 +244,6 @@ def inject_global_constants():
         ).with_entities(
             EntityLabel.id, EntityLabel.label, EntityLabel.description
         ).order_by(EntityLabel.label).all(),
-        'action_labels': ActionLabel.query.filter(
-            ActionLabel.is_deleted == False  # noqa # '== False' is required
-        ).with_entities(
-            ActionLabel.id, ActionLabel.label, ActionLabel.description
-        ).order_by(ActionLabel.label).all(),
-        'actor_labels': ActorLabel.query.filter(
-            ActorLabel.is_deleted == False  # noqa # '== False' is required
-        ).with_entities(
-            ActorLabel.id, ActorLabel.label, ActorLabel.description
-        ).all(),
         # 'entity_labels': [
         #     ("CHAR", "Character"),
         #     ("ORG", "Organization"),
@@ -287,6 +252,38 @@ def inject_global_constants():
         #     ("TIME", "Time"),
         #     ("NUM", "Numeric"),
         #     ("CURR", "Currency"),
+        # ]
+        'relation_labels': RelationLabel.query.filter(
+            RelationLabel.is_deleted == False  # noqa # '== False' is required
+        ).with_entities(
+            RelationLabel.id, RelationLabel.label, RelationLabel.description
+        ).order_by(RelationLabel.label).all(),
+        # 'task_labels': Label.query.filter(
+        #     ActionLabel.is_deleted == False  # noqa # '== False' is required
+        # ).with_entities(
+        #     Label.id, Label.task_id, Label.label, Label.description
+        # ).order_by(Label.task_id, Label.label).all(),
+        # 'tasks': Task.query.filter(
+        #     Task.is_deleted == False  # noqa # '== False' is required
+        # ).with_entities(
+        #     Task.id, Task.type, Task.name, Task.description
+        # ).order_by(Task.id).all(),
+        'sentence_labels': SentenceLabel.query.filter(
+            SentenceLabel.is_deleted == False  # noqa # '== False' is required
+        ).with_entities(
+            SentenceLabel.id, SentenceLabel.label, SentenceLabel.description
+        ).order_by(SentenceLabel.label).all(),
+        'discourse_labels': DiscourseLabel.query.filter(
+            DiscourseLabel.is_deleted == False  # noqa # '== False' is required
+        ).with_entities(
+            DiscourseLabel.id, DiscourseLabel.label, DiscourseLabel.description
+        ).order_by(DiscourseLabel.label).all(),
+        # 'sentence_labels': [
+        #     (1, "C1", "Class-1"),
+        #     (2, "C2", "Class-2"),
+        #     (3, "C3", "Class-3"),
+        #     (4, "C4", "Class-4"),
+        #     (5, "C5", "Class-5")
         # ]
     }
     return {
@@ -474,8 +471,10 @@ def api():
             "add_token", "remove_token",
             "update_anvaya",
             "update_named_entity",
-            "update_action_graph",
+            "update_token_graph",
             "update_coreference",
+            "update_sentence_classification",
+            "update_intersentence_connection",
         ],
         "curator": [],
         "querier": []
@@ -515,12 +514,18 @@ def api():
         # If there's any change between existing tokens and marked tokens,
         # delete  all existing boundary tokens from this verse
         # Anvaya also gets deleted as (CASCADE)
-        # TODO: also delete Anvaya related to the next boundary
+        # Entity also gets deleted as (CASCADE)
+        # TokenGraph also gets deleted as (CASCADE)
+
+        # TODO: Delete Coreference as well?
 
         existing_boundary_query = Boundary.query.filter(
             Boundary.verse_id == verse_id,
             Boundary.annotator_id == annotator_id
         )
+        print(existing_boundary_query)
+        print(existing_boundary_query.all())
+
         existing_boundary_tokens = [
             _boundary.token_id
             for _boundary in existing_boundary_query.all()
@@ -540,6 +545,7 @@ def api():
                 Boundary.verse_id > verse_id,
                 Boundary.annotator_id == annotator_id,
             ).order_by(Boundary.token_id).first()
+            print(next_boundary)
 
             if next_boundary:
                 anvaya_of_next_boundary_query = Anvaya.query.filter(
@@ -569,8 +575,8 @@ def api():
                 api_response["style"] = "warning"
             api_response["success"] = True
         except Exception as e:
-            print(e)
-            print(request.form)
+            webapp.logger.exception(e)
+            webapp.logger.info(request.form)
             api_response["success"] = False
             api_response["message"] = "Something went wrong!"
             api_response["style"] = "danger"
@@ -609,7 +615,7 @@ def api():
             api_response["style"] = "success"
             api_response["changes"] = True
         except Exception as e:
-            print(e)
+            webapp.logger.exception(e)
             api_response["success"] = False
             api_response["message"] = "Something went wrong!"
             api_response["style"] = "danger"
@@ -672,8 +678,8 @@ def api():
                 api_response["style"] = "warning"
             api_response["success"] = True
         except Exception as e:
-            print(e)
-            print(request.form)
+            webapp.logger.exception(e)
+            webapp.logger.info(request.form)
             api_response["success"] = False
             api_response["message"] = "Something went wrong!"
             api_response["style"] = "danger"
@@ -691,7 +697,10 @@ def api():
         objects_to_update = []
         try:
             entity_data = {
-                int(k.split('-')[-1]): int(v)
+                int(k.split('-')[-1]): {
+                    "boundary_id": int(v["boundary_id"]),
+                    "label_id": int(v["label_id"])
+                }
                 for k, v in entity_data.items()
                 if re.match(r'entity-selector-([0-9]+)$', k)
             }
@@ -702,7 +711,7 @@ def api():
             return jsonify(api_response)
 
         existing_entities = Entity.query.filter(
-            Entity.verse_id == verse_id,
+            Entity.boundary.has(Boundary.verse_id == verse_id),
             Entity.annotator_id == annotator_id,
         ).all()
         existing_entity_token_ids = [
@@ -711,20 +720,35 @@ def api():
         ]
         for entity in existing_entities:
             if entity.token_id not in entity_data:
+                # entity exists but was not submitted (i.e. removed)
                 entity.is_deleted = True
                 objects_to_update.append(entity)
             else:
-                if entity.label_id != entity_data[entity.token_id]:
-                    entity.label_id != entity_data[entity.token_id]
-                entity.is_deleted = False
+                # entity exists and is submitted (i.e. retained)
+                # check if there are any changes to the entity
+                token_id = entity.token_id
+                if any([
+                    entity.label_id != entity_data[token_id]["label_id"],
+                    entity.boundary_id != entity_data[token_id]["boundary_id"],
+                    entity.is_deleted is True
+                ]):
+                    entity.label_id = entity_data[token_id]["label_id"]
+                    entity.boundary_id = entity_data[token_id]["boundary_id"]
+                    entity.is_deleted = False
+                    objects_to_update.append(entity)
 
-        for token_id, label_id in entity_data.items():
+        for token_id, _entity_data in entity_data.items():
             if token_id in existing_entity_token_ids:
+                # submitted entity already exists
+                # "else" part of the previous condition block handles this
+                # so we can skip here
                 continue
+
+            # submitted entity doesn't exist, create
             entity = Entity()
-            entity.verse_id = verse_id
+            entity.boundary_id = _entity_data["boundary_id"]
             entity.token_id = token_id
-            entity.label_id = label_id
+            entity.label_id = _entity_data["label_id"]
             entity.annotator_id = annotator_id
             entity.is_deleted = False
             objects_to_update.append(entity)
@@ -740,8 +764,8 @@ def api():
                 api_response["style"] = "warning"
             api_response["success"] = True
         except Exception as e:
-            print(e)
-            print(request.form)
+            webapp.logger.exception(e)
+            webapp.logger.info(request.form)
             api_response["success"] = False
             api_response["message"] = "Something went wrong!"
             api_response["style"] = "danger"
@@ -751,14 +775,115 @@ def api():
 
     # ----------------------------------------------------------------------- #
 
-    if action == "update_action_graph":
+    if action == "update_token_graph":
+        verse_id = int(request.form["verse_id"])
+        annotator_id = current_user.id
+        graph_data = json.loads(request.form.get("graph_data", "[]"))
+
+        objects_to_update = []
+        try:
+            # validate graph_data: List[Dict]
+            # keys: boundary_id, src_id, label_id, dst_id
+            # values: strings? cast int()
+            graph_data = {
+                (
+                    int(rel["src_id"]),
+                    int(rel["label_id"]),
+                    int(rel["dst_id"])
+                ): {
+                    k: int(v)
+                    for k, v in rel.items()
+                }
+                for rel in graph_data
+            }
+        except Exception:
+            api_response["success"] = False
+            api_response["message"] = "Invalid data."
+            api_response["style"] = "danger"
+            return jsonify(api_response)
+
+        existing_relations_query = TokenGraph.query.filter(
+            TokenGraph.boundary.has(Boundary.verse_id == verse_id),
+            TokenGraph.annotator_id == annotator_id,
+        )
+
+        existing_relations = existing_relations_query.all()
+        existing_relation_tuples = [
+            (relation.src_id, relation.label_id, relation.dst_id)
+            for relation in existing_relations_query.all()
+        ]
+
+        for relation in existing_relations:
+            rel_tuple = (relation.src_id, relation.label_id, relation.dst_id)
+            if rel_tuple not in graph_data:
+                # relation exists but was not submitted (i.e. removed)
+                relation.is_deleted = True
+                objects_to_update.append(relation)
+            else:
+                # relation exists and is submitted (i.e. retained)
+                # check if there are any changes to the entity
+                if any([
+                    relation.boundary_id != graph_data[rel_tuple]["boundary_id"],
+                    relation.is_deleted is True
+                ]):
+                    relation.boundary_id = graph_data[rel_tuple]["boundary_id"]
+                    relation.is_deleted = False
+                    objects_to_update.append(relation)
+
+        for rel_tuple, _relation_data in graph_data.items():
+            if rel_tuple in existing_relation_tuples:
+                # submitted relation already exists
+                # "else" part of the previous condition block handles this
+                # so we can skip here
+                continue
+
+            # submitted entity doesn't exist, create
+            relation = TokenGraph()
+            relation.boundary_id = _relation_data["boundary_id"]
+            relation.src_id = _relation_data["src_id"]
+            relation.label_id = _relation_data["label_id"]
+            relation.dst_id = _relation_data["dst_id"]
+            relation.annotator_id = annotator_id
+            relation.is_deleted = False
+            objects_to_update.append(relation)
+
+        try:
+            if objects_to_update:
+                db.session.bulk_save_objects(objects_to_update)
+                db.session.commit()
+                api_response["message"] = "Successfully updated!"
+                api_response["style"] = "success"
+            else:
+                api_response["message"] = "No changes were submitted."
+                api_response["style"] = "warning"
+            api_response["success"] = True
+        except Exception as e:
+            webapp.logger.exception(e)
+            webapp.logger.info(request.form)
+            api_response["success"] = False
+            api_response["message"] = "Something went wrong!"
+            api_response["style"] = "danger"
+
         api_response["data"] = None
-        api_response["message"] = "update_action_graph"
         return jsonify(api_response)
 
     # ----------------------------------------------------------------------- #
 
     if action == "update_coreference":
+        api_response["data"] = None
+        api_response["message"] = "update_coreference"
+        return jsonify(api_response)
+
+    # ----------------------------------------------------------------------- #
+
+    if action == "update_sentence_classification":
+        api_response["data"] = None
+        api_response["message"] = "update_coreference"
+        return jsonify(api_response)
+
+    # ----------------------------------------------------------------------- #
+
+    if action == "update_intersentence_connection":
         api_response["data"] = None
         api_response["message"] = "update_coreference"
         return jsonify(api_response)
@@ -840,9 +965,12 @@ def action():
             # Named Entity Type
             'entity_type_add', 'entity_type_remove',
 
+            # Token Graph Relation Type
+            'relation_type_add', 'relation_type_remove'
+
             # Action
-            'action_type_add', 'action_type_remove',
-            'actor_type_add', 'actor_type_remove',
+            # 'action_type_add', 'action_type_remove',
+            # 'actor_type_add', 'actor_type_remove',
 
             # Data
             'corpus_add', 'chapter_add',
@@ -961,8 +1089,9 @@ def action():
 
     if action in [
         'entity_type_add', 'entity_type_remove',
-        'action_type_add', 'action_type_remove',
-        'actor_type_add', 'actor_type_remove',
+        'relation_type_add', 'relation_type_remove',
+        # 'sentence_type_add', 'sentence_type_remove',
+        # 'discourse_type_add', 'discourse_type_remove',
     ]:
         action_parts = action.split('_')
 
@@ -974,8 +1103,9 @@ def action():
 
         MODELS = {
             'entity': (EntityLabel, Entity, 'label_id'),
-            'action': (ActionLabel, Action, 'label_id'),
-            'actor': (ActorLabel, Action, 'actor_label_id')
+            'relation': (RelationLabel, TokenGraph, 'label_id'),
+            # 'sentence': (SentenceLabel, ..., 'label_id'),
+            # 'discourse': (DiscourseLabel, DiscourseGraph, 'label_id'),
         }
         (
             _object_model, _annotation, _annotation_attribute
@@ -1156,7 +1286,7 @@ def action():
                             db.session.add(token)
 
             except Exception as e:
-                logging.exception(e)
+                webapp.logger.exception(e)
                 flash("An error occurred while inserting data.", "danger")
             else:
                 db.session.commit()
@@ -1208,7 +1338,7 @@ def action():
 
 
 if __name__ == '__main__':
-    host = 'localhost'
+    host = 'hrishirt.cse.iitk.ac.in'
     port = '5000'
 
     webapp.run(host=host, port=port, debug=True)

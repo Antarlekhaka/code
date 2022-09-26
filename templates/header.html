@@ -16,7 +16,9 @@
     {% else %}
     <link rel="stylesheet" id="theme_css" href="{{url_for('static', filename='bootstrap/css/bootstrap.min.css')}}">
     {% endif %}
+    <!-- Custom CSS -->
     <link rel="stylesheet" href="{{url_for('static', filename='custom/css/sticky-footer.css')}}">
+    <link rel="stylesheet" href="{{url_for('static', filename='custom/css/buttons.css')}}">
 
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <script src="{{url_for('static', filename='js/jquery.js')}}"></script>
@@ -87,6 +89,7 @@
         }
         .detail-view>td {
             padding: 0px;
+            max-width: 0px; /* any number less than allowed width, which is roughly 50vw */
         }
 
         .scroll-large {
@@ -110,8 +113,8 @@
         }
 
         .dropdown-menu {
-            max-width: 100%;
-            overflow: clip;
+            max-width: 200%;
+            overflow-x: clip;
         }
 
         .animated {

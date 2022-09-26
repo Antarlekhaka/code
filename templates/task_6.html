@@ -1,0 +1,28 @@
+{% set task_id = "6" %}
+{% set title = "Sentence Classification" %}
+{% extends "task_base.html" %}
+{% block body %}
+<div id="sentence-classification-container">
+    <form id="sentence-classification-form">
+        <div id="sentence-classification-input-container"></div>
+    </form>
+</div>
+<!-- Sample Elements (Hidden) -->
+<!-- <div id="sample-sentence-classification-input-container" hidden="true"> -->
+<div id="sample-sentence-classification-input-container">
+    <div id="sample-sentence-classification-input" class="card border-secondary">
+        <div class="card-body form-row">
+            <div class="col-sm sentence-text">
+                Sentence text appears here.
+            </div>
+            <div class="col-sm-4">
+                <select title="Select Sentence Label" class="form-control sentence-label selectpicker" data-show-subtext="true" data-live-search="true" required multiple>
+                    {% for _id, _label, _description in constants.sentence_labels %}
+                    <option value="{{_id}}" data-subtext="{{_description}}">{{_label}}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -14,7 +14,7 @@ from sqlalchemy.orm.relationships import RelationshipProperty
 
 from models_sqla import User, Role
 from models_sqla import Corpus, Chapter, Verse, Line, Token
-from models_sqla import Anvaya, Boundary, Entity
+from models_sqla import Anvaya, Boundary, Entity, TokenGraph
 
 from utils.heuristic import get_anvaya
 
@@ -162,22 +162,10 @@ def get_verse_data(
                 'boundary': [],
                 'sentences': {},
                 'anvaya': {},
-                'entity': [
-                    {
-                        'id': entity.id,
-                        'token_id': entity.token_id,
-                        'label_id': entity.label_id,
-                        'annotator_id': entity.annotator_id,
-                        'is_deleted': entity.is_deleted
-                    }
-                    for entity in Entity.query.filter(
-                        Entity.verse_id == verse_id,
-                        Entity.annotator_id.in_(annotator_ids)
-                    ).all()
-                ],
+                'entity': [],
                 'relation': [],
                 'action': [],
-                'marked': False,
+                'progress': False,
             }
         else:
             data[verse_id]['text'].append(line.text)
@@ -217,6 +205,7 @@ def get_verse_data(
             Boundary.annotator_id.in_(annotator_ids)
         ).order_by(Boundary.token_id)
 
+    # boundary specific data
     for boundary in boundary_query.all():
         verse_id = boundary.verse_id
         data[verse_id]['boundary'].append(
@@ -245,13 +234,54 @@ def get_verse_data(
 
         data[verse_id]['anvaya'][boundary.id] = sentence_anvaya
 
+        # ------------------------------------------------------------------- #
+
+        entity_query = Entity.query.filter(
+            Entity.boundary_id == boundary.id,
+            Entity.annotator_id.in_(annotator_ids)
+        )
+
+        data[verse_id]['entity'].extend([
+            {
+                'id': entity.id,
+                'boundary_id': entity.boundary_id,
+                'token_id': entity.token_id,
+                'label_id': entity.label_id,
+                'annotator_id': entity.annotator_id,
+                'is_deleted': entity.is_deleted
+            }
+            for entity in entity_query.all()
+        ])
+
+        # ------------------------------------------------------------------- #
+
+        token_graph_query = TokenGraph.query.filter(
+            TokenGraph.boundary_id == boundary.id,
+            TokenGraph.annotator_id.in_(annotator_ids)
+        )
+
+        data[verse_id]['relation'].extend([
+            {
+                'id': relation.id,
+                'boundary_id': relation.boundary_id,
+                'src_id': relation.src_id,
+                'label_id': relation.label_id,
+                'dst_id': relation.dst_id,
+                'annotator_id': relation.annotator_id,
+                'is_deleted': relation.is_deleted
+            }
+            for relation in token_graph_query.all()
+        ])
+
+        # ------------------------------------------------------------------- #
+
     return data
 
 
 def get_sentences(
     verse_id: int, annotator_id: int
 ) -> Dict[int, Dict[int, Token]]:
-    """Get sentences (as a list of tokens) that end on the specific line
+    """Get sentences (a list of tokens) that end on the specific line
 
     Parameters
     ----------

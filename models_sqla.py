@@ -107,6 +107,7 @@ class Token(db.Model):
     annotator = relationship(
         'User', backref=backref('tokens', lazy='dynamic')
     )
+    # removed index because all custom added tokens get same order-id
     # __table_args__ = (
     #     Index('token_line_id_order', 'line_id', 'order', unique=True),
     # )
@@ -155,6 +156,29 @@ class RolesUsers(db.Model):
     role_id = Column('role_id', Integer, ForeignKey('role.id'))
 
 ###############################################################################
+# Task Specific Models
+
+
+class Progress(db.Model):
+    id = Column(Integer, primary_key=True)
+    verse_id = Column(Integer, ForeignKey('verse.id'), nullable=False)
+    annotator_id = Column(Integer, ForeignKey('user.id'), nullable=False)
+    task_id = Column(Integer, nullable=False)
+    updated_at = Column(DateTime, default=dt.utcnow, onupdate=dt.utcnow)
+
+    verse = relationship(
+        'Verse', backref=backref('progress', lazy='dynamic')
+    )
+    annotator = relationship(
+        'User', backref=backref('progress', lazy='dynamic')
+    )
+    __table_args__ = (
+         Index('progress_verse_id_annotator_id_task_id',
+               'verse_id', 'annotator_id', 'task_id', unique=True),
+    )
+
+
+# --------------------------------------------------------------------------- #
 
 
 class Boundary(db.Model):
@@ -206,7 +230,9 @@ class Anvaya(db.Model):
 class Entity(db.Model):
     id = Column(Integer, primary_key=True)
     # ----------------------------------------------------------------------- #
-    verse_id = Column(Integer, ForeignKey('verse.id'), nullable=False)
+    boundary_id = Column(
+        Integer, ForeignKey('boundary.id', ondelete='CASCADE'), nullable=False
+    )
     token_id = Column(Integer, ForeignKey('token.id'), nullable=False)
     label_id = Column(Integer, ForeignKey('entity_label.id'), nullable=False)
     # ----------------------------------------------------------------------- #
@@ -214,8 +240,9 @@ class Entity(db.Model):
     is_deleted = Column(Boolean, default=False, nullable=False)
     updated_at = Column(DateTime, default=dt.utcnow, onupdate=dt.utcnow)
 
-    verse = relationship(
-        'Verse', backref=backref('entities', lazy='dynamic')
+    boundary = relationship(
+        'Boundary',
+        backref=backref('entities', cascade='all,delete-orphan', lazy='dynamic')
     )
     token = relationship('Token', foreign_keys=[token_id])
     label = relationship('EntityLabel', backref=backref('entities'))
@@ -228,12 +255,54 @@ class Entity(db.Model):
     )
 
 
-class ActionGraph(db.Model):
+class TokenGraph(db.Model):
     id = Column(Integer, primary_key=True)
     # ----------------------------------------------------------------------- #
-    boundary_id = Column(Integer, ForeignKey('boundary.id'), nullable=False)
+    boundary_id = Column(
+        Integer, ForeignKey('boundary.id', ondelete='CASCADE'), nullable=False
+    )
     src_id = Column(Integer, ForeignKey('token.id'), nullable=False)
-    label = Column(String(255), nullable=False)
+    label_id = Column(Integer, ForeignKey('relation_label.id'), nullable=False)
+    dst_id = Column(Integer, ForeignKey('token.id'), nullable=False)
+    # ----------------------------------------------------------------------- #
+    annotator_id = Column(Integer, ForeignKey('user.id'), nullable=False)
+    is_deleted = Column(Boolean, default=False, nullable=False)
+    updated_at = Column(DateTime, default=dt.utcnow, onupdate=dt.utcnow)
+
+    src_token = relationship('Token', foreign_keys=[src_id])
+    dst_token = relationship('Token', foreign_keys=[dst_id])
+    label = relationship('RelationLabel', foreign_keys=[label_id])
+    boundary = relationship(
+        'Boundary',
+        backref=backref(
+            'tokengraph', cascade='all,delete-orphan', lazy='dynamic'
+        )
+    )
+    annotator = relationship(
+        'User', backref=backref('tokengraph', lazy='dynamic')
+    )
+
+    __table_args__ = (
+         Index('tokengraph_annotator_id_src_id_dst_id',
+               'annotator_id', 'src_id', 'dst_id', unique=True),
+    )
+    # the above will not allow multiple edges between same two token ids
+    # if that is to be allowed, we would need something like the below
+    # (which is pretty much same as not having a unique index)
+
+    # __table_args__ = (
+    #      Index('tokengraph_annotator_id_src_id_label_id_dst_id',
+    #            'annotator_id', 'src_id', 'label_id', 'dst_id', unique=True),
+    # )
+
+
+class Coreference(db.Model):
+    id = Column(Integer, primary_key=True)
+    # ----------------------------------------------------------------------- #
+    boundary_id = Column(
+        Integer, ForeignKey('boundary.id', ondelete='CASCADE'), nullable=False
+    )
+    src_id = Column(Integer, ForeignKey('token.id'), nullable=False)
     dst_id = Column(Integer, ForeignKey('token.id'), nullable=False)
     # ----------------------------------------------------------------------- #
     annotator_id = Column(Integer, ForeignKey('user.id'), nullable=False)
@@ -243,30 +312,11 @@ class ActionGraph(db.Model):
     src_token = relationship('Token', foreign_keys=[src_id])
     dst_token = relationship('Token', foreign_keys=[dst_id])
     boundary = relationship(
-        'Boundary', backref=backref('actiongraph', lazy='dynamic')
+        'Boundary',
+        backref=backref(
+            'coreference', cascade='all,delete-orphan', lazy='dynamic'
+        )
     )
-    annotator = relationship(
-        'User', backref=backref('actiongraph', lazy='dynamic')
-    )
-
-    __table_args__ = (
-         Index('actiongraph_annotator_id_src_id_dst_id',
-               'annotator_id', 'src_id', 'dst_id', unique=True),
-    )
-
-
-class Coreference(db.Model):
-    id = Column(Integer, primary_key=True)
-    # ----------------------------------------------------------------------- #
-    src_id = Column(Integer, ForeignKey('token.id'), nullable=False)
-    dst_id = Column(Integer, ForeignKey('token.id'), nullable=False)
-    # ----------------------------------------------------------------------- #
-    annotator_id = Column(Integer, ForeignKey('user.id'), nullable=False)
-    is_deleted = Column(Boolean, default=False, nullable=False)
-    updated_at = Column(DateTime, default=dt.utcnow, onupdate=dt.utcnow)
-
-    src_token = relationship('Token', foreign_keys=[src_id])
-    dst_token = relationship('Token', foreign_keys=[dst_id])
     annotator = relationship(
         'User', backref=backref('coreference', lazy='dynamic')
     )
@@ -277,21 +327,7 @@ class Coreference(db.Model):
     )
 
 ###############################################################################
-# Annotation Database Models
-
-
-class Lexicon(db.Model):
-    id = Column(Integer, primary_key=True)
-    lemma = Column(String(255), unique=True)
-    transliteration = Column(Text)
-
-
-# class NodeLabel(db.Model):
-#     __tablename__ = 'node_label'
-#     id = Column(Integer, primary_key=True)
-#     label = Column(String(255), nullable=False)
-#     description = Column(String(255))
-#     is_deleted = Column(Boolean, default=False, nullable=False)
+# Label Models
 
 
 class EntityLabel(db.Model):
@@ -302,105 +338,53 @@ class EntityLabel(db.Model):
     is_deleted = Column(Boolean, default=False, nullable=False)
 
 
-# class RelationLabel(db.Model):
-#     __tablename__ = 'relation_label'
+class RelationLabel(db.Model):
+    __tablename__ = 'relation_label'
+    id = Column(Integer, primary_key=True)
+    label = Column(String(255), nullable=False)
+    description = Column(String(255))
+    is_deleted = Column(Boolean, default=False, nullable=False)
+
+
+class SentenceLabel(db.Model):
+    __tablename__ = 'sentence_label'
+    id = Column(Integer, primary_key=True)
+    label = Column(String(255), nullable=False)
+    description = Column(String(255))
+    is_deleted = Column(Boolean, default=False, nullable=False)
+
+
+class DiscourseLabel(db.Model):
+    __tablename__ = 'discourse_label'
+    id = Column(Integer, primary_key=True)
+    label = Column(String(255), nullable=False)
+    description = Column(String(255))
+    is_deleted = Column(Boolean, default=False, nullable=False)
+
+
+# NOTE:
+# * we can add a generic Task table and a generic Label table later
+# * task can later be replaced by task_id
+# Task "type" can be generic
+
+# class Label(db.Model):
+#     __tablename__ = 'generic_label'
 #     id = Column(Integer, primary_key=True)
+#     task_id = Column(Integer, ForeignKey('task.id'), nullable=False)
 #     label = Column(String(255), nullable=False)
 #     description = Column(String(255))
 #     is_deleted = Column(Boolean, default=False, nullable=False)
 
-
-class ActorLabel(db.Model):
-    __tablename__ = 'actor_label'
-    id = Column(Integer, primary_key=True)
-    label = Column(String(255), nullable=False)
-    description = Column(String(255))
-    is_deleted = Column(Boolean, default=False, nullable=False)
+#     task = relationship('Task', backref=backref('labels'))
 
 
-class ActionLabel(db.Model):
-    __tablename__ = 'action_label'
-    id = Column(Integer, primary_key=True)
-    label = Column(String(255), nullable=False)
-    description = Column(String(255))
-    is_deleted = Column(Boolean, default=False, nullable=False)
-
-
-# class Node(db.Model):
+# class Task(db.Model):
+#     __tablename__ = "task"
 #     id = Column(Integer, primary_key=True)
-#     line_id = Column(Integer, ForeignKey('line.id'), nullable=False)
-#     annotator_id = Column(Integer, ForeignKey('user.id'), nullable=False)
-#     lexicon_id = Column(Integer, ForeignKey('lexicon.id'), nullable=False)
-#     label_id = Column(Integer, ForeignKey('node_label.id'), nullable=False)
+#     type = Column(String(255), nullable=False)
+#     name = Column(String(255), nullable=False)
+#     description = Column(String(255))
 #     is_deleted = Column(Boolean, default=False, nullable=False)
-#     updated_at = Column(DateTime, default=dt.utcnow, onupdate=dt.utcnow)
-
-#     annotator = relationship('User', backref=backref('nodes', lazy='dynamic'))
-#     line = relationship('Line', backref=backref('nodes', lazy='dynamic'))
-#     lemma = relationship('Lexicon', backref=backref('nodes'))
-#     label = relationship('NodeLabel', backref=backref('nodes'))
-
-#     __table_args__ = (
-#         Index('node_line_id_annotator_id_lexicon_id_label_id',
-#               'line_id', 'annotator_id', 'lexicon_id', 'label_id',
-#               unique=True),
-#     )
-
-
-# class Relation(db.Model):
-#     id = Column(Integer, primary_key=True)
-#     line_id = Column(Integer, ForeignKey('line.id'), nullable=False)
-#     annotator_id = Column(Integer, ForeignKey('user.id'), nullable=False)
-#     src_id = Column(Integer, ForeignKey('lexicon.id'), nullable=False)
-#     dst_id = Column(Integer, ForeignKey('lexicon.id'), nullable=False)
-#     label_id = Column(Integer, ForeignKey('relation_label.id'), nullable=False)
-#     detail = Column(String(255))
-
-#     is_deleted = Column(Boolean, default=False, nullable=False)
-#     updated_at = Column(DateTime, default=dt.utcnow, onupdate=dt.utcnow)
-
-#     annotator = relationship(
-#         'User', backref=backref('relations', lazy='dynamic')
-#     )
-#     line = relationship('Line', backref=backref('relations', lazy='dynamic'))
-#     src_lemma = relationship('Lexicon', foreign_keys=[src_id])
-#     dst_lemma = relationship('Lexicon', foreign_keys=[dst_id])
-#     label = relationship('RelationLabel', backref=backref('relations'))
-
-#     __table_args__ = (
-#         Index('relation_line_id_annotator_id_src_id_dst_id_label_id_detail',
-#               'line_id', 'annotator_id',
-#               'src_id', 'dst_id', 'label_id', 'detail', unique=True),
-#     )
-
-
-class Action(db.Model):
-    id = Column(Integer, primary_key=True)
-    line_id = Column(Integer, ForeignKey('line.id'), nullable=False)
-    annotator_id = Column(Integer, ForeignKey('user.id'), nullable=False)
-    label_id = Column(Integer, ForeignKey('action_label.id'), nullable=False)
-    actor_label_id = Column(
-        Integer, ForeignKey('actor_label.id'), nullable=False
-    )
-    actor_id = Column(Integer, ForeignKey('lexicon.id'), nullable=False)
-
-    is_deleted = Column(Boolean, default=False, nullable=False)
-    updated_at = Column(DateTime, default=dt.utcnow, onupdate=dt.utcnow)
-
-    annotator = relationship(
-        'User', backref=backref('actions', lazy='dynamic')
-    )
-    line = relationship('Line', backref=backref('actions', lazy='dynamic'))
-    label = relationship('ActionLabel', backref=backref('actions'))
-    actor_lemma = relationship('Lexicon', foreign_keys=[actor_id])
-    actor_label = relationship('ActorLabel', foreign_keys=[actor_label_id])
-
-    __table_args__ = (
-        Index('action_line_id_annotator_id_actor_label_id_actor_id_label_id',
-              'line_id', 'annotator_id',
-              'actor_label_id', 'actor_id', 'label_id', unique=True),
-    )
-
 
 ###############################################################################
 # Setup Flask-Security

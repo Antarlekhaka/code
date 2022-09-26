@@ -2,14 +2,58 @@
 {% set title = "Co-reference Resolution" %}
 {% extends "task_base.html" %}
 {% block body %}
-<div id="coreference-container">
+<div id="coref-context-container" class="scroll">
+    <br>
+    <br>
+    Clickable list of tokens from sentences from the last 3 verses goes here.
+    <br>
+    Tokens can be clicked in order to select from them.
+    <br>
+    <br>
 </div>
-<div class="sample-input" hidden="true">
-    <table>
-        <tr id="sample-coreference-row">
-            <td></td>
-            <td></td>
-        </tr>
-    </table>
+<div class="mark border border-warning rounded px-1 pt-1 pb-0 m-1" id="coref-sample-row-container">
+    <div id="coref-row" class="row">
+        <div id="coref-source-token-container" class="col-sm"></div>
+        <div class="col-sm-2">
+            <span class="btn btn-secondary mb-1 mr-1">
+                <i class="fas fa-arrow-right"></i>
+            </span>
+        </div>
+        <div id="coref-target-token-container" class="col-sm"></div>
+        <div class="col-sm-2">
+            <button id="coref-confirm-button" type="button" title="Confirm" class="btn btn-success float-right mx-1" disabled>
+                <i class="fas fa-check"></i>
+            </button>
+            <button id="coref-reset-button" type="button" title="Reset" class="btn btn-warning float-right">
+                <i class="fas fa-rotate-right"></i>
+            </button>
+        </div>
+    </div>
+</div>
+<div class="border border-success rounded px-1 pt-1 pb-0 m-1" id="coref-annotation">
+    <div id="coref-annotation-container">
+        <div class="row">
+            <div class="col-sm">
+                <span class="btn btn-light">
+                    source-placeholder
+                </span>
+            </div>
+            <div class="col-sm-2">
+                <button type="button" class="btn btn-secondary mb-1 mr-1">
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+            <div class="col-sm">
+                <span class="btn btn-light">
+                    target-placeholder
+                </span>
+            </div>
+            <div class="col-sm-2">
+                <button type="button" class="btn btn-danger float-right mx-1">
+                    <i class="fas fa-minus"></i>
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}
