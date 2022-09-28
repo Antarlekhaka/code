@@ -14,7 +14,7 @@ from sqlalchemy.orm.relationships import RelationshipProperty
 
 from models_sqla import User, Role
 from models_sqla import Corpus, Chapter, Verse, Line, Token
-from models_sqla import Anvaya, Boundary, Entity, TokenGraph
+from models_sqla import Anvaya, Boundary, Entity, TokenGraph, Coreference
 
 from utils.heuristic import get_anvaya
 
@@ -164,6 +164,7 @@ def get_verse_data(
                 'anvaya': {},
                 'entity': [],
                 'relation': [],
+                'coreference': [],
                 'action': [],
                 'progress': False,
             }
@@ -205,7 +206,8 @@ def get_verse_data(
             Boundary.annotator_id.in_(annotator_ids)
         ).order_by(Boundary.token_id)
 
-    # boundary specific data
+    # ----------------------------------------------------------------------- #
+    # boundary specific data - BEGIN
     for boundary in boundary_query.all():
         verse_id = boundary.verse_id
         data[verse_id]['boundary'].append(
@@ -233,6 +235,8 @@ def get_verse_data(
             )
 
         data[verse_id]['anvaya'][boundary.id] = sentence_anvaya
+        # TODO: consider if we should provide predicted anvaya separately
+        #       instead of in the same field
 
         # ------------------------------------------------------------------- #
 
@@ -275,6 +279,27 @@ def get_verse_data(
 
         # ------------------------------------------------------------------- #
 
+        coreference_query = Coreference.query.filter(
+            Coreference.boundary_id == boundary.id,
+            Coreference.annotator_id.in_(annotator_ids)
+        )
+
+        data[verse_id]['coreference'].extend([
+            {
+                'id': coreference.id,
+                'boundary_id': coreference.boundary_id,
+                'src_id': coreference.src_id,
+                'dst_id': coreference.dst_id,
+                'annotator_id': coreference.annotator_id,
+                'is_deleted': coreference.is_deleted
+            }
+            for coreference in coreference_query.all()
+        ])
+
+        # ------------------------------------------------------------------- #
+
+    # boundary specific data - END
+    # ----------------------------------------------------------------------- #
     return data
 
 

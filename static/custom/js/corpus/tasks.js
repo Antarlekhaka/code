@@ -9,6 +9,7 @@ const default_token_class_common = "btn";
 const default_token_class_normal = "btn-light";
 const default_token_class_subtoken = "btn-warning";
 const default_token_class_manual = "btn-secondary";
+const default_token_element = "<span />";
 
 // Generic Functions
 
@@ -16,7 +17,8 @@ function generate_token_button(options) {
     const token = options.token;
     const id_prefix = options.id_prefix;
     const onclick = options.onclick;
-    const token_class_common = options.token_class || default_token_class_common;
+    const token_element = options.token_element || default_token_element;
+    const token_class_common = options.token_class_common || default_token_class_common;
     const token_class_normal = options.token_class_normal || default_token_class_normal;
     const token_class_subtoken = options.token_class_subtoken || default_token_class_subtoken;
     const token_class_manual = options.token_class_manual || default_token_class_manual;
@@ -48,7 +50,7 @@ function generate_token_button(options) {
         token_class = token_class_manual;
     }
 
-    const $token = $("<span />", {
+    const $token = $(token_element, {
         class: [token_class_common, token_class].join(" "),
         title: [
             `ID: ${token.id}`,
@@ -151,7 +153,7 @@ function setup_sentence_boundary(verse_id) {
     var task_1_text_after = [];
 
     var display_token_last_components = [];
-    $.each(context, function(verse_index, verse){
+    for (const verse of context) {
         // console.log("Verse Tokens:");
         // console.log(verse.tokens);
         // console.log("Verse Boundary:");
@@ -202,7 +204,7 @@ function setup_sentence_boundary(verse_id) {
         if (verse.verse_id > row.verse_id) {
             task_1_text_after.push(actual_verse_text);
         }
-    });
+    };
     $task_1_input.data('marker_positions', display_token_last_components);
     $task_1_input_before.val(task_1_text_before.join("\n"));
     $task_1_input_after.val(task_1_text_after.join("\n"));
@@ -275,7 +277,7 @@ function setup_sortable() {
         connectWith: ".sortable"
     }).on("sortremove", function(e, ui) {
         var toggle_id = ui.item[0].id.replace("button", "toggle");
-        $(`#${toggle_id}`).prop("disabled", false);
+        $(`#${toggle_id}`).prop('disabled', false);
     });
     $('.sortable').sortable({
         opacity: 0.75,
@@ -315,8 +317,9 @@ function setup_anvaya(verse_id) {
         if (boundary_id == "extra") {
             continue;
         }
-        console.log(boundary_id);
-        console.log(sentence_tokens);
+        // console.log("Boundary ID: " + boundary_id);
+        // console.log("Tokens:")
+        // console.log(sentence_tokens);
         for (const token_id of row.anvaya[boundary_id]) {
             if (extra_tokens.hasOwnProperty(token_id)) {
                 used_extra_tokens.push(token_id);
@@ -324,7 +327,6 @@ function setup_anvaya(verse_id) {
         }
     }
     for (const [boundary_id, sentence_tokens] of Object.entries(row.sentences)) {
-        console.log(row);
         var token_order = [];
         var unused_tokens = [];
         if (boundary_id !== "extra") {
@@ -497,7 +499,8 @@ $task_2_submit.click(function () {
         const boundary_id = sentence_element.id;
         anvaya_data[boundary_id] = $(sentence_element).data("anvaya");
     });
-    console.log(anvaya_data);
+    // console.log("Anvaya Data: ");
+    // console.log(anvaya_data);
 
     $.post(API_URL, {
         action: "update_anvaya",
@@ -728,7 +731,7 @@ function setup_token_graph(verse_id) {
             const token = all_tokens[token_id];
             var $token = generate_token_button({
                 token: token,
-                token_class_common: "btn_sm"
+                token_class_common: "btn-sm"
             });
             var token_text = $token.html();
             var token_html = $token.wrapAll('<div>').parent().html();
@@ -950,14 +953,15 @@ function prepare_token_graph_data($data_location) {
         return ++node_id;
     }
 
-    $data_location.children(".triplet-row").each(function () {
-        var $source_entity = $(this).find('.source-entity');
-        var $target_entity = $(this).find('.target-entity');
-        var $relation_label = $(this).find('.relation-label');
+    $data_location.children(".triplet-row").each(function (triplet_index, triplet_row) {
+        const $triplet_row = $(triplet_row);
+        const $source_entity = $triplet_row.find('.source-entity');
+        const $target_entity = $triplet_row.find('.target-entity');
+        const $relation_label = $triplet_row.find('.relation-label');
 
-        var source_entity_value = $source_entity.selectpicker('val');
-        var target_entity_value = $target_entity.selectpicker('val');
-        var relation_label_value = $relation_label.selectpicker('val');
+        const source_entity_value = $source_entity.selectpicker('val');
+        const target_entity_value = $target_entity.selectpicker('val');
+        const relation_label_value = $relation_label.selectpicker('val');
 
         if (!source_entity_value || !relation_label_value || !relation_label_value) {
             return;
@@ -965,9 +969,9 @@ function prepare_token_graph_data($data_location) {
             // "return false;" in .each() ==> "break;"
         }
 
-        var source_entity = $source_entity.find(`[value=${source_entity_value}]`).html();
-        var target_entity = $source_entity.find(`[value=${target_entity_value}]`).html();
-        var relation_label = $relation_label.find(`[value=${relation_label_value}]`).data("subtext");
+        const source_entity = $source_entity.find(`[value=${source_entity_value}]`).html();
+        const target_entity = $source_entity.find(`[value=${target_entity_value}]`).html();
+        const relation_label = $relation_label.find(`[value=${relation_label_value}]`).data("subtext");
 
         if (!node_ids.hasOwnProperty(source_entity)) {
             node_ids[source_entity] = get_node_id();
@@ -1006,6 +1010,7 @@ function prepare_token_graph_data($data_location) {
         });
     });
 
+    console.log("Graph Data: ");
     console.log(data);
     return data;
 }
@@ -1068,6 +1073,7 @@ $task_4_submit.click(function () {
                 "label_id": relation_label_id,
                 "dst_id": target_entity_id
             });
+            console.log("Submit Graph Data: ");
             console.log(graph_data);
         });
     });
@@ -1113,10 +1119,6 @@ function setup_coreference(verse_id) {
     const start_index = (current_index > 2) ? (current_index - 3) : 0;
     const context = data.slice(start_index, current_index + 1);
 
-    console.log(start_index);
-    console.log(current_index);
-    console.log(context);
-
     var all_tokens = {};
     var boundary_tokens = [];
 
@@ -1125,7 +1127,7 @@ function setup_coreference(verse_id) {
         for (const [boundary_id, sentence_tokens] of Object.entries(verse_data.sentences)) {
             $.extend(all_tokens, sentence_tokens);
             if (boundary_id != "extra") {
-                boundary_tokens.push(verse_data.anvaya[boundary_id]);
+                boundary_tokens.push([boundary_id, verse_data.anvaya[boundary_id]]);
             }
             // ensure that every boundary in the previous n verses has anvaya
             // if one is doing anvaya in order, this won't be an issue
@@ -1135,7 +1137,7 @@ function setup_coreference(verse_id) {
     $task_5_coref_context_container.html("");
     $task_5_coref_annotation_container.html("");
 
-    for (const used_tokens of boundary_tokens) {
+    for (const [boundary_id, used_tokens] of boundary_tokens) {
         const $boundary_container = $("<div />", {class: "border border-secondary rounded px-1 pt-1 pb-0 ml-1 mt-1 mb-0"});
         $boundary_container.appendTo($task_5_coref_context_container);
 
@@ -1143,19 +1145,25 @@ function setup_coreference(verse_id) {
             const token = all_tokens[token_id];
             const $token = generate_token_button({
                 token: token,
+                token_element: "<button />",
                 id_prefix: "coref-token",
+                token_class_common: "btn",
                 onclick: function($element) {
                     var $annotation_token = $element.clone();
                     $annotation_token.removeAttr("id");
                     $annotation_token.data("token-id", token_id);
+                    $annotation_token.data("boundary-id", boundary_id);
 
                     if (!$task_5_coref_source_container.html().trim()) {
+                        $annotation_token.addClass("coref-source-token");
                         $annotation_token.appendTo($task_5_coref_source_container);
+                        $element.prop("disabled", true);
                     } else {
                         if (!$task_5_coref_target_container.html().trim()) {
+                            $annotation_token.addClass("coref-target-token");
                             $annotation_token.appendTo($task_5_coref_target_container);
                             $task_5_coref_confirm_button.prop("disabled", false);
-                            $task_5_coref_confirm_button.focus();
+                            $element.prop("disabled", true);
                         } else {
                             $.notify({
                                 message: "Please confirm or reset the current coreference first."
@@ -1163,6 +1171,7 @@ function setup_coreference(verse_id) {
                                 type: "danger"
                             });
                         }
+                        $task_5_coref_confirm_button.focus();
                     }
                 }
             });
@@ -1173,28 +1182,33 @@ function setup_coreference(verse_id) {
 }
 
 $task_5_coref_confirm_button.click(function () {
-    var $row = $('<div />').addClass("row").appendTo($task_5_coref_annotation_container);
-    $row.addClass('coref-row');
+    $task_5_coref_context_container.find("button").prop("disabled", false);
 
-    var source_token_html = $task_5_coref_source_container.html();
-    var target_token_html = $task_5_coref_target_container.html();
+    var $row = $('<div />').addClass("row").appendTo($task_5_coref_annotation_container);
+    $row.addClass('coref-annotation-row');
 
     // add row
+    // add source token
+    const $source_token = $task_5_coref_source_container.children(".coref-source-token");
     var $column = $("<div />", {
         class: "col-sm",
-        html: source_token_html
     }).appendTo($row);
+    $source_token.appendTo($column);
 
+    // add arrow
     var $column = $("<div />", {
         class: "col-sm-2",
         html: '<span class="btn btn-secondary mb-1 mr-1"><i class="fas fa-arrow-right"></i></span>'
     }).appendTo($row);
 
+    // add target token
+    const $target_token = $task_5_coref_target_container.children(".coref-target-token");
     var $column = $("<div />", {
         class: "col-sm",
-        html: target_token_html
     }).appendTo($row);
+    $target_token.appendTo($column);
 
+    // add remove button
     var $remove_coref_button = $('<button />').addClass(`btn btn-danger float-right mx-1`);
     $remove_coref_button.attr("title", "Remove Coreference");
     var $remove_icon = $('<i />').addClass(`fas fa-minus`);
@@ -1209,9 +1223,11 @@ $task_5_coref_confirm_button.click(function () {
 });
 
 $task_5_coref_reset_button.click(function () {
+    $task_5_coref_context_container.find("button").prop("disabled", false);
+
     $task_5_coref_source_container.html("");
     $task_5_coref_target_container.html("");
-})
+});
 
 /* Task-5 Actions */
 
@@ -1219,9 +1235,23 @@ $task_5_coref_reset_button.click(function () {
 $task_5_submit.click(function() {
     const verse_id = $verse_id_containers.html();
 
+    var coreference_data = [];
+    const $coref_annotation_rows = $task_5_coref_annotation_container.find('.coref-annotation-row');
+    $coref_annotation_rows.each(function(coref_index, coref_row) {
+        const $coref_row = $(coref_row);
+        const $source_token = $coref_row.find(".coref-source-token");
+        const $target_token = $coref_row.find(".coref-target-token");
+
+        coreference_data.push({
+            "boundary_id": $source_token.data("boundary-id"),
+            "src_id": $source_token.data("token-id"),
+            "dst_id": $target_token.data("token-id")
+        });
+    });
     $.post(API_URL, {
         action: "update_coreference",
         verse_id: verse_id,
+        coreference_data: JSON.stringify(coreference_data)
     },
     function (response) {
         $.notify({

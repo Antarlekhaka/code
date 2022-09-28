@@ -65,6 +65,7 @@ from models_sqla import (db, user_datastore,
                          Progress, Anvaya, Boundary,
                          EntityLabel, Entity,
                          RelationLabel, TokenGraph,
+                         Coreference,
                          SentenceLabel,
                          DiscourseLabel,)
 from settings import app
@@ -516,8 +517,7 @@ def api():
         # Anvaya also gets deleted as (CASCADE)
         # Entity also gets deleted as (CASCADE)
         # TokenGraph also gets deleted as (CASCADE)
-
-        # TODO: Delete Coreference as well?
+        # Coreference also gets deleted as (CASCADE)
 
         existing_boundary_query = Boundary.query.filter(
             Boundary.verse_id == verse_id,
@@ -870,8 +870,98 @@ def api():
     # ----------------------------------------------------------------------- #
 
     if action == "update_coreference":
+        verse_id = int(request.form["verse_id"])
+        annotator_id = current_user.id
+        coref_data = json.loads(
+            request.form.get("coreference_data", "[]")
+        )
+
+        objects_to_update = []
+        try:
+            # validate coreference_data: List[Dict]
+            # keys: boundary_id, src_id, dst_id
+            # values: strings? cast int()
+            coref_data = {
+                (
+                    int(coref["src_id"]),
+                    int(coref["dst_id"])
+                ): {
+                    k: int(v)
+                    for k, v in coref.items()
+                }
+                for coref in coref_data
+            }
+            api_response["message"] = str(coref_data)
+        except Exception:
+            api_response["success"] = False
+            api_response["message"] = "Invalid data."
+            api_response["style"] = "danger"
+            return jsonify(api_response)
+
+        # TODO: modify database.py to provide coreferences
+
+        existing_corefs_query = Coreference.query.filter(
+            Coreference.boundary.has(Boundary.verse_id == verse_id),
+            Coreference.annotator_id == annotator_id,
+        )
+
+        existing_corefs = existing_corefs_query.all()
+        existing_coref_tuples = [
+            (coref.src_id, coref.dst_id)
+            for coref in existing_corefs_query.all()
+        ]
+
+        for coref in existing_corefs:
+            coref_tuple = (coref.src_id, coref.dst_id)
+            if coref_tuple not in coref_data:
+                # coref exists but was not submitted (i.e. removed)
+                coref.is_deleted = True
+                objects_to_update.append(coref)
+            else:
+                # coref exists and is submitted (i.e. retained)
+                # check if there are any changes to the entity
+                if any([
+                    coref.boundary_id != coref_data[coref_tuple]["boundary_id"],
+                    coref.is_deleted is True
+                ]):
+                    coref.boundary_id = coref_data[coref_tuple]["boundary_id"]
+                    coref.is_deleted = False
+                    objects_to_update.append(coref)
+
+        for coref_tuple, _coref_data in coref_data.items():
+            if coref_tuple in existing_coref_tuples:
+                # submitted coref already exists
+                # "else" part of the previous condition block handles this
+                # so we can skip here
+                continue
+
+            # submitted entity doesn't exist, create
+            coref = Coreference()
+            coref.boundary_id = _coref_data["boundary_id"]
+            coref.src_id = _coref_data["src_id"]
+            coref.dst_id = _coref_data["dst_id"]
+            coref.annotator_id = annotator_id
+            coref.is_deleted = False
+            objects_to_update.append(coref)
+
+        try:
+            if objects_to_update:
+                db.session.bulk_save_objects(objects_to_update)
+                db.session.commit()
+                api_response["message"] = "Successfully updated!"
+                api_response["style"] = "success"
+            else:
+                api_response["message"] = "No changes were submitted."
+                api_response["style"] = "warning"
+            api_response["success"] = True
+        except Exception as e:
+            webapp.logger.exception(e)
+            webapp.logger.info(request.form)
+            api_response["success"] = False
+            api_response["message"] = "Something went wrong!"
+            api_response["style"] = "danger"
+
         api_response["data"] = None
-        api_response["message"] = "update_coreference"
         return jsonify(api_response)
 
     # ----------------------------------------------------------------------- #
@@ -1135,7 +1225,9 @@ def action():
             message = f"{object_name.title()} label '{object_label}' does not exists."
             if _object_label is not None and not _object_label.is_deleted:
                 objects_with_given_label = _annotation.query.filter(
-                    getattr(_annotation, _annotation_attribute) == _object_label.id,
+                    getattr(
+                        _annotation, _annotation_attribute
+                    ) == _object_label.id,
                     _annotation.is_deleted == False  # noqa
                 ).all()
                 if objects_with_given_label:
