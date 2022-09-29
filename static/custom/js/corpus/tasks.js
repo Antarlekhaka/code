@@ -10,6 +10,7 @@ const default_token_class_normal = "btn-light";
 const default_token_class_subtoken = "btn-warning";
 const default_token_class_manual = "btn-secondary";
 const default_token_element = "<span />";
+const default_token_data = {};
 
 // Generic Functions
 
@@ -22,6 +23,7 @@ function generate_token_button(options) {
     const token_class_normal = options.token_class_normal || default_token_class_normal;
     const token_class_subtoken = options.token_class_subtoken || default_token_class_subtoken;
     const token_class_manual = options.token_class_manual || default_token_class_manual;
+    const token_data = options.token_data || default_token_data;
 
     var token_class = token_class_normal;
     var token_text = token.text;
@@ -66,6 +68,10 @@ function generate_token_button(options) {
     if (onclick) {
         $token.click(function() { onclick($(this)); });
     }
+    for (const [key, value] of Object.entries(token_data)) {
+        $token.data(key, value);
+    };
+
     return $token;
 }
 
@@ -153,19 +159,19 @@ function setup_sentence_boundary(verse_id) {
     var task_1_text_after = [];
 
     var display_token_last_components = [];
-    for (const verse of context) {
+    for (const verse_data of context) {
         // console.log("Verse Tokens:");
         // console.log(verse.tokens);
         // console.log("Verse Boundary:");
         // console.log(verse.boundary);
 
-        var verse_text = [`${verse.verse_id}`];
+        var verse_text = [`${verse_data.verse_id}`];
         var boundary_tokens = new Set();
 
-        $.each(verse.boundary, function(boundary_index, boundary) {
+        $.each(verse_data.boundary, function(boundary_index, boundary) {
             boundary_tokens.add(boundary.token_id);
         });
-        $.each(verse.tokens, function(verse_index, line_tokens) {
+        $.each(verse_data.tokens, function(verse_index, line_tokens) {
             verse_text.push("\t");
             $.each(line_tokens, function(token_index, token) {
                 if (token.annotator_id != null) {
@@ -181,7 +187,7 @@ function setup_sentence_boundary(verse_id) {
                         // we want the marker to be after the last component
                         token_id += token.relative_id[2] - token.relative_id[0] + 1;
                     }
-                    if (verse.verse_id == row.verse_id) {
+                    if (verse_data.verse_id == row.verse_id) {
                         display_token_last_components.push(token_id);
                     }
                     verse_text.push(token.text);
@@ -190,18 +196,18 @@ function setup_sentence_boundary(verse_id) {
                     verse_text.push("##");
                 }
             });
-            if (verse_index < verse.tokens.length - 1) {
+            if (verse_index < verse_data.tokens.length - 1) {
                 verse_text.push("\n");
             }
         });
         var actual_verse_text = verse_text.join(" ");
-        if (verse.verse_id < row.verse_id) {
+        if (verse_data.verse_id < row.verse_id) {
             task_1_text_before.push(actual_verse_text);
         }
-        if (verse.verse_id == row.verse_id) {
+        if (verse_data.verse_id == row.verse_id) {
             task_1_text.push(actual_verse_text);
         }
-        if (verse.verse_id > row.verse_id) {
+        if (verse_data.verse_id > row.verse_id) {
             task_1_text_after.push(actual_verse_text);
         }
     };
@@ -557,6 +563,9 @@ function setup_named_entity(verse_id) {
     var existing_entities = [];
     var existing_labels = {};
     for (const entity of row.entity) {
+        if (entity.is_deleted) {
+            continue;
+        }
         existing_entities.push(entity.token_id);
         existing_labels[entity.token_id] = entity.label_id;
     }
@@ -706,6 +715,9 @@ function setup_token_graph(verse_id) {
     // record existing relations
     var existing_relations = {};
     for (const relation of row.relation) {
+        if (relation.is_deleted) {
+            continue;
+        }
         if (!existing_relations.hasOwnProperty(relation.boundary_id)) {
             existing_relations[relation.boundary_id] = [];
         }
@@ -715,6 +727,7 @@ function setup_token_graph(verse_id) {
             relation.dst_id
         ]);
     }
+    console.log(existing_relations);
 
     for (const [boundary_id, used_token_ids] of Object.entries(boundary_tokens)) {
         const $graph_input = $task_4_sample_token_graph_input.clone();
@@ -1122,6 +1135,8 @@ function setup_coreference(verse_id) {
     var all_tokens = {};
     var boundary_tokens = [];
 
+    var existing_coreferences = [];
+
     for (const verse_data of context) {
         // verse_data
         for (const [boundary_id, sentence_tokens] of Object.entries(verse_data.sentences)) {
@@ -1132,14 +1147,25 @@ function setup_coreference(verse_id) {
             // ensure that every boundary in the previous n verses has anvaya
             // if one is doing anvaya in order, this won't be an issue
         }
+        for (const coreference of verse_data.coreference) {
+            if (coreference.is_deleted) {
+                continue;
+            }
+            existing_coreferences.push(coreference);
+        }
     };
+    console.log(existing_coreferences);
 
     $task_5_coref_context_container.html("");
     $task_5_coref_annotation_container.html("");
 
     for (const [boundary_id, used_tokens] of boundary_tokens) {
-        const $boundary_container = $("<div />", {class: "border border-secondary rounded px-1 pt-1 pb-0 ml-1 mt-1 mb-0"});
+        const $boundary_container = $("<div />", {
+            id: `coref-boundary-container-${boundary_id}`,
+            class: "border border-secondary rounded px-1 pt-1 pb-0 ml-1 mt-1 mb-0 boundary-container"
+        });
         $boundary_container.appendTo($task_5_coref_context_container);
+        $boundary_container.data("boundary-id", boundary_id);
 
         for (const token_id of used_tokens) {
             const token = all_tokens[token_id];
@@ -1147,7 +1173,7 @@ function setup_coreference(verse_id) {
                 token: token,
                 token_element: "<button />",
                 id_prefix: "coref-token",
-                token_class_common: "btn",
+                token_data: {token_id: token_id, boundary_id: boundary_id},
                 onclick: function($element) {
                     var $annotation_token = $element.clone();
                     $annotation_token.removeAttr("id");
@@ -1179,17 +1205,32 @@ function setup_coreference(verse_id) {
             $token.appendTo($boundary_container);
         }
     }
+
+    // add existing references
+    for (const coreference of existing_coreferences) {
+        var $source_token = $(`#coref-token-${coreference.src_id}`).clone();
+        $source_token.removeAttr("id");
+        $source_token.data("token-id", coreference.src_id);
+        $source_token.data("boundary-id", coreference.boundary_id);
+        $source_token.addClass("coref-source-token");
+
+        var $target_token = $(`#coref-token-${coreference.dst_id}`).clone();
+        $target_token.removeAttr("id");
+        $target_token.data("token-id", coreference.dst_id);
+        $target_token.data("boundary-id", $target_token.data("boundary_id"));
+        $target_token.addClass("coref-target-token");
+
+        add_coref_row($source_token, $target_token);
+    }
+
 }
 
-$task_5_coref_confirm_button.click(function () {
-    $task_5_coref_context_container.find("button").prop("disabled", false);
 
-    var $row = $('<div />').addClass("row").appendTo($task_5_coref_annotation_container);
+function add_coref_row($source_token, $target_token) {
+    const $row = $('<div />').addClass("row").prependTo($task_5_coref_annotation_container);
     $row.addClass('coref-annotation-row');
 
-    // add row
     // add source token
-    const $source_token = $task_5_coref_source_container.children(".coref-source-token");
     var $column = $("<div />", {
         class: "col-sm",
     }).appendTo($row);
@@ -1202,7 +1243,6 @@ $task_5_coref_confirm_button.click(function () {
     }).appendTo($row);
 
     // add target token
-    const $target_token = $task_5_coref_target_container.children(".coref-target-token");
     var $column = $("<div />", {
         class: "col-sm",
     }).appendTo($row);
@@ -1218,11 +1258,21 @@ $task_5_coref_confirm_button.click(function () {
     $remove_coref_button.click(function () {
         $(this).parent().parent().remove();
     });
+}
+
+$task_5_coref_confirm_button.click(function () {
+    const $source_token = $task_5_coref_source_container.children(".coref-source-token");
+    const $target_token = $task_5_coref_target_container.children(".coref-target-token");
+
+    add_coref_row($source_token, $target_token);
+
+    // reset
     $task_5_coref_reset_button.click();
     $task_5_coref_confirm_button.prop("disabled", true);
 });
 
 $task_5_coref_reset_button.click(function () {
+    // enable all buttons
     $task_5_coref_context_container.find("button").prop("disabled", false);
 
     $task_5_coref_source_container.html("");
@@ -1235,7 +1285,12 @@ $task_5_coref_reset_button.click(function () {
 $task_5_submit.click(function() {
     const verse_id = $verse_id_containers.html();
 
+    var context_data = [];
     var coreference_data = [];
+    $task_5_coref_context_container.find(".boundary-container").each(function (_index, _boundary_container) {
+        context_data.push($(_boundary_container).data("boundary-id"));
+    });
+
     const $coref_annotation_rows = $task_5_coref_annotation_container.find('.coref-annotation-row');
     $coref_annotation_rows.each(function(coref_index, coref_row) {
         const $coref_row = $(coref_row);
@@ -1251,6 +1306,7 @@ $task_5_submit.click(function() {
     $.post(API_URL, {
         action: "update_coreference",
         verse_id: verse_id,
+        context_data: JSON.stringify(context_data),
         coreference_data: JSON.stringify(coreference_data)
     },
     function (response) {
