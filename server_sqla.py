@@ -66,8 +66,8 @@ from models_sqla import (db, user_datastore,
                          EntityLabel, Entity,
                          RelationLabel, TokenGraph,
                          Coreference,
-                         SentenceLabel,
-                         DiscourseLabel,)
+                         SentenceLabel, SentenceClassification,
+                         DiscourseLabel, DiscourseGraph)
 from settings import app
 
 from utils.reverseproxied import ReverseProxied
@@ -279,13 +279,32 @@ def inject_global_constants():
         ).with_entities(
             DiscourseLabel.id, DiscourseLabel.label, DiscourseLabel.description
         ).order_by(DiscourseLabel.label).all(),
-        # 'sentence_labels': [
-        #     (1, "C1", "Class-1"),
-        #     (2, "C2", "Class-2"),
-        #     (3, "C3", "Class-3"),
-        #     (4, "C4", "Class-4"),
-        #     (5, "C5", "Class-5")
-        # ]
+        'admin_labels': [
+            {
+                "name": "entity",
+                "title": "Entity",
+                "is_active": True,
+                "object_name": "entity_labels"
+            },
+            {
+                "name": "relation",
+                "title": "Relation",
+                "is_active": False,
+                "object_name": "relation_labels"
+            },
+            {
+                "name": "sentence",
+                "title": "Sentence",
+                "is_active": False,
+                "object_name": "sentence_labels"
+            },
+            {
+                "name": "discourse",
+                "title": "Discourse",
+                "is_active": False,
+                "object_name": "discourse_labels"
+            },
+        ]
     }
     return {
         'title': app.title,
@@ -485,7 +504,7 @@ def api():
     ]
 
     if action not in valid_actions:
-        api_response["message"] = "Invalid action."
+        api_response["message"] = f"Invalid action. ({action})"
         return jsonify(api_response)
 
     for role, actions in role_actions.items():
@@ -821,7 +840,7 @@ def api():
                 objects_to_update.append(relation)
             else:
                 # relation exists and is submitted (i.e. retained)
-                # check if there are any changes to the entity
+                # check if there are any changes to the relation
                 if any([
                     relation.boundary_id != graph_data[rel_tuple]["boundary_id"],
                     relation.is_deleted is True
@@ -837,7 +856,7 @@ def api():
                 # so we can skip here
                 continue
 
-            # submitted entity doesn't exist, create
+            # submitted relation doesn't exist, create
             relation = TokenGraph()
             relation.boundary_id = _relation_data["boundary_id"]
             relation.src_id = _relation_data["src_id"]
@@ -875,6 +894,9 @@ def api():
         coref_data = json.loads(
             request.form.get("coreference_data", "[]")
         )
+        context_data = json.loads(
+            request.form.get("context_data", "[]")
+        )
 
         objects_to_update = []
         try:
@@ -891,24 +913,22 @@ def api():
                 }
                 for coref in coref_data
             }
-            api_response["message"] = str(coref_data)
+            context_data = [int(boundary_id) for boundary_id in context_data]
         except Exception:
             api_response["success"] = False
             api_response["message"] = "Invalid data."
             api_response["style"] = "danger"
             return jsonify(api_response)
 
-        # TODO: modify database.py to provide coreferences
-
         existing_corefs_query = Coreference.query.filter(
-            Coreference.boundary.has(Boundary.verse_id == verse_id),
+            Coreference.boundary_id.in_(context_data),
             Coreference.annotator_id == annotator_id,
         )
 
         existing_corefs = existing_corefs_query.all()
         existing_coref_tuples = [
             (coref.src_id, coref.dst_id)
-            for coref in existing_corefs_query.all()
+            for coref in existing_corefs
         ]
 
         for coref in existing_corefs:
@@ -919,7 +939,7 @@ def api():
                 objects_to_update.append(coref)
             else:
                 # coref exists and is submitted (i.e. retained)
-                # check if there are any changes to the entity
+                # check if there are any changes to the coref
                 if any([
                     coref.boundary_id != coref_data[coref_tuple]["boundary_id"],
                     coref.is_deleted is True
@@ -935,7 +955,7 @@ def api():
                 # so we can skip here
                 continue
 
-            # submitted entity doesn't exist, create
+            # submitted coref doesn't exist, create
             coref = Coreference()
             coref.boundary_id = _coref_data["boundary_id"]
             coref.src_id = _coref_data["src_id"]
@@ -1052,15 +1072,19 @@ def action():
         'admin': [
             'user_role_add', 'user_role_remove',
 
-            # Named Entity Type
+            # Add/Remove Labels
+
+            # - Named Entity Type
             'entity_type_add', 'entity_type_remove',
 
-            # Token Graph Relation Type
-            'relation_type_add', 'relation_type_remove'
+            # - Token Graph Relation Type
+            'relation_type_add', 'relation_type_remove',
 
-            # Action
-            # 'action_type_add', 'action_type_remove',
-            # 'actor_type_add', 'actor_type_remove',
+            # - Sentence Type
+            'sentence_type_add', 'sentence_type_remove',
+
+            # - Discourse Relation Type
+            'discourse_type_add', 'discourse_type_remove'
 
             # Data
             'corpus_add', 'chapter_add',
@@ -1074,7 +1098,7 @@ def action():
     ]
 
     if action not in valid_actions:
-        flash("Invalid action.")
+        flash(f"Invalid action. ({action})")
         return redirect(request.referrer)
 
     for role, actions in role_actions.items():
@@ -1180,22 +1204,22 @@ def action():
     if action in [
         'entity_type_add', 'entity_type_remove',
         'relation_type_add', 'relation_type_remove',
-        # 'sentence_type_add', 'sentence_type_remove',
-        # 'discourse_type_add', 'discourse_type_remove',
+        'sentence_type_add', 'sentence_type_remove',
+        'discourse_type_add', 'discourse_type_remove',
     ]:
         action_parts = action.split('_')
 
         object_name = action_parts[0]
         target_action = action_parts[-1]
 
-        object_label = request.form[f'{object_name}_label']
-        object_label_desc = request.form.get(f'{object_name}_label_description')
+        object_label = request.form[f'{object_name}_label_text']
+        object_label_desc = request.form.get(f'{object_name}_label_desc')
 
         MODELS = {
             'entity': (EntityLabel, Entity, 'label_id'),
             'relation': (RelationLabel, TokenGraph, 'label_id'),
-            # 'sentence': (SentenceLabel, ..., 'label_id'),
-            # 'discourse': (DiscourseLabel, DiscourseGraph, 'label_id'),
+            'sentence': (SentenceLabel, SentenceClassification, 'label_id'),
+            'discourse': (DiscourseLabel, DiscourseGraph, 'label_id'),
         }
         (
             _object_model, _annotation, _annotation_attribute
@@ -1430,7 +1454,11 @@ def action():
 
 
 if __name__ == '__main__':
-    host = 'hrishirt.cse.iitk.ac.in'
+    # import socket
+    # hostname = socket.gethostname()
+    # host = socket.gethostbyname(hostname)
+
+    host = 'localhost'
     port = '5000'
 
     webapp.run(host=host, port=port, debug=True)
