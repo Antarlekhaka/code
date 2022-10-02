@@ -3,7 +3,7 @@
 {% extends "task_base.html" %}
 {% block body %}
 <div id="entity-container">
-    <form id="entity-form">
+    <form id="entity-form" class="scroll-small">
     <table id="entity-table" class="table"></table>
     </form>
     <hr class="border-secondary m-1">
@@ -12,7 +12,7 @@
     </div>
 </div>
 <div class="sample-input" hidden="true">
-    <select id="sample-entity-type" title="Select Entity Type" class="form-control selectpicker" data-show-subtext="true" data-live-search="true" required>
+    <select id="sample-entity-type" title="Select Entity Type" class="form-control selectpicker" data-show-subtext="true" data-live-search="true" data-container="body" required>
         {% for _id, _label, _description in constants.entity_labels %}
         <option value="{{_id}}" data-subtext="{{_description}}">{{_label}}</option>
         {% endfor %}
