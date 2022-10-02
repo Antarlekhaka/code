@@ -14,7 +14,9 @@ from sqlalchemy.orm.relationships import RelationshipProperty
 
 from models_sqla import User, Role
 from models_sqla import Corpus, Chapter, Verse, Line, Token
-from models_sqla import Anvaya, Boundary, Entity, TokenGraph, Coreference
+from models_sqla import (
+    Anvaya, Boundary, Entity, TokenGraph, Coreference, SentenceClassification
+)
 
 from utils.heuristic import get_anvaya
 
@@ -165,7 +167,7 @@ def get_verse_data(
                 'entity': [],
                 'relation': [],
                 'coreference': [],
-                'action': [],
+                'sentence_classification': [],
                 'progress': False,
             }
         else:
@@ -297,6 +299,25 @@ def get_verse_data(
         ])
 
         # ------------------------------------------------------------------- #
+
+        sentence_classification_query = SentenceClassification.query.filter(
+            Coreference.boundary_id == boundary.id,
+            Coreference.annotator_id.in_(annotator_ids)
+        )
+
+        data[verse_id]['sentence_classification'].extend([
+            {
+                'id': sentclf.id,
+                'boundary_id': sentclf.boundary_id,
+                'label_id': sentclf.label_id,
+                'annotator_id': sentclf.annotator_id,
+                'is_deleted': sentclf.is_deleted
+            }
+            for sentclf in sentence_classification_query.all()
+        ])
+
+        # ------------------------------------------------------------------- #
+
 
     # boundary specific data - END
     # ----------------------------------------------------------------------- #

@@ -326,6 +326,36 @@ class Coreference(db.Model):
                'annotator_id', 'src_id', 'dst_id', unique=True),
     )
 
+
+class SentenceClassification(db.Model):
+    id = Column(Integer, primary_key=True)
+    # ----------------------------------------------------------------------- #
+    boundary_id = Column(
+        Integer, ForeignKey('boundary.id', ondelete='CASCADE'), nullable=False
+    )
+    label_id = Column(Integer, ForeignKey('sentence_label.id'), nullable=False)
+    # ----------------------------------------------------------------------- #
+    annotator_id = Column(Integer, ForeignKey('user.id'), nullable=False)
+    is_deleted = Column(Boolean, default=False, nullable=False)
+    updated_at = Column(DateTime, default=dt.utcnow, onupdate=dt.utcnow)
+
+    label = relationship('SentenceLabel', backref=backref('sentences'))
+    boundary = relationship(
+        'Boundary',
+        backref=backref(
+            'sentences', cascade='all,delete-orphan', lazy='dynamic'
+        )
+    )
+    annotator = relationship(
+        'User', backref=backref('sentences', lazy='dynamic')
+    )
+
+    __table_args__ = (
+         Index('sentence_classification_annotator_id_boundary_id',
+               'annotator_id', 'boundary_id', unique=True),
+    )
+
+
 ###############################################################################
 # Label Models
 

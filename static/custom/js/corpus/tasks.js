@@ -1157,6 +1157,7 @@ function setup_coreference(verse_id) {
     console.log(existing_coreferences);
 
     $task_5_coref_context_container.html("");
+    $task_5_coref_reset_button.click();
     $task_5_coref_annotation_container.html("");
 
     for (const [boundary_id, used_tokens] of boundary_tokens) {
@@ -1175,7 +1176,7 @@ function setup_coreference(verse_id) {
                 id_prefix: "coref-token",
                 token_data: {token_id: token_id, boundary_id: boundary_id},
                 onclick: function($element) {
-                    var $annotation_token = $element.clone();
+                    const $annotation_token = $element.clone();
                     $annotation_token.removeAttr("id");
                     $annotation_token.data("token-id", token_id);
                     $annotation_token.data("boundary-id", boundary_id);
@@ -1208,13 +1209,13 @@ function setup_coreference(verse_id) {
 
     // add existing references
     for (const coreference of existing_coreferences) {
-        var $source_token = $(`#coref-token-${coreference.src_id}`).clone();
+        const $source_token = $(`#coref-token-${coreference.src_id}`).clone();
         $source_token.removeAttr("id");
         $source_token.data("token-id", coreference.src_id);
         $source_token.data("boundary-id", coreference.boundary_id);
         $source_token.addClass("coref-source-token");
 
-        var $target_token = $(`#coref-token-${coreference.dst_id}`).clone();
+        const $target_token = $(`#coref-token-${coreference.dst_id}`).clone();
         $target_token.removeAttr("id");
         $target_token.data("token-id", coreference.dst_id);
         $target_token.data("boundary-id", $target_token.data("boundary_id"));
@@ -1345,17 +1346,45 @@ function setup_sentence_classification(verse_id) {
         }
     }
 
-    // record existing sentence labels
-    var existing_labels = {};
+    // record existing sentence classification
+    var existing_sentence_classification = {};
+    for (const sentence of row.sentence_classification) {
+        if (!existing_sentence_classification.hasOwnProperty(sentence.boundary_id)) {
+            existing_sentence_classification[sentence.boundary_id] = [];
+        }
+        existing_sentence_classification[sentence.boundary_id] = sentence.label_id;
+    }
 
-    // for (const [boundary_id, used_token_ids] of Object.entries(boundary_tokens)) {
-    //     const $graph_input = $task_4_sample_token_graph_input.clone();
-    //     $graph_input.prop("id", `token-graph-input-${boundary_id}`);
-    //     $graph_input.data("boundary-id", boundary_id);
-    //     $graph_input.appendTo($task_4_token_graph_input_container);
+    for (const [boundary_id, used_token_ids] of Object.entries(boundary_tokens)) {
+        var header_html = [];
+        for (const token_id of used_token_ids) {
+            const token = all_tokens[token_id];
+            var $token = generate_token_button({
+                token: token,
+                token_class_common: "btn-sm"
+            });
+            var token_text = $token.html();
+            header_html.push(token_text);
+        }
+        const header_text = header_html.join(" ");
+        const $sentence = $task_6_sample_sentence_classification_input.clone();
+        $sentence.attr("id", `sentence-classification-boundary-${boundary_id}`);
+        $sentence.appendTo($task_6_sentence_classification_input_container);
 
-    //     const $graph_input_header = $graph_input.find(".boundary-token-graph-header");
-    // }
+        const $sentence_text = $sentence.find(".sentence-text");
+        $sentence_text.html(header_text);
+        $sentence_text.data("boundary-id", boundary_id);
+
+        const $sentence_label_select = $sentence.find(".sentence-label");
+        $sentence_label_select.attr("id", `sentence-classification-select-${boundary_id}`);
+
+        console.log(existing_sentence_classification);
+        if (existing_sentence_classification.hasOwnProperty(boundary_id)) {
+            $sentence_label_select.selectpicker("val", existing_sentence_classification[boundary_id]);
+        } else {
+            $sentence_label_select.selectpicker();
+        }
+    }
 }
 
 /* Task-6 Actions */
@@ -1364,9 +1393,28 @@ function setup_sentence_classification(verse_id) {
 $task_6_submit.click(function() {
     const verse_id = $verse_id_containers.html();
 
+    if (!$task_6_form[0].checkValidity()) {
+        $task_6_form[0].reportValidity();
+        return;
+    }
+
+    var sentence_classification_data = [];
+
+    $task_6_sentence_classification_input_container.find(".sentence-text").each(function (_index, _text_element) {
+        const $text_element = $(_text_element);
+        const boundary_id = $text_element.data("boundary-id");
+        const $selector = $(`#sentence-classification-select-${boundary_id}`);
+        const label_id = $selector.selectpicker("val");
+        sentence_classification_data.push({
+            boundary_id: boundary_id,
+            label_id: label_id
+        });
+    });
+
     $.post(API_URL, {
         action: "update_sentence_classification",
         verse_id: verse_id,
+        classification_data: JSON.stringify(sentence_classification_data)
     },
     function (response) {
         $.notify({

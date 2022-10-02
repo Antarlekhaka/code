@@ -1,6 +1,13 @@
 // Globals
 
 $(document).ready(function () {
+    const task_2_placeholder_content = $task_2_sample_anvaya_container.html();
+    $task_2_anvaya_container.html(task_2_placeholder_content);
+
+    const $task_6_placeholder = $task_6_sample_sentence_classification_input.clone();
+    $task_6_placeholder.removeAttr("id");
+    $task_6_placeholder.find(".sentence-label").selectpicker();
+    $task_6_placeholder.appendTo($task_6_sentence_classification_input_container);
 });
 
 // Exapand Row on Select

@@ -26,6 +26,9 @@ const $task_1_input_after = $("#task-1-input-after")
 
 // Task-2
 const $task_2_anvaya_container = $("#anvaya-container");
+
+const $task_2_sample_anvaya_container = $("#sample-anvaya-container");
+
 const $add_token_modal = $("#add-token-modal");
 const $add_token_form = $("#add-token-form");
 const $add_token_button = $("#add-token");
@@ -60,12 +63,14 @@ const $task_4_sample_target_entity = $("#sample-target-entity");
 const $task_4_sample_relation_label = $("#sample-relation-label");
 
 // Task-5
+const $task_5_coref_context_container = $("#coref-context-container");
+
+const $task_5_coref_intermediate_row_container = $("#coref-intermediate-row-container");
 const $task_5_coref_source_container = $("#coref-source-token-container");
 const $task_5_coref_target_container = $("#coref-target-token-container");
 const $task_5_coref_reset_button = $("#coref-reset-button");
 const $task_5_coref_confirm_button = $("#coref-confirm-button");
 
-const $task_5_coref_context_container = $("#coref-context-container");
 const $task_5_coref_annotation_container = $("#coref-annotation-container");
 
 // Task-6

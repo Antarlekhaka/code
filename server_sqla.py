@@ -987,8 +987,87 @@ def api():
     # ----------------------------------------------------------------------- #
 
     if action == "update_sentence_classification":
+        verse_id = int(request.form["verse_id"])
+        annotator_id = current_user.id
+        classification_data = json.loads(
+            request.form.get("classification_data", "[]")
+        )
+        objects_to_update = []
+        try:
+            # validate classification_data: List[Dict]
+            # keys: boundary_id, label_id
+            # values: strings? cast int()
+            classification_data = {
+                int(sentclf["boundary_id"]): int(sentclf["label_id"])
+                for sentclf in classification_data
+            }
+        except Exception:
+            api_response["success"] = False
+            api_response["message"] = "Invalid data."
+            api_response["style"] = "danger"
+            return jsonify(api_response)
+
+        existing_classification_query = SentenceClassification.query.filter(
+            SentenceClassification.boundary.has(Boundary.verse_id == verse_id),
+            SentenceClassification.annotator_id == annotator_id,
+        )
+
+        existing_classification = existing_classification_query.all()
+        existing_boundaries = {
+            sentclf.boundary_id: sentclf.label_id
+            for sentclf in existing_classification_query.all()
+        }
+
+        for sentclf in existing_classification:
+            if sentclf.boundary_id not in classification_data:
+                # sentclf exists but was not submitted (i.e. removed)
+                sentclf.is_deleted = True
+                objects_to_update.append(sentclf)
+            else:
+                # sentclf exists and is submitted (i.e. retained)
+                # check if there are any changes to the sentclf
+                if any([
+                    sentclf.label_id != classification_data[sentclf.boundary_id],
+                    sentclf.is_deleted is True
+                ]):
+                    sentclf.label_id = classification_data[sentclf.boundary_id]
+                    sentclf.is_deleted = False
+                    objects_to_update.append(sentclf)
+
+        for _boundary_id, _label_id in classification_data.items():
+            if _boundary_id in existing_boundaries:
+                # submitted sentclf already exists
+                # "else" part of the previous condition block handles this
+                # so we can skip here
+                continue
+
+            # submitted sentclf doesn't exist, create
+            sentclf = SentenceClassification()
+            sentclf.boundary_id = _boundary_id
+            sentclf.label_id = _label_id
+            sentclf.annotator_id = annotator_id
+            sentclf.is_deleted = False
+            objects_to_update.append(sentclf)
+
+        try:
+            if objects_to_update:
+                db.session.bulk_save_objects(objects_to_update)
+                db.session.commit()
+                api_response["message"] = "Successfully updated!"
+                api_response["style"] = "success"
+            else:
+                api_response["message"] = "No changes were submitted."
+                api_response["style"] = "warning"
+            api_response["success"] = True
+        except Exception as e:
+            webapp.logger.exception(e)
+            webapp.logger.info(request.form)
+            api_response["success"] = False
+            api_response["message"] = "Something went wrong!"
+            api_response["style"] = "danger"
+
         api_response["data"] = None
-        api_response["message"] = "update_coreference"
+
         return jsonify(api_response)
 
     # ----------------------------------------------------------------------- #

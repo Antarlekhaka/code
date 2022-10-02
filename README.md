@@ -10,5 +10,5 @@ An easy and robust web-based distributed **Multi-Task Annotation Framework**.
 * Task 4: Token Graph
 * Task 5: Co-reference Resolution (special case of Token Graph)
 * Task 6: Sentence Classification
-* Task 7: Intersentence Connection
+* Task 7: Inter-sentence Connection
 
