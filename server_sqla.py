@@ -488,7 +488,7 @@ def api():
         "admin": [],
         "annotator": [
             "update_sentence_boundary",
-            "add_token", "remove_token",
+            "add_token",
             "update_anvaya",
             "update_named_entity",
             "update_token_graph",
@@ -610,7 +610,7 @@ def api():
         annotator_id = current_user.id
         token_data = json.loads(request.form["token_data"])
 
-        # associate added tokens with the first line of the verse
+        # NOTE: associate added tokens with the first line of the verse
         _line = Line.query.filter(Line.verse_id == verse_id).first()
         _line_id = _line.id
 
@@ -620,7 +620,7 @@ def api():
 
         token = Token()
         token.line_id = _line_id
-        token.inner_id = "custom"  # TODO: not unique, is that an issue?
+        token.inner_id = "custom"  # NOTE: not unique
         token.order = min(lowest_order, 0) - 1
         token.text = token_data['text']
         token.lemma = token_data['lemma']
@@ -938,6 +938,10 @@ def api():
                 coref.is_deleted = True
                 objects_to_update.append(coref)
             else:
+                # TODO: do we really need to check boundary_id?
+                # when would it be different when src_id and dst_id are same?
+                # only if we change convention?
+
                 # coref exists and is submitted (i.e. retained)
                 # check if there are any changes to the coref
                 if any([
