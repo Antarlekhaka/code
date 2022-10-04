@@ -229,8 +229,8 @@ $task_1_submit.click(function () {
     const verse_id = $verse_id_containers.html();
 
     // Identify Boundary Token IDs
-    var marker_positions = $task_1_input.data('marker_positions');
-    var submitted_tokens = $task_1_input.val().split(/\s+/);
+    const marker_positions = $task_1_input.data('marker_positions');
+    const submitted_tokens = $task_1_input.val().split(/\s+/);
     var line_break_tokens = [];
 
     var current_idx = -2;
@@ -285,7 +285,7 @@ function setup_sortable() {
         placeholder: 'btn btn-secondary py-3 px-5 mb-1 mr-1',
         connectWith: ".sortable"
     }).on("sortremove", function(e, ui) {
-        var toggle_id = ui.item[0].id.replace("button", "toggle");
+        const toggle_id = ui.item[0].id.replace("button", "toggle");
         $(`#${toggle_id}`).prop('disabled', false);
     });
     $('.sortable').sortable({
@@ -617,8 +617,8 @@ function setup_named_entity(verse_id) {
             });
             $entity_row.append($entity_toggle_cell);
 
-            var entity_class = (is_entity) ? "btn btn-secondary" : "btn btn-info include-entity";
-            var entity_html = (is_entity) ? '<i class="fa fa-times"></i>' : '<i class="fa fa-plus"></i>';
+            const entity_class = (is_entity) ? "btn btn-secondary" : "btn btn-info include-entity";
+            const entity_html = (is_entity) ? '<i class="fa fa-times"></i>' : '<i class="fa fa-plus"></i>';
 
             const $entity_toggle = $("<span />", {
                 id: `entity-toggle-${token.id}`,
@@ -745,12 +745,12 @@ function setup_token_graph(verse_id) {
         var header_html = [];
         for (const token_id of used_token_ids) {
             const token = all_tokens[token_id];
-            var $token = generate_token_button({
+            const $token = generate_token_button({
                 token: token,
                 token_class_common: "btn-sm"
             });
-            var token_text = $token.html();
-            var token_html = $token.wrapAll('<div>').parent().html();
+            const token_text = $token.html();
+            const token_html = $token.wrapAll('<div>').parent().html();
             header_html.push(token_text);
             options[token_id] = {
                 text: token_text,
@@ -775,7 +775,7 @@ function setup_token_graph(verse_id) {
 
         if (existing_relations.hasOwnProperty(boundary_id)) {
             for (const [_src_id, _label_id, _dst_id] of existing_relations[boundary_id]) {
-                var $triple_row = add_triplet_row($triplet_location);
+                const $triple_row = add_triplet_row($triplet_location);
                 $triple_row.find(".source-entity").selectpicker('val', _src_id);
                 $triple_row.find(".relation-label").selectpicker('val', _label_id);
                 $triple_row.find(".target-entity").selectpicker('val', _dst_id);
@@ -791,14 +791,14 @@ function add_triplet_row($location) {
     const target_entity_options = $location.data("target-options");
 
     // Create and Insert Triplet Row Element
-    var $row = $('<div />').addClass(`form-row mt-1 px-0`).appendTo($location);
+    const $row = $('<div />').addClass(`form-row mt-1 px-0`).appendTo($location);
     $row.addClass('triplet-row');
 
-    var triplet_count = $location.data("triplet-count") + 1;
+    const triplet_count = $location.data("triplet-count") + 1;
     $location.data("triplet-count", triplet_count);
 
     // Create Action Entity Input Element
-    var $input_source_entity = $task_4_sample_source_entity.clone();
+    const $input_source_entity = $task_4_sample_source_entity.clone();
     $input_source_entity.attr("id", `element-source-entity-${triplet_count}`);
     var current_value = $input_source_entity.attr("title");
     var updated_value = current_value.replace(
@@ -810,7 +810,7 @@ function add_triplet_row($location) {
 
     // Add Options
     for (const [option_value, option] of Object.entries(source_entity_options)) {
-        var $option = $("<option />", {
+        const $option = $("<option />", {
             value: option_value,
             html: option.text
         });
@@ -825,7 +825,7 @@ function add_triplet_row($location) {
     // $input_source_entity.autoComplete();
 
     // Create Actor Label Selector Element
-    var $input_relation_label = $task_4_sample_relation_label.clone();
+    const $input_relation_label = $task_4_sample_relation_label.clone();
     $input_relation_label.attr("id", `element-relation-label-${triplet_count}`);
     var current_value = $input_relation_label.attr("title");
     var updated_value = current_value.replace(
@@ -840,7 +840,7 @@ function add_triplet_row($location) {
     $input_relation_label.appendTo($column);
 
     // Create Target Entity Input Element
-    var $input_target_entity = $task_4_sample_target_entity.clone();
+    const $input_target_entity = $task_4_sample_target_entity.clone();
     $input_target_entity.attr("id", `element-target-entity-${triplet_count}`);
     var current_value = $input_target_entity.attr("title");
     var updated_value = current_value.replace(
@@ -852,7 +852,7 @@ function add_triplet_row($location) {
 
     // Add Options
     for (const [option_value, option] of Object.entries(target_entity_options)) {
-        var $option = $("<option />", {
+        const $option = $("<option />", {
             value: option_value,
             html: option.text
         });
@@ -862,15 +862,15 @@ function add_triplet_row($location) {
 
     // Insert Target Entity Input Element
     var $column = $('<div />').addClass(`col-sm mx-0 pl-0`).appendTo($row);
-    var $form_group = $('<div />').addClass('form-group').appendTo($column);
+    const $form_group = $('<div />').addClass('form-group').appendTo($column);
     $input_target_entity.appendTo($form_group);
     // $input_target_entity.autoComplete();
 
     // Create Remove Triplet Button
-    var $remove_triplet_button = $('<button />').addClass("btn btn-danger");
+    const $remove_triplet_button = $('<button />').addClass("btn btn-danger");
     $remove_triplet_button.attr("id", `remove-triplet-button-${triplet_count}`);
     $remove_triplet_button.attr("title", "Remove Relation");
-    var $remove_icon = $('<i />').addClass(`fas fa-minus`);
+    const $remove_icon = $('<i />').addClass(`fas fa-minus`);
 
     // Insert Remove Triplet Button
     var $column = $('<div />').addClass(`col-sm-1 mx-0 px-0`).appendTo($row);
@@ -949,7 +949,7 @@ function draw_graph(data) {
 
     // get a JSON object
     NETWORK.on("afterDrawing", function (ctx) {
-        var data_url = ctx.canvas.toDataURL();
+        const data_url = ctx.canvas.toDataURL();
         $snapshot_graph_button.data("src", data_url);
     });
 }
@@ -1053,7 +1053,7 @@ $show_graph_modal.on('shown.bs.modal', function(e) {
     * Remove the dummy  anchor.
 */
 $snapshot_graph_button.click(function() {
-    var download_anchor = document.createElement('a');
+    const download_anchor = document.createElement('a');
     download_anchor.href = $snapshot_graph_button.data('src');
     /* TODO: name using verse_id / boundary_idx ? */
     download_anchor.download = 'graph.png';
@@ -1253,9 +1253,9 @@ function add_coref_row($source_token, $target_token) {
     $target_token.appendTo($column);
 
     // add remove button
-    var $remove_coref_button = $('<button />').addClass(`btn btn-danger float-right mx-1`);
+    const $remove_coref_button = $('<button />').addClass(`btn btn-danger float-right mx-1`);
     $remove_coref_button.attr("title", "Remove Coreference");
-    var $remove_icon = $('<i />').addClass(`fas fa-minus`);
+    const $remove_icon = $('<i />').addClass(`fas fa-minus`);
     var $column = $('<div />').addClass("col-sm-2").appendTo($row);
     $remove_icon.appendTo($remove_coref_button);
     $remove_coref_button.appendTo($column);
@@ -1362,11 +1362,11 @@ function setup_sentence_classification(verse_id) {
         var header_html = [];
         for (const token_id of used_token_ids) {
             const token = all_tokens[token_id];
-            var $token = generate_token_button({
+            const $token = generate_token_button({
                 token: token,
                 token_class_common: "btn-sm"
             });
-            var token_text = $token.html();
+            const token_text = $token.html();
             header_html.push(token_text);
         }
         const header_text = header_html.join(" ");
