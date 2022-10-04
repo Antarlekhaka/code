@@ -34,9 +34,19 @@ const $add_token_form = $("#add-token-form");
 const $add_token_button = $("#add-token");
 const $add_token_modal_button = $("#add-token-modal-button");
 
-const $add_token_input_text = $("#add-token-text");
-const $add_token_input_lemma = $("#add-token-lemma");
-const $add_token_input_analysis = $("#add-token-analysis");
+const $add_token_input_text = $("#add-token-input-text");
+const $add_token_input_lemma = $("#add-token-input-lemma");
+
+const $add_token_input_analysis_upos = $("#add-token-input-analysis-upos");
+const $add_token_input_analysis_xpos = $("#add-token-input-analysis-upos");
+
+const $add_token_analysis_items = $(".add-token-analysis-item");
+const $add_token_feature_items = $(".add-token-feature-item");
+
+const add_token_analysis_label_selector = ".add-token-analysis-label";
+const add_token_analysis_input_selector = ".add-token-analysis-input";
+const add_token_feature_label_selector = ".add-token-feature-label";
+const add_token_feature_input_selector = ".add-token-feature-input";
 
 // Task-3
 const $task_3_form = $("#entity-form");
