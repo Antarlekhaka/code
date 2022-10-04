@@ -1219,9 +1219,10 @@ function setup_coreference(verse_id) {
         $source_token.addClass("coref-source-token");
 
         const $target_token = $(`#coref-token-${coreference.dst_id}`).clone();
+        const target_token_boundary_id = $(`#coref-token-${coreference.dst_id}`).data("boundary-id");
         $target_token.removeAttr("id");
         $target_token.data("token-id", coreference.dst_id);
-        $target_token.data("boundary-id", $target_token.data("boundary_id"));
+        $target_token.data("boundary-id", target_token_boundary_id);
         $target_token.addClass("coref-target-token");
 
         add_coref_row($source_token, $target_token);
