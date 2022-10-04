@@ -356,6 +356,60 @@ class SentenceClassification(db.Model):
     )
 
 
+class DiscourseGraph(db.Model):
+    id = Column(Integer, primary_key=True)
+    # ----------------------------------------------------------------------- #
+    src_boundary_id = Column(
+        Integer, ForeignKey('boundary.id', ondelete='CASCADE'), nullable=False
+    )
+    dst_boundary_id = Column(
+        Integer, ForeignKey('boundary.id', ondelete='CASCADE'), nullable=False
+    )
+    src_token_id = Column(Integer, ForeignKey('token.id'), nullable=False)
+    dst_token_id = Column(Integer, ForeignKey('token.id'), nullable=False)
+    label_id = Column(
+        Integer, ForeignKey('discourse_label.id'), nullable=False
+    )
+    relation_type = Column(Integer, nullable=False)
+    # type == 0: token-token connection
+    # type == 1: token-sentence connection
+    # type == 2: sentence-token connection
+    # type == 3: sentence-sentence connection
+    # ----------------------------------------------------------------------- #
+    annotator_id = Column(Integer, ForeignKey('user.id'), nullable=False)
+    is_deleted = Column(Boolean, default=False, nullable=False)
+    updated_at = Column(DateTime, default=dt.utcnow, onupdate=dt.utcnow)
+
+    label = relationship('DiscourseLabel', backref=backref('discourse'))
+    src_boundary = relationship(
+        'Boundary',
+        backref=backref(
+            'discourse_src', cascade='all,delete-orphan', lazy='dynamic'
+        ),
+        foreign_keys=[src_boundary_id]
+    )
+    dst_boundary = relationship(
+        'Boundary',
+        backref=backref(
+            'discourse_dst', cascade='all,delete-orphan', lazy='dynamic'
+        ),
+        foreign_keys=[dst_boundary_id]
+    )
+    annotator = relationship(
+        'User', backref=backref('discourse', lazy='dynamic')
+    )
+
+    __table_args__ = (
+         Index(
+            ('discourse_graph_annotator_id_src_boundary_id_dst_boundary_id'
+             'src_token_id_dst_token_Id'),
+            'annotator_id',
+            'src_boundary_id', 'dst_boundary_id',
+            'src_token_id', 'dst_token_id',
+            unique=True),
+    )
+
+
 ###############################################################################
 # Label Models
 
