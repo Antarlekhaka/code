@@ -240,6 +240,25 @@ def inject_global_constants():
                         for theme in theme_js_files])
 
     CONSTANTS = {
+        # TODO: move these to settings?
+        # TODO: handle corpus speific things through config?
+        # corpus agnostic treatment will require changes to JS too
+        # e.g. assumptions about / usage of "unsandhied"
+        'token_analysis_items': [
+            {"id": "upos", "title": "UPOS"},
+            {"id": "xpos", "title": "XPOS"}
+        ],
+        'token_feature_items': [
+            {"id": "case", "title": "Case"},
+            {"id": "formation", "title": "Formation"},
+            {"id": "gender", "title": "Gender"},
+            {"id": "mood", "title": "Mood"},
+            {"id": "number", "title": "Number"},
+            {"id": "person", "title": "Person"},
+            {"id": "tense", "title": "Tense"},
+            {"id": "verb-form", "title": "VerbForm"},
+            {"id": "voice", "title": "Voice"}
+        ],
         'entity_labels': EntityLabel.query.filter(
             EntityLabel.is_deleted == False  # noqa # '== False' is required
         ).with_entities(
@@ -630,7 +649,9 @@ def api():
         try:
             db.session.add(token)
             db.session.commit()
-            api_response["message"] = f"Token '{token_data['lemma']}' added!"
+            api_response["message"] = (
+                f"Token '{token_data['text']}' ({token_data['lemma']}) added!"
+            )
             api_response["style"] = "success"
             api_response["changes"] = True
         except Exception as e:

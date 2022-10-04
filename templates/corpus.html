@@ -106,7 +106,7 @@
 </div>
 <!-- Add Token Modal -- BEGIN -->
 <div class="modal fade" id="add-token-modal" tabindex="-1" aria-labelledby="add-token-modal-label" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="add-token-modal-label">Add Token</h5>
@@ -116,23 +116,41 @@
             </div>
             <div class="modal-body">
                 <form id="add-token-form">
-                <table class="table">
-                    <tr>
-                        <td>Text</td>
-                        <td><input type="text" class="form-control" name="token-text" id="add-token-text"
-                                placeholder="Text" required></td>
-                    </tr>
-                    <tr>
-                        <td>Lemma</td>
-                        <td><input type="text" class="form-control" name="token-lemma" id="add-token-lemma"
-                                placeholder="Lemma" required></td>
-                    </tr>
-                    <tr>
-                        <td>Analysis</td>
-                        <td><input type="text" class="form-control" name="token-analysis" id="add-token-analysis"
-                                placeholder="Analysis"></td>
-                    </tr>
-                </table>
+                    <div class="row">
+                        <div class="col-sm">
+                            <legend>Mandatory</legend>
+                            <table class="table">
+                                <tr>
+                                    <td>Text</td>
+                                    <td><input type="text" class="form-control" name="token-text" id="add-token-input-text" placeholder="Text" required></td>
+                                </tr>
+                                <tr>
+                                    <td>Lemma</td>
+                                    <td><input type="text" class="form-control" name="token-lemma" id="add-token-input-lemma" placeholder="Lemma" required></td>
+                                </tr>
+                            </table>
+                            <legend>Analysis</legend>
+                            <table class="table">
+                                {% for analysis_item in constants.token_analysis_items %}
+                                <tr class="add-token-analysis-item">
+                                    <td class="add-token-analysis-label">{{analysis_item.title}}</td>
+                                    <td><input type="text" class="form-control add-token-analysis-input" name="token-analysis-{{analysis_item.id}}" id="add-token-input-analysis-{{analysis_item.id}}" placeholder="{{analysis_item.title}}"></td></td>
+                                </tr>
+                                {% endfor %}
+                            </table>
+                        </div>
+                        <div class="col-sm scroll-medium">
+                            <legend>Features</legend>
+                            <table class="table">
+                                {% for feature_item in constants.token_feature_items %}
+                                <tr class="add-token-feature-item">
+                                    <td class="add-token-feature-label">{{feature_item.title}}</td>
+                                    <td><input type="text" class="form-control add-token-feature-input" name="token-feats-{{feature_item.id}}" id="add-token-input-feats-{{feature_item.id}}" placeholder="{{feature_item.title}}"></td></td>
+                                </tr>
+                                {% endfor %}
+                            </table>
+                        </div>
+                    </div>
                 </form>
             </div>
             <div class="modal-footer">
