@@ -62,6 +62,9 @@ function generate_token_button(options) {
         ].join("\n"),
         html: token_text
     });
+    if (token_element.includes("button")) {
+        $token.attr("type", "button");
+    }
     if (id_prefix) {
         $token.attr('id', `${id_prefix}-${token.id}`);
     }
@@ -168,9 +171,9 @@ function setup_sentence_boundary(verse_id) {
         var verse_text = [`${verse_data.verse_id}`];
         var boundary_tokens = new Set();
 
-        $.each(verse_data.boundary, function(boundary_index, boundary) {
+        for (const [boundary_id, boundary] of Object.entries(verse_data.boundary)) {
             boundary_tokens.add(boundary.token_id);
-        });
+        };
         $.each(verse_data.tokens, function(verse_index, line_tokens) {
             verse_text.push("\t");
             $.each(line_tokens, function(token_index, token) {
@@ -1439,9 +1442,212 @@ $task_6_submit.click(function() {
 // Setup-7
 function setup_intersentence_connections(verse_id) {
     console.log(`Called setup_intersentence_connections(${verse_id});`);
+
     const row = $corpus_table.bootstrapTable('getRowByUniqueId', verse_id);
+    const data = $corpus_table.bootstrapTable('getData');
+
+    // calculate pre-context
+    const current_index = data.findIndex(function(r) {
+        return r.verse_id == verse_id;
+    });
+
+    const start_index = (current_index > 2) ? (current_index - 3) : 0;
+    const context = data.slice(start_index, current_index + 1);
+
+    var all_tokens = {};
+    var boundary_tokens = [];
+    var boundary_marker_tokens = {};
+
+    var existing_intersentence_connections = [];
+
+    for (const verse_data of context) {
+        // verse_data
+        $.extend(boundary_marker_tokens, verse_data.boundary);
+        for (const [boundary_id, sentence_tokens] of Object.entries(verse_data.sentences)) {
+            $.extend(all_tokens, sentence_tokens);
+            if (boundary_id != "extra") {
+                boundary_tokens.push([boundary_id, verse_data.anvaya[boundary_id]]);
+            }
+            // ensure that every boundary in the previous n verses has anvaya
+            // if one is doing anvaya in order, this won't be an issue
+        }
+        for (const intersentence_connection of verse_data.intersentence_connection) {
+            if (intersentence_connection.is_deleted) {
+                continue;
+            }
+            existing_intersentence_connections.push(intersentence_connection);
+        }
+    };
+    console.log(boundary_marker_tokens);
+    console.log(existing_intersentence_connections);
+
+    $task_7_intersentence_connection_context_container.html("");
+    $task_7_intersentence_connection_reset_button.click();
+    $task_7_intersentence_connection_annotation_container.html("");
+
+    for (const [boundary_id, used_tokens] of boundary_tokens) {
+        const $boundary_container = $("<div />", {
+            id: `intersentence-connection-boundary-container-${boundary_id}`,
+            class: "border border-secondary rounded px-1 pt-1 pb-0 ml-1 mt-1 mb-0 boundary-container"
+        });
+        $boundary_container.appendTo($task_7_intersentence_connection_context_container);
+        $boundary_container.data("boundary-id", boundary_id);
+
+        var sentence_text = [];
+
+        const boundary_token_id = boundary_marker_tokens[boundary_id]["token_id"];
+        for (const token_id of used_tokens) {
+            const token = all_tokens[token_id];
+            const $token = generate_token_button({
+                token: token,
+                token_element: "<button />",
+                id_prefix: "intersentence-connection-token",
+                token_class_common: "btn intersentence-connection-context-token",
+                token_data: {"token-id": token_id, "boundary-id": boundary_id},
+                onclick: function($element) {
+                    const $annotation_token = $element.clone();
+                    $annotation_token.removeAttr("id");
+                    $annotation_token.data("token-id", token_id);
+                    $annotation_token.data("boundary-id", boundary_id);
+
+                    if (!$task_7_intersentence_connection_source_container.html().trim()) {
+                        $annotation_token.addClass("intersentence-connection-source-token");
+                        $annotation_token.appendTo($task_7_intersentence_connection_source_container);
+                        $element.parent().children("button").prop("disabled", true);
+                    } else {
+                        if (!$task_7_intersentence_connection_target_container.html().trim()) {
+                            $annotation_token.addClass("intersentence-connection-target-token");
+                            $annotation_token.appendTo($task_7_intersentence_connection_target_container);
+                            $task_7_intersentence_connection_confirm_button.prop("disabled", false);
+                            $element.parent().children("button").prop("disabled", true);
+                        } else {
+                            $.notify({
+                                message: "Please confirm or reset the current intersentence_connection first."
+                            }, {
+                                type: "danger"
+                            });
+                        }
+                        $task_7_intersentence_connection_confirm_button.focus();
+                    }
+                }
+            });
+            sentence_text.push($token.html());
+            $token.addClass("mr-1 mb-1");
+            if (token_id == boundary_token_id) {
+                const token_element_id = $token.attr("id");
+                const boundary_token_element_id = token_element_id.replace("token", "sentence-token");
+
+                const $boundary_token = $token.clone(true);
+                $boundary_token.html(`S-${boundary_id}`);
+                $boundary_token.attr("id", boundary_token_element_id);
+                $boundary_token.removeClass("btn-light btn-secondary btn-warning");
+                $boundary_token.removeClass("intersentence-connection-context-token");
+                $boundary_token.addClass("btn-dark");
+                $boundary_token.addClass("intersentence-connection-context-sentence-token");
+                $boundary_token.prependTo($boundary_container);
+            }
+            $token.appendTo($boundary_container);
+        }
+        $boundary_container.children(".intersentence-connection-context-sentence-token").attr("title", sentence_text.join(" "));
+    }
+
+    // add existing references
+    for (const intersentence_connection of existing_intersentence_connections) {
+        const relation_relation_type = intersentence_connection.relation_type;
+
+        // type == 0: token-token connection
+        // type == 1: token-sentence connection
+        // type == 2: sentence-token connection
+        // type == 3: sentence-sentence connection
+
+        var $source_token, $target_token;
+        if ((relation_relation_type == 0) || (relation_relation_type == 1)) {
+            $source_token = $(`#intersentence-connection-token-${intersentence_connection.src_token_id}`).clone();
+        } else {
+            $source_token = $(`#intersentence-connection-sentence-token-${intersentence_connection.src_token_id}`).clone();
+        }
+        $source_token.removeAttr("id");
+        $source_token.data("token-id", intersentence_connection.src_token_id);
+        $source_token.data("boundary-id", intersentence_connection.src_boundary_id);
+        $source_token.addClass("intersentence-connection-source-token");
+
+        if ((relation_relation_type == 0) || (relation_relation_type == 2)) {
+            $target_token = $(`#intersentence-connection-token-${intersentence_connection.dst_token_id}`).clone();
+        } else {
+            $target_token = $(`#intersentence-connection-sentence-token-${intersentence_connection.dst_token_id}`).clone();
+        }
+        $target_token.removeAttr("id");
+        $target_token.data("token-id", intersentence_connection.dst_token_id);
+        $target_token.data("boundary-id", intersentence_connection.dst_boundary_id);
+        $target_token.addClass("intersentence-connection-target-token");
+
+        const relation_label_id = intersentence_connection.label_id;
+
+        add_intersentence_connection_row($source_token, $target_token, relation_label_id);
+    }
+}
+
+function add_intersentence_connection_row($source_token, $target_token, relation_label_id) {
+    const $row = $('<div />').addClass("row").prependTo($task_7_intersentence_connection_annotation_container);
+    $row.addClass('intersentence-connection-annotation-row');
+
+    // add source token
+    var $column = $("<div />", {
+        class: "col-sm",
+    }).appendTo($row);
+    $source_token.appendTo($column);
+
+    // add relation
+    const $relation_selector = $task_7_intersentence_connection_relation_selector.clone();
+    $relation_selector.removeAttr("id");
+    $relation_selector.addClass("intersentence-connection-relation");
+
+    var $column = $("<div />", {
+        class: "col-sm-4",
+    }).appendTo($row);
+    $relation_selector.appendTo($column);
+    $relation_selector.selectpicker("val", relation_label_id);
+
+    // add target token
+    var $column = $("<div />", {
+        class: "col-sm",
+    }).appendTo($row);
+    $target_token.appendTo($column);
+
+    // add remove button
+    const $remove_intersentence_connection_button = $('<button />').addClass(`btn btn-danger float-right mx-1`);
+    $remove_intersentence_connection_button.attr("title", "Remove Discourse Relation");
+    const $remove_icon = $('<i />').addClass(`fas fa-minus`);
+    var $column = $('<div />').addClass("col-sm-2").appendTo($row);
+    $remove_icon.appendTo($remove_intersentence_connection_button);
+    $remove_intersentence_connection_button.appendTo($column);
+    $remove_intersentence_connection_button.click(function () {
+        $(this).parent().parent().remove();
+    });
 
 }
+
+$task_7_intersentence_connection_confirm_button.click(function () {
+    const $source_token = $task_7_intersentence_connection_source_container.children(".intersentence-connection-source-token");
+    const $target_token = $task_7_intersentence_connection_target_container.children(".intersentence-connection-target-token");
+
+    const relation_label_id = $task_7_intersentence_connection_relation_selector.selectpicker("val");
+    $task_7_intersentence_connection_relation_selector.selectpicker("val", null);
+
+    add_intersentence_connection_row($source_token, $target_token, relation_label_id);
+
+    // reset
+    $task_7_intersentence_connection_reset_button.click();
+    $task_7_intersentence_connection_confirm_button.prop("disabled", true);
+});
+
+$task_7_intersentence_connection_reset_button.click(function () {
+    // enable all buttons
+    $task_7_intersentence_connection_context_container.find("button").prop("disabled", false);
+
+    $task_7_intersentence_connection_source_container.html("");
+    $task_7_intersentence_connection_target_container.html("");
+});
 
 /* Task-7 Actions */
 
@@ -1449,9 +1655,58 @@ function setup_intersentence_connections(verse_id) {
 $task_7_submit.click(function () {
     const verse_id = $verse_id_containers.html();
 
+    if (!$task_7_form[0].checkValidity()) {
+        $task_7_form[0].reportValidity();
+        return;
+    }
+
+    var context_data = [];
+    var intersentence_connection_data = [];
+    $task_7_intersentence_connection_context_container.find(".boundary-container").each(function (_index, _boundary_container) {
+        context_data.push($(_boundary_container).data("boundary-id"));
+    });
+
+    const $intersentence_connection_annotation_rows = $task_7_intersentence_connection_annotation_container.find('.intersentence-connection-annotation-row');
+    $intersentence_connection_annotation_rows.each(function(_index, intersentence_connection_row) {
+        const $intersentence_connection_row = $(intersentence_connection_row);
+        const $source_token = $intersentence_connection_row.find(".intersentence-connection-source-token");
+        const $target_token = $intersentence_connection_row.find(".intersentence-connection-target-token");
+        const $relation = $intersentence_connection_row.find(".intersentence-connection-relation");
+
+        const source_is_sentence_token = $source_token.hasClass("intersentence-connection-context-sentence-token");
+        const target_is_sentence_token = $target_token.hasClass("intersentence-connection-context-sentence-token");
+
+        // type == 0: token-token connection
+        // type == 1: token-sentence connection
+        // type == 2: sentence-token connection
+        // type == 3: sentence-sentence connection
+
+        var relation_type = 0
+        if (source_is_sentence_token && target_is_sentence_token) {
+            relation_type = 3;
+        } else {
+            if (source_is_sentence_token) {
+                relation_type = 2;
+            }
+            if (target_is_sentence_token) {
+                relation_type = 1;
+            }
+        }
+
+        intersentence_connection_data.push({
+            "src_boundary_id": $source_token.data("boundary-id"),
+            "src_token_id": $source_token.data("token-id"),
+            "label_id": $relation.selectpicker("val"),
+            "dst_boundary_id": $target_token.data("boundary-id"),
+            "dst_token_id": $target_token.data("token-id"),
+            "relation_type": relation_type
+        });
+    });
     $.post(API_URL, {
-        action: "update_sentence_graph",
+        action: "update_intersentence_connection",
         verse_id: verse_id,
+        context_data: JSON.stringify(context_data),
+        intersentence_connection_data: JSON.stringify(intersentence_connection_data)
     },
     function (response) {
         $.notify({

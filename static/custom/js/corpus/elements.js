@@ -84,6 +84,16 @@ const $task_6_sample_sentence_classification_input = $("#sample-sentence-classif
 
 // Task-7
 const $task_7_form = $("#intersentence-connection-form");
+const $task_7_intersentence_connection_context_container = $("#intersentence-connection-context-container");
+
+const $task_7_intersentence_connection_intermediate_row_container = $("#intersentence-connection-intermediate-row-container");
+const $task_7_intersentence_connection_source_container = $("#intersentence-connection-source-token-container");
+const $task_7_intersentence_connection_relation_selector = $("#intersentence-connection-relation-selector");
+const $task_7_intersentence_connection_target_container = $("#intersentence-connection-target-token-container");
+const $task_7_intersentence_connection_reset_button = $("#intersentence-connection-reset-button");
+const $task_7_intersentence_connection_confirm_button = $("#intersentence-connection-confirm-button");
+
+const $task_7_intersentence_connection_annotation_container = $("#intersentence-connection-annotation-container");
 
 // Globals
 var storage = window.localStorage;
