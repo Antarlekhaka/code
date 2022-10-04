@@ -15,7 +15,13 @@ from sqlalchemy.orm.relationships import RelationshipProperty
 from models_sqla import User, Role
 from models_sqla import Corpus, Chapter, Verse, Line, Token
 from models_sqla import (
-    Anvaya, Boundary, Entity, TokenGraph, Coreference, SentenceClassification
+    Boundary,
+    Anvaya,
+    Entity,
+    TokenGraph,
+    Coreference,
+    SentenceClassification,
+    DiscourseGraph
 )
 
 from utils.heuristic import get_anvaya
@@ -161,13 +167,14 @@ def get_verse_data(
                     # Could also consider keeping original tokens in 'tokens'
                     # and adding a '_tokens' for custom tokens
                 ]],
-                'boundary': [],
+                'boundary': {},
                 'sentences': {},
                 'anvaya': {},
                 'entity': [],
                 'relation': [],
                 'coreference': [],
                 'sentence_classification': [],
+                'intersentence_connection': [],
                 'progress': False,
             }
         else:
@@ -212,14 +219,13 @@ def get_verse_data(
     # boundary specific data - BEGIN
     for boundary in boundary_query.all():
         verse_id = boundary.verse_id
-        data[verse_id]['boundary'].append(
-            {
-                'id': boundary.id,
-                'token_id': boundary.token_id,
-                'verse_id': boundary.verse_id,
-                'annotator': boundary.annotator.username,
-            }
-        )
+        data[verse_id]['boundary'][boundary.id] = {
+            'id': boundary.id,
+            'token_id': boundary.token_id,
+            'verse_id': boundary.verse_id,
+            'annotator_id': boundary.annotator_id,
+            'annotator': boundary.annotator.username,
+        }
         data[verse_id]['sentences'] = get_sentences(
             verse_id, boundary.annotator_id
         )
@@ -301,8 +307,8 @@ def get_verse_data(
         # ------------------------------------------------------------------- #
 
         sentence_classification_query = SentenceClassification.query.filter(
-            Coreference.boundary_id == boundary.id,
-            Coreference.annotator_id.in_(annotator_ids)
+            SentenceClassification.boundary_id == boundary.id,
+            SentenceClassification.annotator_id.in_(annotator_ids)
         )
 
         data[verse_id]['sentence_classification'].extend([
@@ -318,6 +324,28 @@ def get_verse_data(
 
         # ------------------------------------------------------------------- #
 
+        # NOTE: We show connections that at the src_boundary_id
+        intersentence_connection_query = DiscourseGraph.query.filter(
+            DiscourseGraph.src_boundary_id == boundary.id,
+            DiscourseGraph.annotator_id.in_(annotator_ids)
+        )
+
+        data[verse_id]['intersentence_connection'].extend([
+            {
+                'id': isc.id,
+                'src_boundary_id': isc.src_boundary_id,
+                'src_token_id': isc.src_token_id,
+                'dst_boundary_id': isc.dst_boundary_id,
+                'dst_token_id': isc.dst_token_id,
+                'label_id': isc.label_id,
+                'relation_type': isc.relation_type,
+                'annotator_id': isc.annotator_id,
+                'is_deleted': isc.is_deleted
+            }
+            for isc in intersentence_connection_query.all()
+        ])
+
+        # ------------------------------------------------------------------- #
 
     # boundary specific data - END
     # ----------------------------------------------------------------------- #

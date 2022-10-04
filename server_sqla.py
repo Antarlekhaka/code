@@ -1073,8 +1073,127 @@ def api():
     # ----------------------------------------------------------------------- #
 
     if action == "update_intersentence_connection":
+        verse_id = int(request.form["verse_id"])
+        annotator_id = current_user.id
+        intersentence_connection_data = json.loads(
+            request.form.get("intersentence_connection_data", "[]")
+        )
+        context_data = json.loads(
+            request.form.get("context_data", "[]")
+        )
+        objects_to_update = []
+        try:
+            # validate intersentence_connection_data: List[Dict]
+            # keys:
+            # src_boundary_id, src_token_id,
+            # dst_boundary_id, dst_token_id
+            # label_id, relation_type (0, 1, 2, 3)
+            # values: strings? cast int()
+            intersentence_connection_data = {
+                (
+                    int(isc["src_boundary_id"]),
+                    int(isc["src_token_id"]),
+                    int(isc["dst_boundary_id"]),
+                    int(isc["dst_token_id"]),
+                    int(isc["relation_type"])
+                ): {
+                    k: int(v)
+                    for k, v in isc.items()
+                }
+                for isc in intersentence_connection_data
+            }
+            context_data = [int(boundary_id) for boundary_id in context_data]
+        except Exception:
+            api_response["success"] = False
+            api_response["message"] = "Invalid data."
+            api_response["style"] = "danger"
+            return jsonify(api_response)
+
+        print(intersentence_connection_data)
+        print(context_data)
+
+        # TODO: Re-examine if the conditions are proper
+        existing_iscs_query = DiscourseGraph.query.filter(
+            DiscourseGraph.src_boundary_id.in_(context_data),
+            DiscourseGraph.dst_boundary_id.in_(context_data),
+            DiscourseGraph.annotator_id == annotator_id,
+        )
+
+        existing_iscs = existing_iscs_query.all()
+        existing_isc_tuples = [
+            (
+                isc.src_boundary_id,
+                isc.src_token_id,
+                isc.dst_boundary_id,
+                isc.dst_token_id,
+                isc.relation_type
+            )
+            for isc in existing_iscs
+        ]
+
+        for isc in existing_iscs:
+            isc_tuple = (
+                isc.src_boundary_id,
+                isc.src_token_id,
+                isc.dst_boundary_id,
+                isc.dst_token_id,
+                isc.relation_type
+            )
+            if isc_tuple not in intersentence_connection_data:
+                # isc exists but was not submitted (i.e. removed)
+                isc.is_deleted = True
+                objects_to_update.append(isc)
+            else:
+                # TODO: Re-examine conditions in any()
+                # i.e. conditions to decide whether isc should be updated
+
+                # isc exists and is submitted (i.e. retained)
+                # check if there are any changes to the isc
+                if any([
+                    isc.label_id != intersentence_connection_data[isc_tuple]["label_id"],
+                    isc.is_deleted is True
+                ]):
+                    isc.label_id = intersentence_connection_data[isc_tuple]["label_id"]
+                    isc.is_deleted = False
+                    objects_to_update.append(isc)
+
+        for isc_tuple, _isc_data in intersentence_connection_data.items():
+            if isc_tuple in existing_isc_tuples:
+                # submitted isc already exists
+                # "else" part of the previous condition block handles this
+                # so we can skip here
+                continue
+
+            # submitted isc doesn't exist, create
+            isc = DiscourseGraph()
+            isc.src_boundary_id = _isc_data["src_boundary_id"]
+            isc.src_token_id = _isc_data["src_token_id"]
+            isc.dst_boundary_id = _isc_data["dst_boundary_id"]
+            isc.dst_token_id = _isc_data["dst_token_id"]
+            isc.label_id = _isc_data["label_id"]
+            isc.relation_type = _isc_data["relation_type"]
+            isc.annotator_id = annotator_id
+            isc.is_deleted = False
+            objects_to_update.append(isc)
+
+        try:
+            if objects_to_update:
+                db.session.bulk_save_objects(objects_to_update)
+                db.session.commit()
+                api_response["message"] = "Successfully updated!"
+                api_response["style"] = "success"
+            else:
+                api_response["message"] = "No changes were submitted."
+                api_response["style"] = "warning"
+            api_response["success"] = True
+        except Exception as e:
+            webapp.logger.exception(e)
+            webapp.logger.info(request.form)
+            api_response["success"] = False
+            api_response["message"] = "Something went wrong!"
+            api_response["style"] = "danger"
+
         api_response["data"] = None
-        api_response["message"] = "update_coreference"
         return jsonify(api_response)
 
     # ----------------------------------------------------------------------- #
