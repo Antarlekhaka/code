@@ -473,12 +473,32 @@ $add_token_button.click(function() {
     const verse_id = $verse_id_containers.html();
     const token_text = $add_token_input_text.val();
     const token_lemma = $add_token_input_lemma.val();
-    const token_analysis = $add_token_input_analysis.val();
+    const token_analysis_upos = $add_token_input_analysis_upos.val();
+    const token_analysis_xpos = $add_token_input_analysis_xpos.val();
+    var token_features = {};
+
+    $add_token_feature_items.each(function(_index, _element){
+        const $element = $(_element);
+        const label = $element.find(add_token_feature_label_selector).html().trim();
+        const value = $element.find(add_token_feature_input_selector).val();
+        if (value) {
+            token_features[label] = value;
+        }
+    });
+    const token_analysis = {
+        form: token_text,
+        lemma: token_lemma,
+        upos: token_analysis_upos,
+        xpos: token_analysis_xpos, // Corpus Specific
+        unsandhied: token_text, // Corpus Specific
+        feats: token_features
+    }
     const token_data = {
         text: token_text,
         lemma: token_lemma,
         analysis: token_analysis,
     }
+
     $add_token_modal.modal('hide');
     $.post(API_URL, {
         action: "add_token",
