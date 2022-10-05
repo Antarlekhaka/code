@@ -72,3 +72,8 @@ $corpus_table.on('page-change.bs.table', function (e, number, size) {
     $task_1_input.val("");
 });
 
+// Click / Double-Click Cell
+// 'click-cell.bs.table' / 'dbl-click-cell.bs.table'
+$corpus_table.on('dbl-click-cell.bs.table', function (event, field, value, row, $element) {
+
+});
