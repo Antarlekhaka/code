@@ -258,9 +258,7 @@ $task_1_submit.click(function () {
             $task_1_input.prop('disabled', true).removeClass('text-info').addClass('text-muted');
 
             // update local table
-            // next task is anvaya, therefore,
-
-            refresh_row_data(verse_id, setup_anvaya);
+            refresh_row_data(verse_id);
 
             // move to the next task
             $task_2_tab.click();
@@ -513,7 +511,7 @@ $add_token_button.click(function() {
         });
 
         if (response.success) {
-            refresh_row_data(verse_id, setup_anvaya);
+            refresh_row_data(verse_id);
         }
     });
 });
@@ -544,12 +542,7 @@ $task_2_submit.click(function () {
         });
 
         if (response.success) {
-            refresh_row_data(verse_id, setup_named_entity);
-            // is this required?
-            // yes, if the entities are to be shown in anvaya order or so,
-            // otherwise, there's no dependence on anvaya task, and ideally, shouldn't be
-            // called conditionally
-
+            refresh_row_data(verse_id);
             $task_3_tab.click();
         }
     });
@@ -707,7 +700,7 @@ $task_3_submit.click(function () {
         });
 
         if (response.success) {
-            refresh_row_data(verse_id, setup_token_graph)
+            refresh_row_data(verse_id);
             $task_4_tab.click();
         }
     });
@@ -1127,7 +1120,7 @@ $task_4_submit.click(function () {
         });
 
         if (response.success) {
-            refresh_row_data(verse_id, setup_coreference)
+            refresh_row_data(verse_id);
             $task_5_tab.click();
         }
     });
@@ -1341,7 +1334,7 @@ $task_5_submit.click(function() {
             type: response.style
         });
         if (response.success) {
-            refresh_row_data(verse_id, setup_sentence_classification);
+            refresh_row_data(verse_id);
             $task_6_tab.click();
         }
     });
@@ -1449,7 +1442,7 @@ $task_6_submit.click(function() {
 
         if (response.success) {
             // ....
-            refresh_row_data(verse_id, setup_intersentence_connections)
+            refresh_row_data(verse_id);
             $task_7_tab.click();
         }
     });
@@ -1738,6 +1731,8 @@ $task_7_submit.click(function () {
 
         if (response.success) {
             // ...
+            refresh_row_data(verse_id);
+
             $task_1_tab.click();
             $corpus_table.bootstrapTable('collapseAllRows');
             $corpus_table.bootstrapTable('uncheckAll');
