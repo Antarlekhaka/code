@@ -177,6 +177,37 @@ DCS = DigitalCorpusSanskrit()
 # Database Utlity Functions
 
 
+def update_progress(verse_id: int, annotator_id: int, task_id: int):
+    """Update Progress
+
+    Parameters
+    ----------
+    verse_id : int
+        Verse ID
+    annotator_id : int
+        Annotator ID
+    task_id : int
+        Task ID
+    """
+    progress_query = Progress.query.filter(
+        Progress.verse_id == verse_id,
+        Progress.annotator_id == annotator_id,
+        Progress.task_id == task_id
+    )
+    progress = progress_query.one_or_none()
+    if progress is None:
+        progress = Progress()
+        progress.verse_id = verse_id
+        progress.annotator_id = annotator_id
+        progress.task_id = task_id
+
+    # TODO: Is there a better way than manually triggering this?
+    progress.updated_at = datetime.datetime.utcnow()
+
+    db.session.add(progress)
+    db.session.commit()
+
+
 ###############################################################################
 # Hooks
 
@@ -540,6 +571,7 @@ def api():
     # ----------------------------------------------------------------------- #
 
     if action == "update_sentence_boundary":
+        task_id = 1   # NOTE: to be updated later, read from settings or so
         verse_id = int(request.form["verse_id"])
         annotator_id = current_user.id
         boundary_tokens = [
@@ -556,13 +588,13 @@ def api():
         # Entity also gets deleted as (CASCADE)
         # TokenGraph also gets deleted as (CASCADE)
         # Coreference also gets deleted as (CASCADE)
+        # SentenceClassification also gets deleted as (CASCADE)
+        # DiscourseGraph also gets deleted as (CASCADE)
 
         existing_boundary_query = Boundary.query.filter(
             Boundary.verse_id == verse_id,
             Boundary.annotator_id == annotator_id
         )
-        print(existing_boundary_query)
-        print(existing_boundary_query.all())
 
         existing_boundary_tokens = [
             _boundary.token_id
@@ -611,6 +643,12 @@ def api():
             else:
                 api_response["message"] = "No changes were submitted."
                 api_response["style"] = "warning"
+
+            update_progress(
+                verse_id=verse_id,
+                annotator_id=annotator_id,
+                task_id=task_id
+            )
             api_response["success"] = True
         except Exception as e:
             webapp.logger.exception(e)
@@ -666,6 +704,7 @@ def api():
     # ----------------------------------------------------------------------- #
 
     if action == "update_anvaya":
+        task_id = 2   # NOTE: to be updated later, read from settings or so
         verse_id = int(request.form["verse_id"])
         annotator_id = current_user.id
         anvaya = json.loads(request.form["anvaya"])
@@ -716,6 +755,12 @@ def api():
             else:
                 api_response["message"] = "No changes were submitted."
                 api_response["style"] = "warning"
+
+            update_progress(
+                verse_id=verse_id,
+                annotator_id=annotator_id,
+                task_id=task_id
+            )
             api_response["success"] = True
         except Exception as e:
             webapp.logger.exception(e)
@@ -730,6 +775,7 @@ def api():
     # ----------------------------------------------------------------------- #
 
     if action == "update_named_entity":
+        task_id = 3   # NOTE: to be updated later, read from settings or so
         verse_id = int(request.form["verse_id"])
         annotator_id = current_user.id
         entity_data = json.loads(request.form["entity_data"])
@@ -761,6 +807,10 @@ def api():
         for entity in existing_entities:
             if entity.token_id not in entity_data:
                 # entity exists but was not submitted (i.e. removed)
+                # TODO: This triggers on the deleted entities always
+                # Perhaps we need to add a check
+                # That should avoid "Successfully updated" message even when
+                # there are no updates
                 entity.is_deleted = True
                 objects_to_update.append(entity)
             else:
@@ -802,6 +852,12 @@ def api():
             else:
                 api_response["message"] = "No changes were submitted."
                 api_response["style"] = "warning"
+
+            update_progress(
+                verse_id=verse_id,
+                annotator_id=annotator_id,
+                task_id=task_id
+            )
             api_response["success"] = True
         except Exception as e:
             webapp.logger.exception(e)
@@ -816,6 +872,7 @@ def api():
     # ----------------------------------------------------------------------- #
 
     if action == "update_token_graph":
+        task_id = 4   # NOTE: to be updated later, read from settings or so
         verse_id = int(request.form["verse_id"])
         annotator_id = current_user.id
         graph_data = json.loads(request.form.get("graph_data", "[]"))
@@ -896,6 +953,12 @@ def api():
             else:
                 api_response["message"] = "No changes were submitted."
                 api_response["style"] = "warning"
+
+            update_progress(
+                verse_id=verse_id,
+                annotator_id=annotator_id,
+                task_id=task_id
+            )
             api_response["success"] = True
         except Exception as e:
             webapp.logger.exception(e)
@@ -910,6 +973,7 @@ def api():
     # ----------------------------------------------------------------------- #
 
     if action == "update_coreference":
+        task_id = 5   # NOTE: to be updated later, read from settings or so
         verse_id = int(request.form["verse_id"])
         annotator_id = current_user.id
         coref_data = json.loads(
@@ -998,6 +1062,12 @@ def api():
             else:
                 api_response["message"] = "No changes were submitted."
                 api_response["style"] = "warning"
+
+            update_progress(
+                verse_id=verse_id,
+                annotator_id=annotator_id,
+                task_id=task_id
+            )
             api_response["success"] = True
         except Exception as e:
             webapp.logger.exception(e)
@@ -1012,6 +1082,7 @@ def api():
     # ----------------------------------------------------------------------- #
 
     if action == "update_sentence_classification":
+        task_id = 6   # NOTE: to be updated later, read from settings or so
         verse_id = int(request.form["verse_id"])
         annotator_id = current_user.id
         classification_data = json.loads(
@@ -1083,6 +1154,12 @@ def api():
             else:
                 api_response["message"] = "No changes were submitted."
                 api_response["style"] = "warning"
+
+            update_progress(
+                verse_id=verse_id,
+                annotator_id=annotator_id,
+                task_id=task_id
+            )
             api_response["success"] = True
         except Exception as e:
             webapp.logger.exception(e)
@@ -1098,6 +1175,7 @@ def api():
     # ----------------------------------------------------------------------- #
 
     if action == "update_intersentence_connection":
+        task_id = 7   # NOTE: to be updated later, read from settings or so
         verse_id = int(request.form["verse_id"])
         annotator_id = current_user.id
         intersentence_connection_data = json.loads(
@@ -1210,6 +1288,12 @@ def api():
             else:
                 api_response["message"] = "No changes were submitted."
                 api_response["style"] = "warning"
+
+            update_progress(
+                verse_id=verse_id,
+                annotator_id=annotator_id,
+                task_id=task_id
+            )
             api_response["success"] = True
         except Exception as e:
             webapp.logger.exception(e)

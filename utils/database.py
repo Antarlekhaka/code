@@ -15,6 +15,7 @@ from sqlalchemy.orm.relationships import RelationshipProperty
 from models_sqla import User, Role
 from models_sqla import Corpus, Chapter, Verse, Line, Token
 from models_sqla import (
+    Progress,
     Boundary,
     Anvaya,
     Entity,
@@ -98,6 +99,9 @@ def get_chapter_data(chapter_id: int, user: User, all: bool = False) -> dict:
     return get_verse_data(verse_ids, annotator_ids=annotator_ids)
 
 
+###############################################################################
+
+
 def get_verse_data(
     verse_ids: List[int],
     annotator_ids: List[int] = None,
@@ -175,7 +179,18 @@ def get_verse_data(
                 'coreference': [],
                 'sentence_classification': [],
                 'intersentence_connection': [],
-                'progress': False,
+                'progress': [
+                    {
+                        "task_id": p.task_id,
+                        "verse_id": p.verse_id,
+                        "annotator_id": p.annotator_id,
+                        "updated_at": p.updated_at
+                    }
+                    for p in Progress.query.filter(
+                        Progress.verse_id == verse_id,
+                        Progress.annotator_id.in_(annotator_ids),
+                    ).all()
+                ]
             }
         else:
             data[verse_id]['text'].append(line.text)

@@ -38,18 +38,23 @@ function generic_row_detail_formatter(index, row) {
     return html.join("\n");
 }
 
-function column_marked_formatter(value, row) {
-    value = Math.round(Math.random() * 5);
-    const percent = Math.round(value / 5 * 100);
-    const title = value < 5 ? `Task ${value}` : "Complete";
+function column_progress_formatter(progress_value, row) {;
+    const percent = Math.round(progress_value.length / 7 * 100);
+    const title = []
+    for (const task of progress_value) {
+        title.push(`Task ${task.task_id} - ${task.updated_at}`);
+    }
+    if (title.length == 0) {
+        title.push("No progress")
+    }
 
-    var $progress_bar_container = $("<div />", {
-        class: "progress"
+    const $progress_bar_container = $("<div />", {
+        class: "progress",
+        title: title.join("\n")
     });
-    var $progress_bar = $("<div />", {
+    const $progress_bar = $("<div />", {
         class: "progress-bar progress-bar-striped bg-success",
         role: "progressbar",
-        title: title,
         style: `width: ${percent}%`
     });
     $progress_bar.attr("aria-valuenow", percent);
@@ -57,8 +62,6 @@ function column_marked_formatter(value, row) {
     $progress_bar.attr("aria-valuemax", "100");
     $progress_bar_container.append($progress_bar);
     return $progress_bar_container.wrapAll("<div>").parent().html();
-
-    // return value ? '<i class="fa fa-check"></i>' : '';
 }
 
 function column_text_formatter(value, row, index, field) {
