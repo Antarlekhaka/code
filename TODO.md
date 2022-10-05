@@ -13,8 +13,6 @@
 
 ### Features
 
-[ ] Draggable Left-Right Column?
-  - [x] At least adjust width (50-50 or so)
 [ ] Keep showing the graph as triplets are added
   - [x] Core functionality - after press of a button
   - [ ] Change graph to show permanently instead of on click
@@ -28,6 +26,8 @@
 [x] Skip vs Submit
   [x] Remove Skip button?
   [x] Allow empty submits
+[x] Draggable Left-Right Column
+  - [x] ~At least adjust width (50-50 or so)~ (no longer needed)
 
 
 ## BUGS

@@ -57,18 +57,28 @@
     <link rel="stylesheet" href="{{url_for('static', filename='plugins/css/bootstrap4-toggle.min.css')}}">
     <script src="{{url_for('static', filename='plugins/js/bootstrap4-toggle.min.js')}}"></script>
 
-    {% if active_page == "builder" %}
-    <!-- Graph Builder CSS -->
-    <link rel="stylesheet" href="{{url_for('static', filename='custom/css/builder/builder.css')}}">
-
-    <!-- Graph Manipulation Menu Customization -->
-    <!-- <link rel="stylesheet" href="{{url_for('static', filename='custom/css/builder/vis-manipulation.css')}}"> -->
-    {% endif %}
-
     <!-- Bootstrap Table -->
     <link rel="stylesheet" href="{{url_for('static', filename='plugins/bootstrap-table/bootstrap-table.min.css')}}">
     <link rel="stylesheet" href="{{url_for('static', filename='plugins/bootstrap-table/extensions/sticky-header/bootstrap-table-sticky-header.css')}}">
     <link rel="stylesheet" href="{{url_for('static', filename='plugins/bootstrap-table/extensions/page-jump-to/bootstrap-table-page-jump-to.css')}}">
+
+    {% if active_page == "corpus" %}
+    <!-- Split.js Resizable Columns -->
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/split.js/1.3.5/split.min.js"></script> -->
+    <script src="{{url_for('static', filename='plugins/js/split.min.js')}}"></script>
+    <style>
+        .gutter {
+            background-repeat: no-repeat;
+            background-position: 50%;
+        }
+
+        .gutter.gutter-horizontal {
+            background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAeCAYAAADkftS9AAAAIklEQVQoU2M4c+bMfxAGAgYYmwGrIIiDjrELjpo5aiZeMwF+yNnOs5KSvgAAAABJRU5ErkJggg==');
+            cursor: col-resize;
+        }
+    </style>
+
+    {% endif %}
     <style>
         .table {
             padding-top: 0px;
@@ -155,7 +165,7 @@
             background-color: rgba(0, 0, 0, 0.4);
             display: block;
             z-index: 2;
-          }
+        }
     </style>
 </head>
 

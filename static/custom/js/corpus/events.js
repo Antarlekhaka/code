@@ -1,6 +1,7 @@
 // Globals
 
 $(document).ready(function () {
+    // TODO: Set-up placeholders for other tasks as well
     const task_2_placeholder_content = $task_2_sample_anvaya_container.html();
     $task_2_anvaya_container.html(task_2_placeholder_content);
 
@@ -8,6 +9,25 @@ $(document).ready(function () {
     $task_6_placeholder.removeAttr("id");
     $task_6_placeholder.find(".sentence-label").selectpicker();
     $task_6_placeholder.appendTo($task_6_sentence_classification_input_container);
+
+    // Split Columns
+    var splitobj = Split(["#corpus-column","#annotation-column"], {
+        elementStyle: function (dimension, size, gutterSize) {
+            $(window).trigger('resize');
+            return {
+                'flex-basis': `calc(${size}% - ${gutterSize}px)`
+            };
+        },
+        gutterStyle: function (dimension, gutterSize) {
+            return {
+                'flex-basis':  `${gutterSize}px`
+            };
+        },
+        sizes: [51, 49],
+        minSize: 300,
+        gutterSize: 10,
+        cursor: 'col-resize'
+    });
 });
 
 // Exapand Row on Select
