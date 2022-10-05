@@ -1,23 +1,20 @@
 ## TODO
 
-[ ] Improvments to "Add Token" Interface
-  - [ ] Front-end with multiple fields for Analysis and Features
+[ ] DiscourseGraph show graph
+[ ] View as another user for Admin
+
+[ ] Unify/Modularize task handling items? (Task-3 onwards, since most of it is repetitive code).
+[ ] Remove `task_id` hardcoding
+
+[ ] Improvements to "Add Token" Interface
+  - [x] Front-end with multiple fields for Analysis and Features
   - [ ] Search Functionality for "Add Token"
   - [ ] Edit Token using same interface?
-
-[ ] Track progress and provide a progressbar in front-end
-  - [x] Front-end
-  - [ ] Back-end
-
-[ ] View as another user for Admin
 
 ### Features
 
 [ ] Draggable Left-Right Column?
   - [x] At least adjust width (50-50 or so)
-[ ] Skip vs Submit
-  [x] Remove Skip button?
-  [x] Allow empty submits
 [ ] Keep showing the graph as triplets are added
   - [x] Core functionality - after press of a button
   - [ ] Change graph to show permanently instead of on click
@@ -25,8 +22,17 @@
 [x] Add triplets for token graph
 [x] Show sentence with Token Graph
 [x] Do task setup on the event of tab change (so we can avoid calling it from every submit and it'll be more consistent)
+[x] Track progress and provide a progressbar in front-end
+  - [x] Front-end
+  - [x] Back-end
+[x] Skip vs Submit
+  [x] Remove Skip button?
+  [x] Allow empty submits
+
 
 ## BUGS
+
+- [ ] If there are deleted items, it triggers a "Successfully updated" message even if there are no changes. Refer to `server_sqla.py` for further details.
 
 - [x] After marking sentence boundary, transition to anvaya task doesnt take proper sentence as anvaya, need to call `setup_anvaya()` again. Probably async issue.
 - [x] When new boundaries are marked, it may affect next sentence as well, need to do something about that. (e.g. If token 12 was boundary, and token 24 was another, and token 12 gets deleted, now, if token 24 had anvaya, that needs to be re-done)
