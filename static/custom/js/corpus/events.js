@@ -23,7 +23,7 @@ $(document).ready(function () {
                 'flex-basis':  `${gutterSize}px`
             };
         },
-        sizes: [51, 49],
+        sizes: [49, 51],
         minSize: 300,
         gutterSize: 10,
         cursor: 'col-resize'
