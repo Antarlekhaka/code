@@ -125,7 +125,7 @@ function setup_task(task_id, verse_id) {
             setup_sentence_classification(verse_id);
             break;
         case "7":
-            setup_intersentence_connections(verse_id);
+            setup_intersentence_connection(verse_id);
             break;
 
         default:
@@ -138,7 +138,7 @@ function setup_task(task_id, verse_id) {
 
 // Setup-1
 function setup_sentence_boundary(verse_id) {
-    console.log(`Called setup_sentence_boundary(${verse_id});`);
+    console.log(`Called ${arguments.callee.name}(${Object.values(arguments).join(", ")});`);
 
     const row = $corpus_table.bootstrapTable('getRowByUniqueId', verse_id);
     const data = $corpus_table.bootstrapTable('getData');
@@ -274,7 +274,8 @@ $task_1_submit.click(function () {
 
 // Setup-2
 function setup_sortable() {
-    console.log(`Called setup_sortable();`);
+    console.log(`Called ${arguments.callee.name}(${Object.values(arguments).join(", ")});`);
+
     $('.connected-sortable').sortable({
         opacity: 0.75,
         revert: true,
@@ -305,7 +306,8 @@ function setup_sortable() {
 }
 
 function setup_anvaya(verse_id) {
-    console.log(`Called setup_anvaya(${verse_id});`);
+    console.log(`Called ${arguments.callee.name}(${Object.values(arguments).join(", ")});`);
+
     const row = $corpus_table.bootstrapTable('getRowByUniqueId', verse_id);
 
     $task_2_anvaya_container.html("");
@@ -555,7 +557,8 @@ $task_2_submit.click(function () {
 
 // Setup-3
 function setup_named_entity(verse_id) {
-    console.log(`Called setup_named_entity(${verse_id})`);
+    console.log(`Called ${arguments.callee.name}(${Object.values(arguments).join(", ")});`);
+
     const row = $corpus_table.bootstrapTable('getRowByUniqueId', verse_id);
 
     $task_3_entity_table.html("");
@@ -713,7 +716,8 @@ $task_3_submit.click(function () {
 // Setup-4
 
 function setup_token_graph(verse_id) {
-    console.log(`Called setup_token_graph(${verse_id})`);
+    console.log(`Called ${arguments.callee.name}(${Object.values(arguments).join(", ")});`);
+
     const row = $corpus_table.bootstrapTable('getRowByUniqueId', verse_id);
 
     $task_4_token_graph_input_container.html("");
@@ -1135,7 +1139,7 @@ $task_4_submit.click(function () {
 
 
 function setup_coreference(verse_id) {
-    console.log(`Called setup_coreference(${verse_id})`);
+    console.log(`Called ${arguments.callee.name}(${Object.values(arguments).join(", ")});`);
 
     const row = $corpus_table.bootstrapTable('getRowByUniqueId', verse_id);
     const data = $corpus_table.bootstrapTable('getData');
@@ -1348,7 +1352,8 @@ $task_5_submit.click(function() {
 // Setup-6
 
 function setup_sentence_classification(verse_id) {
-    console.log(`Called setup_sentence_classification(${verse_id});`);
+    console.log(`Called ${arguments.callee.name}(${Object.values(arguments).join(", ")});`);
+
     const row = $corpus_table.bootstrapTable('getRowByUniqueId', verse_id);
 
     $task_6_sentence_classification_input_container.html("");
@@ -1454,8 +1459,8 @@ $task_6_submit.click(function() {
 // Task 7: Intersentence Connections (e.g. Discourse Graph)
 
 // Setup-7
-function setup_intersentence_connections(verse_id) {
-    console.log(`Called setup_intersentence_connections(${verse_id});`);
+function setup_intersentence_connection(verse_id) {
+    console.log(`Called ${arguments.callee.name}(${Object.values(arguments).join(", ")});`);
 
     const row = $corpus_table.bootstrapTable('getRowByUniqueId', verse_id);
     const data = $corpus_table.bootstrapTable('getData');
