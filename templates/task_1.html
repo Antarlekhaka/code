@@ -1,16 +1,14 @@
-{% set task_id = "1" %}
-{% set title = "Sentence Boundary" %}
 {% set rows = "2" %}
 {% extends "task_base.html" %}
 
 {% block body %}
-<textarea id="task-{{task_id}}-input-before" placeholder="Previous Verse" style="resize: none;" class="form-control text-muted text-monospace" rows="2" required disabled>
+<textarea id="task-{{task.id}}-input-before" placeholder="Previous Verse" style="resize: none;" class="form-control text-muted text-monospace" rows="2" required disabled>
 </textarea>
 
-<textarea id="task-{{task_id}}-input" placeholder="Annotation Area. Add '##' to mark sentence boundaries." class="form-control text-muted text-monospace" rows="{{rows or '9'}}" required disabled>
+<textarea id="task-{{task.id}}-input" placeholder="Annotation Area. Add '##' to mark sentence boundaries." class="form-control text-muted text-monospace" rows="{{rows or '9'}}" required disabled>
 </textarea>
 
-<textarea id="task-{{task_id}}-input-after" placeholder="Next Verse" style="resize: none;" class="form-control text-muted text-monospace" rows="2" required disabled>
+<textarea id="task-{{task.id}}-input-after" placeholder="Next Verse" style="resize: none;" class="form-control text-muted text-monospace" rows="2" required disabled>
 </textarea>
 {% endblock %}
 

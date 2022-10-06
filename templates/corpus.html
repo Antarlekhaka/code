@@ -51,51 +51,31 @@
             <!-- <div class="scroll-large"> -->
             {% if current_user.has_permission("annotate") %}
             <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
-                <li class="nav-item">
-                  <a class="nav-link active" id="task-1-tab" data-toggle="pill" href="#task-1-tab-content" role="tab" aria-controls="task-1-tab-content" aria-selected="true">Task 1</a>
+                {% for task_name, task in config.tasks.items() %}
+                {% if task.id == 1 %}
+                    {% set active_class = "active" %}
+                    {% set aria_selected = "true" %}
+                {% else %}
+                    {% set active_class = "" %}
+                    {% set aria_selected = "false" %}
+                {% endif %}
+                <li class="nav-item" title="{{task.title}}">
+                  <a class="nav-link {{active_class}}" id="task-{{task.id}}-tab" data-toggle="pill" href="#task-{{task.id}}-tab-content" role="tab" aria-controls="task-{{task.id}}-tab-content" aria-selected="{{aria_selected}}">{{task.short}}</a>
                 </li>
-                <li class="nav-item">
-                  <a class="nav-link" id="task-2-tab" data-toggle="pill" href="#task-2-tab-content" role="tab" aria-controls="task-2-tab-content" aria-selected="false">Task 2</a>
-                </li>
-                <li class="nav-item">
-                  <a class="nav-link" id="task-3-tab" data-toggle="pill" href="#task-3-tab-content" role="tab" aria-controls="task-3-tab-content" aria-selected="false">Task 3</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" id="task-4-tab" data-toggle="pill" href="#task-4-tab-content" role="tab" aria-controls="task-4-tab-content" aria-selected="false">Task 4</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" id="task-5-tab" data-toggle="pill" href="#task-5-tab-content" role="tab" aria-controls="task-5-tab-content" aria-selected="false">Task 5</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" id="task-6-tab" data-toggle="pill" href="#task-6-tab-content" role="tab" aria-controls="task-6-tab-content" aria-selected="false">Task 6</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" id="task-7-tab" data-toggle="pill" href="#task-7-tab-content" role="tab" aria-controls="task-7-tab-content" aria-selected="false">Task 7</a>
-                </li>
+                {% endfor %}
             </ul>
 
             <div class="tab-content" id="pills-tab-content">
-                <div class="tab-pane active" id="task-1-tab-content" role="tabpanel" aria-labelledby="task-1-tab">
-                    {% include "task_1.html" %}
+                {% for task_name, task in config.tasks.items() %}
+                {% if task.id == 1 %}
+                    {% set active_class = "active" %}
+                {% else %}
+                    {% set active_class = "" %}
+                {% endif %}
+                <div class="tab-pane {{active_class}}" id="task-{{task.id}}-tab-content" role="tabpanel" aria-labelledby="task-{{task.id}}-tab">
+                    {% include "task_" + task.id | string + ".html" %}
                 </div>
-                <div class="tab-pane" id="task-2-tab-content" role="tabpanel" aria-labelledby="task-2-tab">
-                    {% include "task_2.html" %}
-                </div>
-                <div class="tab-pane" id="task-3-tab-content" role="tabpanel" aria-labelledby="task-3-tab">
-                    {% include "task_3.html" %}
-                </div>
-                <div class="tab-pane" id="task-4-tab-content" role="tabpanel" aria-labelledby="task-4-tab">
-                    {% include "task_4.html" %}
-                </div>
-                <div class="tab-pane" id="task-5-tab-content" role="tabpanel" aria-labelledby="task-5-tab">
-                    {% include "task_5.html" %}
-                </div>
-                <div class="tab-pane" id="task-6-tab-content" role="tabpanel" aria-labelledby="task-6-tab">
-                    {% include "task_6.html" %}
-                </div>
-                <div class="tab-pane" id="task-7-tab-content" role="tabpanel" aria-labelledby="task-7-tab">
-                    {% include "task_7.html" %}
-                </div>
+                {% endfor %}
             </div>
 
             {% endif %}
@@ -130,7 +110,7 @@
                             </table>
                             <legend>Analysis</legend>
                             <table class="table">
-                                {% for analysis_item in constants.token_analysis_items %}
+                                {% for analysis_item in config.token_analysis_items %}
                                 <tr class="add-token-analysis-item">
                                     <td class="add-token-analysis-label">{{analysis_item.title}}</td>
                                     <td><input type="text" class="form-control add-token-analysis-input" name="token-analysis-{{analysis_item.id}}" id="add-token-input-analysis-{{analysis_item.id}}" placeholder="{{analysis_item.title}}"></td></td>
@@ -141,7 +121,7 @@
                         <div class="col-sm scroll-medium">
                             <legend>Features</legend>
                             <table class="table">
-                                {% for feature_item in constants.token_feature_items %}
+                                {% for feature_item in config.token_feature_items %}
                                 <tr class="add-token-feature-item">
                                     <td class="add-token-feature-label">{{feature_item.title}}</td>
                                     <td><input type="text" class="form-control add-token-feature-input" name="token-feats-{{feature_item.id}}" id="add-token-input-feats-{{feature_item.id}}" placeholder="{{feature_item.title}}"></td></td>

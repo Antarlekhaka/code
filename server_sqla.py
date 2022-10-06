@@ -271,25 +271,6 @@ def inject_global_constants():
                         for theme in theme_js_files])
 
     CONSTANTS = {
-        # TODO: move these to settings?
-        # TODO: handle corpus speific things through config?
-        # corpus agnostic treatment will require changes to JS too
-        # e.g. assumptions about / usage of "unsandhied"
-        'token_analysis_items': [
-            {"id": "upos", "title": "UPOS"},
-            {"id": "xpos", "title": "XPOS"}
-        ],
-        'token_feature_items': [
-            {"id": "case", "title": "Case"},
-            {"id": "formation", "title": "Formation"},
-            {"id": "gender", "title": "Gender"},
-            {"id": "mood", "title": "Mood"},
-            {"id": "number", "title": "Number"},
-            {"id": "person", "title": "Person"},
-            {"id": "tense", "title": "Tense"},
-            {"id": "verb-form", "title": "VerbForm"},
-            {"id": "voice", "title": "Voice"}
-        ],
         'entity_labels': EntityLabel.query.filter(
             EntityLabel.is_deleted == False  # noqa # '== False' is required
         ).with_entities(
@@ -571,7 +552,9 @@ def api():
     # ----------------------------------------------------------------------- #
 
     if action == "update_sentence_boundary":
-        task_id = 1   # NOTE: to be updated later, read from settings or so
+        subaction = action.replace("update_", "")
+        task_id = app.config["tasks"][subaction]["id"]
+
         verse_id = int(request.form["verse_id"])
         annotator_id = current_user.id
         boundary_tokens = [
@@ -704,7 +687,9 @@ def api():
     # ----------------------------------------------------------------------- #
 
     if action == "update_anvaya":
-        task_id = 2   # NOTE: to be updated later, read from settings or so
+        subaction = action.replace("update_", "")
+        task_id = app.config["tasks"][subaction]["id"]
+
         verse_id = int(request.form["verse_id"])
         annotator_id = current_user.id
         anvaya = json.loads(request.form["anvaya"])
@@ -775,7 +760,9 @@ def api():
     # ----------------------------------------------------------------------- #
 
     if action == "update_named_entity":
-        task_id = 3   # NOTE: to be updated later, read from settings or so
+        subaction = action.replace("update_", "")
+        task_id = app.config["tasks"][subaction]["id"]
+
         verse_id = int(request.form["verse_id"])
         annotator_id = current_user.id
         entity_data = json.loads(request.form["entity_data"])
@@ -872,7 +859,9 @@ def api():
     # ----------------------------------------------------------------------- #
 
     if action == "update_token_graph":
-        task_id = 4   # NOTE: to be updated later, read from settings or so
+        subaction = action.replace("update_", "")
+        task_id = app.config["tasks"][subaction]["id"]
+
         verse_id = int(request.form["verse_id"])
         annotator_id = current_user.id
         graph_data = json.loads(request.form.get("graph_data", "[]"))
@@ -973,7 +962,9 @@ def api():
     # ----------------------------------------------------------------------- #
 
     if action == "update_coreference":
-        task_id = 5   # NOTE: to be updated later, read from settings or so
+        subaction = action.replace("update_", "")
+        task_id = app.config["tasks"][subaction]["id"]
+
         verse_id = int(request.form["verse_id"])
         annotator_id = current_user.id
         coref_data = json.loads(
@@ -1082,7 +1073,9 @@ def api():
     # ----------------------------------------------------------------------- #
 
     if action == "update_sentence_classification":
-        task_id = 6   # NOTE: to be updated later, read from settings or so
+        subaction = action.replace("update_", "")
+        task_id = app.config["tasks"][subaction]["id"]
+
         verse_id = int(request.form["verse_id"])
         annotator_id = current_user.id
         classification_data = json.loads(
@@ -1175,7 +1168,9 @@ def api():
     # ----------------------------------------------------------------------- #
 
     if action == "update_intersentence_connection":
-        task_id = 7   # NOTE: to be updated later, read from settings or so
+        subaction = action.replace("update_", "")
+        task_id = app.config["tasks"][subaction]["id"]
+
         verse_id = int(request.form["verse_id"])
         annotator_id = current_user.id
         intersentence_connection_data = json.loads(

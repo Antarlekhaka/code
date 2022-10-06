@@ -35,7 +35,69 @@ APPLICATION_CONFIG = {
         "wx", "slp1", "optitrans", "kolkata"
     ],
     "unnamed_prefix": "X",
-    "row_detail_formatter": "generic"
+    "row_detail_formatter": "generic",
+    "tasks": {
+        "sentence_boundary": {
+            "id": 1,
+            "title": "Sentence Bondary",
+            "short": "SnB",
+            "help": "Mark the sentence boundary.",
+        },
+        "anvaya": {
+            "id": 2,
+            "title": "Anvaya",
+            "short": "Anv",
+            "help": "Arrange the words in the correct order.",
+        },
+        "named_entity": {
+            "id": 3,
+            "title": "Named Entity Recognition",
+            "short": "NER",
+            "help": "Identify named entities and their types.",
+        },
+        "token_graph": {
+            "id": 4,
+            "title": "Action Graph",
+            "short": "ActGr",
+            "help": "Create action graph in the form of triplets.",
+        },
+        "coreference": {
+            "id": 5,
+            "title": "Co-reference Resolution",
+            "short": "Coref",
+            "help": "Idenitfy coreferences.",
+        },
+        "sentence_classification": {
+            "id": 6,
+            "title": "Sentence Classification",
+            "short": "SnClf",
+            "help": "Classify sentences.",
+        },
+        "intersentence_connection": {
+            "id": 7,
+            "title": "Discourse Graph",
+            "short": "DscGr",
+            "help": "Identify intersentence connections to create the discourse graph.",
+        },
+    },
+    # TODO: handle corpus speific things through config?
+    # corpus agnostic treatment will require changes to JS too
+    # e.g. assumptions about / usage of "unsandhied"
+    "token_analysis_items": [
+        {"id": "upos", "title": "UPOS"},
+        {"id": "xpos", "title": "XPOS"}
+    ],
+    "token_feature_items": [
+        {"id": "case", "title": "Case"},
+        {"id": "formation", "title": "Formation"},
+        {"id": "gender", "title": "Gender"},
+        {"id": "mood", "title": "Mood"},
+        {"id": "number", "title": "Number"},
+        {"id": "person", "title": "Person"},
+        {"id": "tense", "title": "Tense"},
+        {"id": "verb-form", "title": "VerbForm"},
+        {"id": "voice", "title": "Voice"}
+    ],
 }
 
 # --------------------------------------------------------------------------- #
