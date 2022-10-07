@@ -44,7 +44,11 @@ $corpus_table.on('expand-row.bs.table', function (e, index, row, $detail) {
     $add_token_modal_button.prop('disabled', false);
     $refresh_verse_buttons.prop('disabled', false);
 
-    storage.setItem("next", parseInt(verse_id) + 1);
+    storage.setItem("current_verse_id", parseInt(verse_id));
+    storage.setItem("next_verse_id", parseInt(verse_id) + 1);
+
+    storage.setItem("current_index", parseInt(index));
+    storage.setItem("next_index", parseInt(index) + 1);
 
     // // Setup All Tasks
     // for (const task_id of ["1", "2", "3", "4", "5", "6", "7", "8"]) {

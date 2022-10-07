@@ -79,6 +79,7 @@ function generate_token_button(options) {
 }
 
 function refresh_row_data(unique_id, _callback) {
+    console.log(`Called ${arguments.callee.name}(${Object.values(arguments).join(", ")});`);
     const verse_data_url = SAMPLE_VERSE_DATA_URL.replace('0', unique_id);
     $.get(verse_data_url, function (data) {
         $corpus_table.bootstrapTable('updateByUniqueId', {
@@ -86,14 +87,14 @@ function refresh_row_data(unique_id, _callback) {
             row: data[unique_id],
             replace: true
         });
+        $corpus_table.bootstrapTable('collapseRowByUniqueId', unique_id);
+        $corpus_table.bootstrapTable('check', storage.getItem('current_index'));
+
         if (_callback) {
             _callback(unique_id);
         }
     }, 'json');
     console.log(`Verse data updated for ID: ${unique_id}`);
-
-    $corpus_table.bootstrapTable('collapseRowByUniqueId', unique_id);
-    $corpus_table.bootstrapTable('expandRowByUniqueId', unique_id);
 }
 
 $refresh_verse_buttons.click(function() {
@@ -257,11 +258,13 @@ $task_1_submit.click(function () {
         if (response.success) {
             $task_1_input.prop('disabled', true).removeClass('text-info').addClass('text-muted');
 
-            // update local table
             refresh_row_data(verse_id);
-
-            // move to the next task
-            $task_2_tab.click();
+            const first_task = response.first_task;
+            const next_task = response.next_task;
+            $tabs[next_task].click();
+            if (next_task == first_task) {
+                $corpus_table.bootstrapTable('check', storage.getItem("next_index"));
+            }
         }
     },
     'json');
@@ -545,7 +548,12 @@ $task_2_submit.click(function () {
 
         if (response.success) {
             refresh_row_data(verse_id);
-            $task_3_tab.click();
+            const first_task = response.first_task;
+            const next_task = response.next_task;
+            $tabs[next_task].click();
+            if (next_task == first_task) {
+                $corpus_table.bootstrapTable('check', storage.getItem("next_index"));
+            }
         }
     });
 });
@@ -704,7 +712,12 @@ $task_3_submit.click(function () {
 
         if (response.success) {
             refresh_row_data(verse_id);
-            $task_4_tab.click();
+            const first_task = response.first_task;
+            const next_task = response.next_task;
+            $tabs[next_task].click();
+            if (next_task == first_task) {
+                $corpus_table.bootstrapTable('check', storage.getItem("next_index"));
+            }
         }
     });
 });
@@ -1125,7 +1138,12 @@ $task_4_submit.click(function () {
 
         if (response.success) {
             refresh_row_data(verse_id);
-            $task_5_tab.click();
+            const first_task = response.first_task;
+            const next_task = response.next_task;
+            $tabs[next_task].click();
+            if (next_task == first_task) {
+                $corpus_table.bootstrapTable('check', storage.getItem("next_index"));
+            }
         }
     });
 });
@@ -1339,7 +1357,12 @@ $task_5_submit.click(function() {
         });
         if (response.success) {
             refresh_row_data(verse_id);
-            $task_6_tab.click();
+            const first_task = response.first_task;
+            const next_task = response.next_task;
+            $tabs[next_task].click();
+            if (next_task == first_task) {
+                $corpus_table.bootstrapTable('check', storage.getItem("next_index"));
+            }
         }
     });
 });
@@ -1448,7 +1471,12 @@ $task_6_submit.click(function() {
         if (response.success) {
             // ....
             refresh_row_data(verse_id);
-            $task_7_tab.click();
+            const first_task = response.first_task;
+            const next_task = response.next_task;
+            $tabs[next_task].click();
+            if (next_task == first_task) {
+                $corpus_table.bootstrapTable('check', storage.getItem("next_index"));
+            }
         }
     });
 });
@@ -1735,13 +1763,13 @@ $task_7_submit.click(function () {
         });
 
         if (response.success) {
-            // ...
             refresh_row_data(verse_id);
-
-            $task_1_tab.click();
-            $corpus_table.bootstrapTable('collapseAllRows');
-            $corpus_table.bootstrapTable('uncheckAll');
-            $corpus_table.bootstrapTable('expandRowByUniqueId', storage.getItem("next"));
+            const first_task = response.first_task;
+            const next_task = response.next_task;
+            $tabs[next_task].click();
+            if (next_task == first_task) {
+                $corpus_table.bootstrapTable('check', storage.getItem("next_index"));
+            }
         }
     },
     'json');

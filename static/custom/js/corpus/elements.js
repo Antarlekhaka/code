@@ -3,6 +3,16 @@ const $corpus_table = $("#corpus_viewer");
 const $verse_id_containers = $(".verse-id-container");
 const $refresh_verse_buttons = $(".refresh-verse");
 
+const $tabs = {
+    "sentence_boundary": $("#task-1-tab"),
+    "anvaya": $("#task-2-tab"),
+    "named_entity": $("#task-3-tab"),
+    "token_graph": $("#task-4-tab"),
+    "coreference": $("#task-5-tab"),
+    "sentence_classification": $("#task-6-tab"),
+    "intersentence_connection": $("#task-7-tab"),
+}
+
 const $task_1_tab = $("#task-1-tab");
 const $task_2_tab = $("#task-2-tab");
 const $task_3_tab = $("#task-3-tab");
