@@ -72,7 +72,7 @@
                     {% set active_class = "" %}
                 {% endif %}
                 <div class="tab-pane {{active_class}}" id="task-{{task.id}}-tab-content" role="tabpanel" aria-labelledby="task-{{task.id}}-tab">
-                    {% include "task_" + task.id | string + ".html" %}
+                    {% include "task_" + task.name + ".html" %}
                 </div>
                 {% endfor %}
             </div>
