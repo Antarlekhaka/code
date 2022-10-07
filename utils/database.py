@@ -182,6 +182,7 @@ def get_verse_data(
                 'progress': [
                     {
                         "task_id": p.task_id,
+                        "task_short": p.task.short,
                         "verse_id": p.verse_id,
                         "annotator_id": p.annotator_id,
                         "updated_at": p.updated_at

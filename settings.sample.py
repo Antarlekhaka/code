@@ -36,50 +36,57 @@ APPLICATION_CONFIG = {
     ],
     "unnamed_prefix": "X",
     "row_detail_formatter": "generic",
-    "tasks": {
-        "sentence_boundary": {
+    "tasks": [
+        {
             "id": 1,
+            "name": "sentence_boundary",
             "title": "Sentence Bondary",
             "short": "SnB",
             "help": "Mark the sentence boundary.",
         },
-        "anvaya": {
+        {
             "id": 2,
+            "name": "anvaya",
             "title": "Anvaya",
             "short": "Anv",
             "help": "Arrange the words in the correct order.",
         },
-        "named_entity": {
+        {
             "id": 3,
+            "name": "named_entity",
             "title": "Named Entity Recognition",
             "short": "NER",
             "help": "Identify named entities and their types.",
         },
-        "token_graph": {
+        {
             "id": 4,
+            "name": "token_graph",
             "title": "Action Graph",
             "short": "ActGr",
             "help": "Create action graph in the form of triplets.",
         },
-        "coreference": {
+        {
             "id": 5,
+            "name": "coreference",
             "title": "Co-reference Resolution",
             "short": "Coref",
             "help": "Idenitfy coreferences.",
         },
-        "sentence_classification": {
+        {
             "id": 6,
+            "name": "sentence_classification",
             "title": "Sentence Classification",
             "short": "SnClf",
             "help": "Classify sentences.",
         },
-        "intersentence_connection": {
+        {
             "id": 7,
+            "name": "intersentence_connection",
             "title": "Discourse Graph",
             "short": "DscGr",
             "help": "Identify intersentence connections to create the discourse graph.",
         },
-    },
+    ],
     # TODO: handle corpus speific things through config?
     # corpus agnostic treatment will require changes to JS too
     # e.g. assumptions about / usage of "unsandhied"

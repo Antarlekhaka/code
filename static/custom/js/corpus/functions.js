@@ -42,7 +42,7 @@ function column_progress_formatter(progress_value, row) {;
     const percent = Math.round(progress_value.length / 7 * 100);
     const title = []
     for (const task of progress_value) {
-        title.push(`Task ${task.task_id} - ${task.updated_at}`);
+        title.push(`Task ${task.task_short} - ${task.updated_at}`);
     }
     if (title.length == 0) {
         title.push("No progress")

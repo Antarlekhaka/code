@@ -51,7 +51,7 @@
             <!-- <div class="scroll-large"> -->
             {% if current_user.has_permission("annotate") %}
             <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
-                {% for task_name, task in config.tasks.items() %}
+                {% for task in constants.tasks %}
                 {% if task.id == 1 %}
                     {% set active_class = "active" %}
                     {% set aria_selected = "true" %}
@@ -66,7 +66,7 @@
             </ul>
 
             <div class="tab-content" id="pills-tab-content">
-                {% for task_name, task in config.tasks.items() %}
+                {% for task in constants.tasks %}
                 {% if task.id == 1 %}
                     {% set active_class = "active" %}
                 {% else %}

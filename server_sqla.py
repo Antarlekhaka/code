@@ -62,7 +62,7 @@ from flask_migrate import Migrate
 from models_sqla import (db, user_datastore,
                          CustomLoginForm, CustomRegisterForm,
                          Corpus, Chapter, Verse, Line, Token,
-                         Progress, Anvaya, Boundary,
+                         Task, Progress, Anvaya, Boundary,
                          EntityLabel, Entity,
                          RelationLabel, TokenGraph,
                          Coreference,
@@ -239,6 +239,19 @@ def init_database():
             roles=['owner', 'admin', 'curator',
                    'annotator', 'member']
         )
+
+    # Populate Task table if empty
+    if not Task.query.first():
+        for idx, task in enumerate(app.config["tasks"], start=1):
+            t = Task()
+            t.id = task["id"]
+            t.name = task["name"]
+            t.title = task["title"]
+            t.short = task["short"]
+            t.help = task["help"]
+            t.order = idx
+            db.session.add(t)
+
     db.session.commit()
 
 
@@ -295,11 +308,19 @@ def inject_global_constants():
         # ).with_entities(
         #     Label.id, Label.task_id, Label.label, Label.description
         # ).order_by(Label.task_id, Label.label).all(),
-        # 'tasks': Task.query.filter(
-        #     Task.is_deleted == False  # noqa # '== False' is required
-        # ).with_entities(
-        #     Task.id, Task.type, Task.name, Task.description
-        # ).order_by(Task.id).all(),
+        'tasks': [
+            {
+                "id": task.id,
+                "name": task.name,
+                "title": task.title,
+                "short": task.short,
+                "help": task.help,
+                "order": task.order
+            }
+            for task in Task.query.filter(
+                Task.is_deleted == False  # noqa # '== False' is required
+            ).order_by(Task.order).all()
+        ],
         'sentence_labels': SentenceLabel.query.filter(
             SentenceLabel.is_deleted == False  # noqa # '== False' is required
         ).with_entities(
@@ -553,7 +574,7 @@ def api():
 
     if action == "update_sentence_boundary":
         subaction = action.replace("update_", "")
-        task_id = app.config["tasks"][subaction]["id"]
+        task_id = Task.query.filter(Task.name == subaction).first().id
 
         verse_id = int(request.form["verse_id"])
         annotator_id = current_user.id
@@ -688,7 +709,7 @@ def api():
 
     if action == "update_anvaya":
         subaction = action.replace("update_", "")
-        task_id = app.config["tasks"][subaction]["id"]
+        task_id = Task.query.filter(Task.name == subaction).first().id
 
         verse_id = int(request.form["verse_id"])
         annotator_id = current_user.id
@@ -761,7 +782,7 @@ def api():
 
     if action == "update_named_entity":
         subaction = action.replace("update_", "")
-        task_id = app.config["tasks"][subaction]["id"]
+        task_id = Task.query.filter(Task.name == subaction).first().id
 
         verse_id = int(request.form["verse_id"])
         annotator_id = current_user.id
@@ -860,7 +881,7 @@ def api():
 
     if action == "update_token_graph":
         subaction = action.replace("update_", "")
-        task_id = app.config["tasks"][subaction]["id"]
+        task_id = Task.query.filter(Task.name == subaction).first().id
 
         verse_id = int(request.form["verse_id"])
         annotator_id = current_user.id
@@ -963,7 +984,7 @@ def api():
 
     if action == "update_coreference":
         subaction = action.replace("update_", "")
-        task_id = app.config["tasks"][subaction]["id"]
+        task_id = Task.query.filter(Task.name == subaction).first().id
 
         verse_id = int(request.form["verse_id"])
         annotator_id = current_user.id
@@ -1074,7 +1095,7 @@ def api():
 
     if action == "update_sentence_classification":
         subaction = action.replace("update_", "")
-        task_id = app.config["tasks"][subaction]["id"]
+        task_id = Task.query.filter(Task.name == subaction).first().id
 
         verse_id = int(request.form["verse_id"])
         annotator_id = current_user.id
@@ -1169,7 +1190,7 @@ def api():
 
     if action == "update_intersentence_connection":
         subaction = action.replace("update_", "")
-        task_id = app.config["tasks"][subaction]["id"]
+        task_id = Task.query.filter(Task.name == subaction).first().id
 
         verse_id = int(request.form["verse_id"])
         annotator_id = current_user.id
