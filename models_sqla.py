@@ -159,11 +159,21 @@ class RolesUsers(db.Model):
 # Task Specific Models
 
 
+class Task(db.Model):
+    id = Column(Integer, primary_key=True)
+    name = Column(String(255), nullable=False)
+    title = Column(String(255), nullable=False)
+    short = Column(String(255), nullable=False)
+    help = Column(String(255), nullable=False)
+    order = Column(Integer, nullable=False)
+    is_deleted = Column(Boolean, default=False, nullable=False)
+
+
 class Progress(db.Model):
     id = Column(Integer, primary_key=True)
     verse_id = Column(Integer, ForeignKey('verse.id'), nullable=False)
     annotator_id = Column(Integer, ForeignKey('user.id'), nullable=False)
-    task_id = Column(Integer, nullable=False)
+    task_id = Column(Integer, ForeignKey('task.id'), nullable=False)
     updated_at = Column(DateTime, default=dt.utcnow, onupdate=dt.utcnow)
 
     verse = relationship(
@@ -171,6 +181,9 @@ class Progress(db.Model):
     )
     annotator = relationship(
         'User', backref=backref('progress', lazy='dynamic')
+    )
+    task = relationship(
+        'Task', backref=backref('progress', lazy='dynamic')
     )
     __table_args__ = (
          Index('progress_verse_id_annotator_id_task_id',
