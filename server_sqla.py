@@ -565,6 +565,32 @@ def api():
             return jsonify(api_response)
 
     # ----------------------------------------------------------------------- #
+    # Populate next_task
+
+    task_actions = []
+    next_task = {}
+    task_query = Task.query.filter(
+        Task.is_deleted == False  # noqa # '== False' is required
+    ).order_by(Task.order)
+
+    _first_task = None
+    _task = None
+
+    for task in task_query.all():
+        task_actions.append(f"update_{task.name}")
+        if _first_task is None:
+            _task = task.name
+            _first_task = _task
+        else:
+            next_task[_task] = task.name
+            _task = task.name
+
+    next_task[_task] = _first_task
+
+    if action in task_actions:
+        api_response["first_task"] = _first_task
+
+    # ----------------------------------------------------------------------- #
 
     api_response["success"] = True
     api_response["message"] = "Under construction."
@@ -573,8 +599,8 @@ def api():
     # ----------------------------------------------------------------------- #
 
     if action == "update_sentence_boundary":
-        subaction = action.replace("update_", "")
-        task_id = Task.query.filter(Task.name == subaction).first().id
+        task_name = action.replace("update_", "")
+        task_id = Task.query.filter(Task.name == task_name).first().id
 
         verse_id = int(request.form["verse_id"])
         annotator_id = current_user.id
@@ -654,6 +680,7 @@ def api():
                 task_id=task_id
             )
             api_response["success"] = True
+            api_response["next_task"] = next_task[task_name]
         except Exception as e:
             webapp.logger.exception(e)
             webapp.logger.info(request.form)
@@ -695,7 +722,7 @@ def api():
                 f"Token '{token_data['text']}' ({token_data['lemma']}) added!"
             )
             api_response["style"] = "success"
-            api_response["changes"] = True
+            api_response["success"] = True
         except Exception as e:
             webapp.logger.exception(e)
             api_response["success"] = False
@@ -708,8 +735,8 @@ def api():
     # ----------------------------------------------------------------------- #
 
     if action == "update_anvaya":
-        subaction = action.replace("update_", "")
-        task_id = Task.query.filter(Task.name == subaction).first().id
+        task_name = action.replace("update_", "")
+        task_id = Task.query.filter(Task.name == task_name).first().id
 
         verse_id = int(request.form["verse_id"])
         annotator_id = current_user.id
@@ -768,6 +795,7 @@ def api():
                 task_id=task_id
             )
             api_response["success"] = True
+            api_response["next_task"] = next_task[task_name]
         except Exception as e:
             webapp.logger.exception(e)
             webapp.logger.info(request.form)
@@ -781,8 +809,8 @@ def api():
     # ----------------------------------------------------------------------- #
 
     if action == "update_named_entity":
-        subaction = action.replace("update_", "")
-        task_id = Task.query.filter(Task.name == subaction).first().id
+        task_name = action.replace("update_", "")
+        task_id = Task.query.filter(Task.name == task_name).first().id
 
         verse_id = int(request.form["verse_id"])
         annotator_id = current_user.id
@@ -867,6 +895,7 @@ def api():
                 task_id=task_id
             )
             api_response["success"] = True
+            api_response["next_task"] = next_task[task_name]
         except Exception as e:
             webapp.logger.exception(e)
             webapp.logger.info(request.form)
@@ -880,8 +909,8 @@ def api():
     # ----------------------------------------------------------------------- #
 
     if action == "update_token_graph":
-        subaction = action.replace("update_", "")
-        task_id = Task.query.filter(Task.name == subaction).first().id
+        task_name = action.replace("update_", "")
+        task_id = Task.query.filter(Task.name == task_name).first().id
 
         verse_id = int(request.form["verse_id"])
         annotator_id = current_user.id
@@ -970,6 +999,7 @@ def api():
                 task_id=task_id
             )
             api_response["success"] = True
+            api_response["next_task"] = next_task[task_name]
         except Exception as e:
             webapp.logger.exception(e)
             webapp.logger.info(request.form)
@@ -983,8 +1013,8 @@ def api():
     # ----------------------------------------------------------------------- #
 
     if action == "update_coreference":
-        subaction = action.replace("update_", "")
-        task_id = Task.query.filter(Task.name == subaction).first().id
+        task_name = action.replace("update_", "")
+        task_id = Task.query.filter(Task.name == task_name).first().id
 
         verse_id = int(request.form["verse_id"])
         annotator_id = current_user.id
@@ -1081,6 +1111,7 @@ def api():
                 task_id=task_id
             )
             api_response["success"] = True
+            api_response["next_task"] = next_task[task_name]
         except Exception as e:
             webapp.logger.exception(e)
             webapp.logger.info(request.form)
@@ -1094,8 +1125,8 @@ def api():
     # ----------------------------------------------------------------------- #
 
     if action == "update_sentence_classification":
-        subaction = action.replace("update_", "")
-        task_id = Task.query.filter(Task.name == subaction).first().id
+        task_name = action.replace("update_", "")
+        task_id = Task.query.filter(Task.name == task_name).first().id
 
         verse_id = int(request.form["verse_id"])
         annotator_id = current_user.id
@@ -1175,6 +1206,7 @@ def api():
                 task_id=task_id
             )
             api_response["success"] = True
+            api_response["next_task"] = next_task[task_name]
         except Exception as e:
             webapp.logger.exception(e)
             webapp.logger.info(request.form)
@@ -1189,8 +1221,8 @@ def api():
     # ----------------------------------------------------------------------- #
 
     if action == "update_intersentence_connection":
-        subaction = action.replace("update_", "")
-        task_id = Task.query.filter(Task.name == subaction).first().id
+        task_name = action.replace("update_", "")
+        task_id = Task.query.filter(Task.name == task_name).first().id
 
         verse_id = int(request.form["verse_id"])
         annotator_id = current_user.id
@@ -1227,9 +1259,6 @@ def api():
             api_response["message"] = "Invalid data."
             api_response["style"] = "danger"
             return jsonify(api_response)
-
-        print(intersentence_connection_data)
-        print(context_data)
 
         # TODO: Re-examine if the conditions are proper
         existing_iscs_query = DiscourseGraph.query.filter(
@@ -1311,6 +1340,7 @@ def api():
                 task_id=task_id
             )
             api_response["success"] = True
+            api_response["next_task"] = next_task[task_name]
         except Exception as e:
             webapp.logger.exception(e)
             webapp.logger.info(request.form)
