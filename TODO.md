@@ -2,15 +2,14 @@
 
 - [ ] DiscourseGraph show graph
 
+- [ ] "Submit and go to next verse" ?
+
+- [ ] Accept CSV/JSON files for initialization of various labels
+
 - [ ] Admin
   - [ ] Download Data
   - [ ] Task Reorder/Enable/Disable
   - [ ] View as another user
-
-- [ ] "Submit and go to next verse" ?
-
-- [ ] Unify/Modularize task backend handling items? (Task-3 onwards, since most of it is repetitive code).
-- [ ] Remove `task_id` hardcoding
 
 - [ ] Improvements to "Add Token" Interface
   - [x] Front-end with multiple fields for Analysis and Features
@@ -20,6 +19,22 @@
 - [ ] Keep showing the TokenGraph as triplets are added
   - [x] Core functionality - after press of a button
   - [ ] Change graph to show permanently instead of on click
+
+- [ ] Unify/Modularize task backend handling items? (Task-3 onwards, since most of it is repetitive code).
+
+- [ ] Remove `task_id` hardcoding
+  - [x] Task table
+  - [x] Remove `task_id` hard-coding in `server_sqla.py` api action handling
+  - [ ] Next task etc using Task.order
+  - [ ] Task related elements etc in JS
+  - [ ] Anything else that still remains
+
+- [ ] Custom key-events
+  - [ ] Next/Previous Verse
+  - [ ] Next/Previous Page
+  - [ ] Submit
+
+- [ ] Detailed Help Messages
 
 ---
 
@@ -53,10 +68,10 @@
   - [x] Token Graph Interface
     - [x] Triplet based addition
     - [x] Show Live Graph (on button click)
-  - [x] Coreference Resolution Interface
+  - [x] Co-reference Resolution Interface
     - [x] Button click (for token selection) based interface
   - [x] Sentence Classification Interface
-  - [x] Intersentence Connection (Discourse Graph)
+  - [x] Inter-sentence Connection (Discourse Graph)
 - [x] Back-end
   - [x] Sentence Boundary
     - [x] Deleting necessary boundaries if required
@@ -66,7 +81,7 @@
   - [x] Token Graph
   - [x] Co-reference Resolution
   - [x] Sentence Classification
-  - [x] Intersentence Connection
+  - [x] Inter-sentence Connection
 
 ## Future
 
