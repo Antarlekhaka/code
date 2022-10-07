@@ -173,6 +173,11 @@
     const SAMPLE_VERSE_DATA_URL = "{{url_for('api_verse', verse_id=0)}}";
     const CURRENT_USERNAME = "{{current_user.username}}";
 </script>
+<script>
+    {% for task in constants.tasks %}
+    const TASK_{{task.id}}_SUBMIT_ACTION = "update_{{task.name}}";
+    {% endfor %}
+</script>
 <script src="{{url_for('static', filename='custom/js/corpus/elements.js')}}"></script>
 <script src="{{url_for('static', filename='custom/js/corpus/functions.js')}}"></script>
 <script src="{{url_for('static', filename='custom/js/corpus/tasks.js')}}"></script>
