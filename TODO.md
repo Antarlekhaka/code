@@ -1,6 +1,6 @@
 ## TODO
 
-- [ ] DiscourseGraph show graph
+- [ ] Log all Submits instead of just latest per task per annotator?
 
 - [ ] "Submit and go to next verse" ?
 
@@ -25,7 +25,7 @@
 - [ ] Remove `task_id` hardcoding
   - [x] Task table
   - [x] Remove `task_id` hard-coding in `server_sqla.py` api action handling
-  - [ ] Next task etc using Task.order
+  - [x] Next task etc using Task.order
   - [ ] Task related elements etc in JS
   - [ ] Anything else that still remains
 
@@ -38,6 +38,7 @@
 
 ---
 
+- [x] DiscourseGraph show graph
 - [x] Add triplets for token graph
 - [x] Show sentence with Token Graph
 - [x] Do task setup on the event of tab change (so we can avoid calling it from every submit and it'll be more consistent)
