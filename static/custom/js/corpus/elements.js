@@ -13,14 +13,6 @@ const $tabs = {
     "intersentence_connection": $("#task-7-tab"),
 }
 
-const $task_1_tab = $("#task-1-tab");
-const $task_2_tab = $("#task-2-tab");
-const $task_3_tab = $("#task-3-tab");
-const $task_4_tab = $("#task-4-tab");
-const $task_5_tab = $("#task-5-tab");
-const $task_6_tab = $("#task-6-tab");
-const $task_7_tab = $("#task-7-tab");
-
 const $task_1_submit = $("#task-1-submit");
 const $task_2_submit = $("#task-2-submit");
 const $task_3_submit = $("#task-3-submit");
@@ -36,8 +28,9 @@ const $task_1_input_after = $("#task-1-input-after")
 
 // Task-2
 const $task_2_anvaya_container = $("#anvaya-container");
-
 const $task_2_sample_anvaya_container = $("#sample-anvaya-container");
+
+/* *** Add Token *** */
 
 const $add_token_modal = $("#add-token-modal");
 const $add_token_form = $("#add-token-form");
@@ -58,6 +51,8 @@ const add_token_analysis_input_selector = ".add-token-analysis-input";
 const add_token_feature_label_selector = ".add-token-feature-label";
 const add_token_feature_input_selector = ".add-token-feature-input";
 
+/* ***************** */
+
 // Task-3
 const $task_3_form = $("#entity-form");
 const $task_3_entity_table = $("#entity-table");
@@ -67,14 +62,19 @@ const task_3_sample_entity_type = $("#sample-entity-type");
 // Task-4
 const $task_4_form = $("#token-graph-form");
 
+/* *** Graph Modal *** */
+
 const $show_graph_modal_buttons = $(".show-graph-modal-button");
 const $show_graph_modal = $("#show-graph-modal");
 const $show_graph_modal_label = $("#show-graph-modal-label")
-const $token_graph = $("#token-graph");
 const $snapshot_graph_button = $('#snapshot-graph-button');
+const $graph = $("#graph");
+
+/* ******************* */
 
 const $task_4_token_graph_container = $("#token-graph-container");
 const $task_4_token_graph_input_container = $("#token-graph-input-container");
+const $task_4_sentence_token_graph_input_containers = $(".sentence-token-graph-input-container");
 
 const $task_4_sample_token_graph_input_container = $("#sample-token-graph-input-container");
 const $task_4_sample_token_graph_input = $("#sample-token-graph-input");
@@ -114,6 +114,8 @@ const $task_7_intersentence_connection_reset_button = $("#intersentence-connecti
 const $task_7_intersentence_connection_confirm_button = $("#intersentence-connection-confirm-button");
 
 const $task_7_intersentence_connection_annotation_container = $("#intersentence-connection-annotation-container");
+
+const $show_graph_button_intersentence_connection = $("#show-graph-intersentence-connection");
 
 // Globals
 var storage = window.localStorage;
