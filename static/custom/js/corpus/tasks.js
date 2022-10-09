@@ -78,6 +78,73 @@ function generate_token_button(options) {
     return $token;
 }
 
+function draw_graph(data) {
+    const container = $graph[0];
+    const options = {
+        nodes: {
+            shape: 'box',
+            scaling: {
+                min: 12,
+                max: 24,
+                label: {
+                    min: 15,
+                    max: 30,
+                    drawThreshold: 12,
+                    maxVisible: 30
+                }
+            },
+            font: {
+                size: 16,
+                face: 'Noto Serif Devanagari'
+            },
+            margin: 8
+        },
+        edges: {
+            width: 0.15,
+            color: {
+                inherit: 'both'
+            },
+            scaling: {
+                min: 1,
+                max: 5,
+                label: {
+                    min: 10,
+                    max: 25,
+                    drawThreshold: 5,
+                    maxVisible: 20
+                }
+            },
+            font: {
+                size: 5,
+                face: 'Noto Serif Devanagari',
+            }
+        },
+        interaction: {
+            tooltipDelay: 100,
+            hideEdgesOnDrag: false,
+            hideEdgesOnZoom: false
+        },
+        layout: {
+            hierarchical: {
+               enabled: true,
+               sortMethod: 'directed',
+               levelSeparation: 200,
+               nodeSpacing: 150,
+               treeSpacing: 250,
+            },
+        },
+        physics: false
+    };
+
+    NETWORK = new vis.Network(container, data, options);
+
+    // get a JSON object
+    NETWORK.on("afterDrawing", function (ctx) {
+        const data_url = ctx.canvas.toDataURL();
+        $snapshot_graph_button.data("src", data_url);
+    });
+}
+
 function refresh_row_data(unique_id, _callback) {
     console.log(`Called ${arguments.callee.name}(${Object.values(arguments).join(", ")});`);
     const verse_data_url = SAMPLE_VERSE_DATA_URL.replace('0', unique_id);
@@ -917,73 +984,6 @@ function add_triplet_row($location) {
     return $row;
 }
 
-function draw_graph(data) {
-    const container = document.getElementById('token-graph');
-    const options = {
-        nodes: {
-            shape: 'box',
-            scaling: {
-                min: 12,
-                max: 24,
-                label: {
-                    min: 15,
-                    max: 30,
-                    drawThreshold: 12,
-                    maxVisible: 30
-                }
-            },
-            font: {
-                size: 16,
-                face: 'Noto Serif Devanagari'
-            },
-            margin: 8
-        },
-        edges: {
-            width: 0.15,
-            color: {
-                inherit: 'both'
-            },
-            scaling: {
-                min: 1,
-                max: 5,
-                label: {
-                    min: 10,
-                    max: 25,
-                    drawThreshold: 5,
-                    maxVisible: 20
-                }
-            },
-            font: {
-                size: 5,
-                face: 'Noto Serif Devanagari',
-            }
-        },
-        interaction: {
-            tooltipDelay: 100,
-            hideEdgesOnDrag: false,
-            hideEdgesOnZoom: false
-        },
-        layout: {
-            hierarchical: {
-               enabled: true,
-               sortMethod: 'directed',
-               levelSeparation: 200,
-               nodeSpacing: 150,
-               treeSpacing: 250,
-            },
-        },
-        physics: false
-    };
-
-    NETWORK = new vis.Network(container, data, options);
-
-    // get a JSON object
-    NETWORK.on("afterDrawing", function (ctx) {
-        const data_url = ctx.canvas.toDataURL();
-        $snapshot_graph_button.data("src", data_url);
-    });
-}
-
 function prepare_token_graph_data($data_location) {
     var data = {
         nodes: [],
@@ -1064,14 +1064,24 @@ function prepare_token_graph_data($data_location) {
 // Show Graph Modal
 $show_graph_modal.on('shown.bs.modal', function(e) {
     const $trigger_button = $(e.relatedTarget);
-    const $target_card = $trigger_button.parents(".sentence-token-graph-input-container");
-    const $target_location = $target_card.find(".token-graph-input");
+    const source_task = $trigger_button.data("task");
 
-    const sentence_text = $target_location.data("header-text");
-    $show_graph_modal_label.html(sentence_text);
+    if (source_task == "token_graph") {
+        // triggered from token_graph task
+        const $target_card = $trigger_button.parents(".sentence-token-graph-input-container");
+        const $target_location = $target_card.find(".token-graph-input");
 
-    const graph_data = prepare_token_graph_data($target_location);
-    draw_graph(graph_data);
+        const sentence_text = $target_location.data("header-text");
+        $show_graph_modal_label.html(sentence_text);
+
+        const graph_data = prepare_token_graph_data($target_location);
+        draw_graph(graph_data);
+
+    } else if (source_task == "intersentence_connection") {
+        // triggered from intersentence_connection task
+        const graph_data = prepare_intersentence_connection_data();
+        draw_graph(graph_data);
+    }
 });
 
 /* Task-4 Actions */
@@ -1102,7 +1112,7 @@ $task_4_submit.click(function () {
     }
 
     var graph_data = [];
-    $(".sentence-token-graph-input-container").each(function () {
+    $task_4_sentence_token_graph_input_containers.each(function () {
         const boundary_id = $(this).data("boundary-id");
 
         $(this).find(".triplet-row").each(function () {
@@ -1672,6 +1682,124 @@ function add_intersentence_connection_row($source_token, $target_token, relation
         $(this).parent().parent().remove();
     });
 
+}
+
+function prepare_intersentence_connection_data($data_location) {
+    // TODO: update for discourse graph
+
+    var data = {
+        nodes: [],
+        edges: []
+    };
+
+    // temporary id store
+    // TODO: consider replacing it with actual node_ids
+    //       don't think there's any real benefit either way
+    var node_ids = {};
+    var node_id = 0;
+    function get_node_id() {
+        return ++node_id;
+    }
+
+    // var intersentence_connection_data = [];
+
+    const $intersentence_connection_annotation_rows = $task_7_intersentence_connection_annotation_container.find('.intersentence-connection-annotation-row');
+    $intersentence_connection_annotation_rows.each(function(_index, intersentence_connection_row) {
+        const $intersentence_connection_row = $(intersentence_connection_row);
+        const $source_token = $intersentence_connection_row.find(".intersentence-connection-source-token");
+        const $target_token = $intersentence_connection_row.find(".intersentence-connection-target-token");
+        const $relation = $intersentence_connection_row.find(".intersentence-connection-relation");
+
+        const source_is_sentence_token = $source_token.hasClass("intersentence-connection-context-sentence-token");
+        const target_is_sentence_token = $target_token.hasClass("intersentence-connection-context-sentence-token");
+
+        // type == 0: token-token connection
+        // type == 1: token-sentence connection
+        // type == 2: sentence-token connection
+        // type == 3: sentence-sentence connection
+
+        var relation_type = 0
+        if (source_is_sentence_token && target_is_sentence_token) {
+            relation_type = 3;
+        } else {
+            if (source_is_sentence_token) {
+                relation_type = 2;
+            }
+            if (target_is_sentence_token) {
+                relation_type = 1;
+            }
+        }
+
+        if (!$relation.selectpicker("val")) {
+            return;
+            // "return;" in .each() ==> "continue;"
+            // "return false;" in .each() ==> "break;"
+        }
+
+        const source_entity = $source_token.html();
+        const target_entity = $target_token.html();
+
+        const relation_label_value = $relation.selectpicker("val");
+        const relation_label = $relation.find(`[value=${relation_label_value}]`).data("subtext");
+
+        // intersentence_connection_data.push({
+        //     "src_boundary_id": $source_token.data("boundary-id"),
+        //     "src_token_id": $source_token.data("token-id"),
+        //     "label_id": $relation.selectpicker("val"),
+        //     "dst_boundary_id": $target_token.data("boundary-id"),
+        //     "dst_token_id": $target_token.data("token-id"),
+        //     "relation_type": relation_type
+        // });
+
+
+        // TODO: colour encoding as per relation_type ?
+
+        if (!node_ids.hasOwnProperty(source_entity)) {
+            node_ids[source_entity] = get_node_id();
+
+            data.nodes.push({
+                id: node_ids[source_entity],
+                label: source_entity, // label
+                title: [
+                    `Sentence ID: ${$source_token.data("boundary-id")}`,
+                    `Token ID: ${$source_token.data("token-id")}`,
+                ].join("\n"), // title (visible on hover)
+                value: 3,
+                group: null // group-id (upos/xpos based?)
+            });
+        }
+        if (!node_ids.hasOwnProperty(target_entity)) {
+            node_ids[target_entity] = get_node_id();
+
+            data.nodes.push({
+                id: node_ids[target_entity],
+                label: target_entity, // label
+                title: [
+                    `Sentence ID: ${$target_token.data("boundary-id")}`,
+                    `Token ID: ${$target_token.data("token-id")}`,
+                ].join("\n"), // title (visible on hover)
+                value: 3,
+                group: null // group-id (upos/xpos based?)
+            });
+        }
+
+        data.edges.push({
+            from: node_ids[source_entity], // start-id
+            to: node_ids[target_entity],  // end-id
+            label: relation_label, // label
+            title: `Label ID: ${relation_label_value}`, // title (visible on hover)
+            arrows: {
+                to: {
+                    enabled: true
+                }
+            },
+            value: 3,
+        });
+    });
+
+    console.log("Graph Data: ");
+    console.log(data);
+    return data;
 }
 
 $task_7_intersentence_connection_confirm_button.click(function () {
