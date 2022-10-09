@@ -1,4 +1,9 @@
 {% extends "task_base.html" %}
+{% block extra_header %}
+<button id="show-graph-intersentence-connection" type="button" title="Show Graph" class="btn btn-sm btn-info ml-1 float-right show-graph-modal-button" data-task="{{task.name}}" data-toggle="modal" data-target="#show-graph-modal" disabled>
+    <i class="fa-solid fa-diagram-project"></i>
+</button>
+{% endblock %}
 {% block body %}
 <!-- Context -->
 <div id="intersentence-connection-context-container" class="scroll">
