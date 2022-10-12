@@ -74,7 +74,6 @@ const $graph = $("#graph");
 
 const $task_4_token_graph_container = $("#token-graph-container");
 const $task_4_token_graph_input_container = $("#token-graph-input-container");
-const $task_4_sentence_token_graph_input_containers = $(".sentence-token-graph-input-container");
 
 const $task_4_sample_token_graph_input_container = $("#sample-token-graph-input-container");
 const $task_4_sample_token_graph_input = $("#sample-token-graph-input");

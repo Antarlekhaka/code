@@ -12,6 +12,8 @@ const default_token_class_manual = "btn-secondary";
 const default_token_element = "<span />";
 const default_token_data = {};
 
+const sentence_token_graph_input_container_class = "sentence-token-graph-input-container";
+
 // Generic Functions
 
 function generate_token_button(options) {
@@ -832,6 +834,7 @@ function setup_token_graph(verse_id) {
     for (const [boundary_id, used_token_ids] of Object.entries(boundary_tokens)) {
         const $graph_input = $task_4_sample_token_graph_input.clone();
         $graph_input.prop("id", `token-graph-input-${boundary_id}`);
+        $graph_input.addClass(sentence_token_graph_input_container_class);
         $graph_input.data("boundary-id", boundary_id);
         $graph_input.appendTo($task_4_token_graph_input_container);
 
@@ -1068,7 +1071,7 @@ $show_graph_modal.on('shown.bs.modal', function(e) {
 
     if (source_task == "token_graph") {
         // triggered from token_graph task
-        const $target_card = $trigger_button.parents(".sentence-token-graph-input-container");
+        const $target_card = $trigger_button.parents(`.${sentence_token_graph_input_container_class}`);
         const $target_location = $target_card.find(".token-graph-input");
 
         const sentence_text = $target_location.data("header-text");
@@ -1112,13 +1115,16 @@ $task_4_submit.click(function () {
     }
 
     var graph_data = [];
-    $task_4_sentence_token_graph_input_containers.each(function () {
-        const boundary_id = $(this).data("boundary-id");
 
-        $(this).find(".triplet-row").each(function () {
-            const $source_entity = $(this).find('.source-entity');
-            const $relation_label = $(this).find('.relation-label');
-            const $target_entity = $(this).find('.target-entity');
+    // NOTE: selector cannot be constant, due to being dynamic
+    $(`.${sentence_token_graph_input_container_class}`).each(function (_index, _container) {
+        const $container = $(_container);
+        const boundary_id = $container.data("boundary-id");
+        console.log($container);
+        $container.find(".triplet-row").each(function () {
+            const $source_entity = $container.find('.source-entity');
+            const $relation_label = $container.find('.relation-label');
+            const $target_entity = $container.find('.target-entity');
 
             const source_entity_id = $source_entity.selectpicker('val');
             const relation_label_id = $relation_label.selectpicker('val');
@@ -1129,10 +1135,10 @@ $task_4_submit.click(function () {
                 "label_id": relation_label_id,
                 "dst_id": target_entity_id
             });
-            console.log("Submit Graph Data: ");
-            console.log(graph_data);
         });
     });
+    console.log("Submit Graph Data: ");
+    console.log(graph_data);
 
     $.post(API_URL, {
         action: TASK_4_SUBMIT_ACTION,
