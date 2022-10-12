@@ -1437,7 +1437,7 @@ def action():
             'sentence_type_add', 'sentence_type_remove',
 
             # - Discourse Relation Type
-            'discourse_type_add', 'discourse_type_remove'
+            'discourse_type_add', 'discourse_type_remove',
 
             # Data
             'corpus_add', 'chapter_add',
@@ -1669,7 +1669,8 @@ def action():
 
             try:
                 data = DCS.parse_conllu(chapter_file.read().decode())
-            except Exception:
+            except Exception as e:
+                webapp.logger.exception(e)
                 flash("Invalid file format.")
                 return redirect(request.referrer)
 
