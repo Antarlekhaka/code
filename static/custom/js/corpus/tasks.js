@@ -1117,14 +1117,15 @@ $task_4_submit.click(function () {
     var graph_data = [];
 
     // NOTE: selector cannot be constant, due to being dynamic
-    $(`.${sentence_token_graph_input_container_class}`).each(function (_index, _container) {
+    $(`.${sentence_token_graph_input_container_class}`).each(function (_container_index, _container) {
         const $container = $(_container);
         const boundary_id = $container.data("boundary-id");
         console.log($container);
-        $container.find(".triplet-row").each(function () {
-            const $source_entity = $container.find('.source-entity');
-            const $relation_label = $container.find('.relation-label');
-            const $target_entity = $container.find('.target-entity');
+        $container.find(".triplet-row").each(function (_row_index, _triplet_row) {
+            const $triplet_row = $(_triplet_row);
+            const $source_entity = $triplet_row.find('.source-entity');
+            const $relation_label = $triplet_row.find('.relation-label');
+            const $target_entity = $triplet_row.find('.target-entity');
 
             const source_entity_id = $source_entity.selectpicker('val');
             const relation_label_id = $relation_label.selectpicker('val');
