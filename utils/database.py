@@ -389,6 +389,9 @@ def get_sentences(
     """
     sentences = {}
 
+    # TODO: Consider only verses from this chapter
+    # TODO: If too many tokens, emit an error
+
     # boundaries present in the current verse
     boundaries = Boundary.query.filter(
         Boundary.verse_id == verse_id,

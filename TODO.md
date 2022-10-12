@@ -1,5 +1,15 @@
 ## TODO
 
+- [ ] Export Data
+  - [ ] Every task in 2 formats
+    - [ ] suitable for annotators
+    - [ ] annotator visualization?
+    - [ ] (admin) suitable for programmers
+    - [ ] decide a standard format
+- [ ] Connect to Sangrahaka
+  - [ ] Import entities (do it manually in database)
+
+
 - [ ] Log all Submits instead of just latest per task per annotator?
 
 - [ ] "Submit and go to next verse" ?
@@ -53,6 +63,10 @@
 
 
 ## Bugs
+
+- [ ] Task 4 not recording
+- [ ] Task 4 display only displays single relation out of existing ones
+- [ ] If sentence boundary is marked for a verse in the next chapter, all the nodes in between get counted as sentences
 
 - [ ] If there are deleted items, it triggers a "Successfully updated" message even if there are no changes. Refer to `server_sqla.py` for further details.
 
