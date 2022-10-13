@@ -31,16 +31,16 @@ function generate_token_button(options) {
     var token_text = token.text;
 
     // whenever unsandhied is available, use it?
-    if (token.analysis.unsandhied && token.analysis.unsandhied != "_") {
-        token_text = token.analysis.unsandhied;
+    if (token.analysis.misc.Unsandhied && token.analysis.misc.Unsandhied != "_") {
+        token_text = token.analysis.misc.Unsandhied;
     }
 
     if (!token.text || (token.text == "_")) {
         // subtoken (result of sandhi or samaasa split)
         token_class = token_class_subtoken;
-        token_text = token.analysis.unsandhied;
+        token_text = token.analysis.misc.Unsandhied;
         // setting token_text again is actually redundant
-        // since we already use token.analysis.unsandhied whenever available
+        // since we already use token.analysis.misc.Unsandhied whenever available
     }
 
     // can both text and unsandhied be null?
@@ -58,9 +58,9 @@ function generate_token_button(options) {
         class: [token_class_common, token_class].join(" "),
         title: [
             `ID: ${token.id}`,
-            `Text:${token.text}`,
+            `Text: ${token.text}`,
             `Lemma: ${token.lemma}`,
-            `Padapāṭha: ${token.analysis.unsandhied}`,
+            `Padapāṭha: ${token.analysis.misc.Unsandhied}`,
         ].join("\n"),
         html: token_text
     });
@@ -561,9 +561,11 @@ $add_token_button.click(function() {
         form: token_text,
         lemma: token_lemma,
         upos: token_analysis_upos,
-        xpos: token_analysis_xpos, // Corpus Specific
-        unsandhied: token_text, // Corpus Specific
-        feats: token_features
+        xpos: token_analysis_xpos,
+        feats: token_features,
+        misc: {
+            "Unsandhied": token_text
+        } // Corpus Specific
     }
     const token_data = {
         text: token_text,
