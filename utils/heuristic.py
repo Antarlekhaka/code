@@ -27,6 +27,9 @@ def get_anvaya(token_list: Dict[int, Dict]) -> List[int]:
     unused = set(token_list)
     for case in ANVAYA_CASE_ORDER:
         for token_id, token in token_list.items():
+            if not isinstance(token["analysis"], dict):
+                continue
+
             if token["analysis"].get("feats", {}).get("Case") == case:
                 case_order.append(token_id)
                 unused.remove(token_id)
