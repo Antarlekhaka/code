@@ -13,7 +13,7 @@
                     <div class="col-sm-3 my-auto">
                         <select class="lead m-1 selectpicker" name="target_user" id="target_user" data-live-search="true">
                             {% for user in data.users %}
-                            <option value="{{user}}">{{user}}</option>
+                            <option value="{{user.username}}">{{user.username}}</option>
                             {% endfor %}
                         </select>
                     </div>
@@ -26,11 +26,11 @@
                         </select>
                     </div>
                     <div class="col-sm my-auto">
-                        <button type="submit" name="action" value="user_role_add" class="btn btn-success disabled m-1">
+                        <button type="submit" name="action" value="user_role_add" class="btn btn-success m-1">
                             Add
                         </button>
                         <button type="submit" name="action" value="user_role_remove"
-                            class="btn btn-danger disabled m-1">
+                            class="btn btn-danger m-1">
                             Remove
                         </button>
                     </div>
@@ -49,7 +49,7 @@
                         aria-expanded="false" aria-controls="corpus_container">
                         Create Corpus
                     </div>
-                    <div id="corpus_container" class="collapse" data-parent="#manage_data">
+                    <div id="corpus_container" role="tabpanel" class="collapse" data-parent="#manage_data">
                         <div class="card-body">
                             <form method=POST enctype=multipart/form-data action="{{url_for('action')}}">
                                 <input type="hidden" name="csrf_token" value={{csrf_token()}}>
@@ -69,7 +69,7 @@
                                         <input type="text" class="form-control"  name="corpus_description" id="corpus_description" placeholder="Enter new corpus description">
                                     </div>
                                 </div>
-                                <button type="submit" name="action" value="corpus_add" class="btn btn-success disabled m-1">
+                                <button type="submit" name="action" value="corpus_add" class="btn btn-success m-1">
                                     Create
                                 </button>
                             </form>
@@ -77,11 +77,11 @@
                     </div>
                 </div>
                 <div class="card" style="border-top-left-radius: 0; border-top-right-radius: 0;">
-                    <div class="card-header" data-toggle="collapse" data-target="#chapter_container"
-                        aria-expanded="true" aria-controls="chapter_container">
+                    <div class="card-header collapsed" data-toggle="collapse" data-target="#chapter_container"
+                        aria-expanded="false" aria-controls="chapter_container">
                         Add Chapter
                     </div>
-                    <div id="chapter_container" role="tabpanel" class="collapse show" data-parent="#manage_data">
+                    <div id="chapter_container" role="tabpanel" class="collapse" data-parent="#manage_data">
                         <div class="card-body">
                             <form method=POST enctype=multipart/form-data action="{{url_for('action')}}">
                                 <input type="hidden" name="csrf_token" value={{csrf_token()}}>
@@ -127,7 +127,7 @@
                                         bsCustomFileInput.init();
                                     })
                                 </script>
-                                <button type="submit" name="action" value="chapter_add" class="btn btn-success disabled m-1">
+                                <button type="submit" name="action" value="chapter_add" class="btn btn-success m-1">
                                     Add
                                 </button>
                             </form>
@@ -135,34 +135,57 @@
                     </div>
                 </div>
                 <div class="card" style="border-top-left-radius: 0; border-top-right-radius: 0;">
-                    <div class="card-header collapsed" data-toggle="collapse" data-target="#download_container"
-                        aria-expanded="false" aria-controls="download_container">
+                    <div class="card-header" data-toggle="collapse" data-target="#download_container"
+                        aria-expanded="true" aria-controls="download_container">
                         Download Annotations
                     </div>
-                    <div id="download_container" role="tabpanel" class="collapse" data-parent="#manage_data">
+                    <div id="download_container" role="tabpanel" class="collapse show" data-parent="#manage_data">
                         <div class="card-body">
                             <form method=POST enctype=multipart/form-data action="{{url_for('action')}}">
                                 <input type="hidden" name="csrf_token" value={{csrf_token()}}>
 
-                                        <label for="annotator">User</label>
-                                        <select class="lead m-1 selectpicker" name="annotator" id="annotator"
+                                <div class="form-group row">
+                                    <label class="col-sm-2" for="download_annotator_id">User</label>
+                                    <div class="col-sm-3">
+                                        <select class="lead selectpicker" name="annotator_id" id="download_annotator_id"
                                             data-container="body"
-                                            data-width="25%"
+                                            data-width="100%"
                                             data-live-search="true"
                                             data-actions-box="true"
                                             data-select-all-text="All"
                                             data-deselect-all-text="None"
                                             data-selected-text-format="count"
                                             multiple>
-                                            {% for user in data.users %}
-                                            <option value="{{user}}">{{user}}</option>
+                                            {% for user in data.annotators %}
+                                            <option value="{{user.id}}">{{user.username}}</option>
                                             {% endfor %}
                                         </select>
+                                    </div>
 
-                                        <label for="corpus_id">Chapter</label>
-                                        <select class="lead m-1 selectpicker" name="chapter_id" id="annotator_chapter_id"
+                                    <label class="col-sm-1" for="download_task_id">Task</label>
+                                    <div class="col-sm-5">
+                                        <select class="lead selectpicker" name="task_id" id="download_task_id"
                                             data-container="body"
-                                            data-width="50%"
+                                            data-width="100%"
+                                            data-live-search="true"
+                                            data-actions-box="true"
+                                            data-select-all-text="All"
+                                            data-deselect-all-text="None"
+                                            data-selected-text-format="count"
+                                            multiple>
+                                            {% for task in constants.tasks %}
+                                            <option value="{{task.id}}">{{task.title}}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="form-group row">
+                                    <label class="col-sm-2" for="download_chapter_id">Chapter</label>
+                                    <div class="col-sm-9">
+                                        <select class="lead selectpicker" name="chapter_id" id="download_chapter_id"
+                                            data-container="body"
+                                            data-width="100%"
                                             data-live-search="true"
                                             data-actions-box="true"
                                             data-select-all-text="All"
@@ -175,11 +198,13 @@
                                             {% endfor %}
                                             {% endfor %}
                                         </select>
-
-                                        <button type="submit" name="action" value="annotation_download" class="btn btn-secondary disabled">
+                                    </div>
+                                    <div class="col-sm-1">
+                                        <button type="submit" name="action" value="annotation_download" class="btn btn-secondary float-right">
                                             <i class="fa fa-download"></i>
                                         </button>
-
+                                    </div>
+                                </div>
                             </form>
                         </div>
                     </div>
@@ -231,7 +256,7 @@
                                 </label>
                                 <input class="form-control" type="text" name="{{label.name}}_label_desc" id="{{label.name}}-label-desc" required>
                             </div>
-                            <button type="submit" name="action" value="{{label.name}}_type_add" class="btn btn-success disabled m-1">
+                            <button type="submit" name="action" value="{{label.name}}_type_add" class="btn btn-success m-1">
                                 Add
                             </button>
                         </form>
@@ -245,7 +270,7 @@
                                     <option value="{{_label}}">{{_description}}</option>
                                     {% endfor %}
                                 </select>
-                                <button type="submit" name="action" value="{{label.name}}_type_remove" class="btn btn-danger disabled m-1">
+                                <button type="submit" name="action" value="{{label.name}}_type_remove" class="btn btn-danger m-1">
                                     Remove
                                 </button>
                             </div>
@@ -257,7 +282,7 @@
         </div>
     </div>
 
-    {% if current_user.has_role('owner') %}
+    {% if current_user.has_role('owner') and data.pa %}
     <!-- PythonAnywhere -->
     <div class="card mt-2">
         <div class="card-header lead">
@@ -266,14 +291,14 @@
         <div class="card-body">
             <form method=POST enctype=multipart/form-data action="{{url_for('action')}}">
                 <input type="hidden" name="csrf_token" value={{csrf_token()}}>
-                <button type="submit" name="action" value="application_info" class="btn btn-primary disabled">
+                <button type="submit" name="action" value="application_info" class="btn btn-primary">
                     info
                 </button>
-                <button type="submit" name="action" value="application_update" class="btn btn-warning disabled">
+                <button type="submit" name="action" value="application_update" class="btn btn-warning">
                     update
                 </button>
                 <!-- reload button not actually interacting with form -->
-                <button type="button" id="application_reload" class="btn btn-success disabled">
+                <button type="button" id="application_reload" class="btn btn-success">
                     reload
                 </button>
             </form>

@@ -424,9 +424,21 @@ def show_admin():
     user_query = user_model.query
     role_query = role_model.query
 
-    data['users'] = [user.username for user in user_query.all()]
-    data['annotators'] = [user.username for user in user_query.all()
-                          if annotator_role in user.roles]
+    data['users'] = [
+        {
+            "id": user.id,
+            "username": user.username
+        }
+        for user in user_query.all()
+    ]
+    data['annotators'] = [
+        {
+            "id": user.id,
+            "username": user.username
+        }
+        for user in user_query.all()
+        if annotator_role in user.roles
+    ]
     data['roles'] = [
         role.name
         for role in role_query.order_by(role_model.level).all()
@@ -434,12 +446,20 @@ def show_admin():
     ]
 
     data['corpus_list'] = [
-        {'id': corpus.id, 'name': corpus.name, 'chapters': [
-            {'id': chapter.id, 'name': chapter.name}
-            for chapter in corpus.chapters.all()
-        ]}
+        {
+            'id': corpus.id,
+            'name': corpus.name,
+            'chapters': [
+                {
+                    'id': chapter.id,
+                    'name': chapter.name
+                }
+                for chapter in corpus.chapters.all()
+            ]
+        }
         for corpus in Corpus.query.all()
     ]
+    data['pa'] = app.pa_enabled
 
     admin_result = session.get('admin_result', None)
     if admin_result:
@@ -1479,6 +1499,9 @@ def action():
 
             # Data
             'corpus_add', 'chapter_add',
+
+            # Export
+            'annotation_download',
         ],
         'curator': [],
         'annotator': [],
@@ -1637,7 +1660,7 @@ def action():
                     message = f"{object_name.title()} label '{object_label}' already exists."
 
         if target_action == 'remove':
-            message = f"{object_name.title()} label '{object_label}' does not exists."
+            message = f"{object_name.title()} label '{object_label}' does not exist."
             if _object_label is not None and not _object_label.is_deleted:
                 objects_with_given_label = _annotation.query.filter(
                     getattr(
@@ -1806,6 +1829,10 @@ def action():
         else:
             flash("Invalid file or file extension.")
 
+        return redirect(request.referrer)
+
+    if action == 'annotation_download':
+        flash("Work in progress")
         return redirect(request.referrer)
 
     # ----------------------------------------------------------------------- #
