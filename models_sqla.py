@@ -171,13 +171,17 @@ class Task(db.Model):
 
 class Progress(db.Model):
     id = Column(Integer, primary_key=True)
-    verse_id = Column(Integer, ForeignKey('verse.id'), nullable=False)
+    verse_id = Column(Integer, ForeignKey('verse.id', ondelete='CASCADE'),
+                      nullable=False, index=True)
     annotator_id = Column(Integer, ForeignKey('user.id'), nullable=False)
     task_id = Column(Integer, ForeignKey('task.id'), nullable=False)
     updated_at = Column(DateTime, default=dt.utcnow, onupdate=dt.utcnow)
 
     verse = relationship(
-        'Verse', backref=backref('progress', lazy='dynamic')
+        'Verse',
+        backref=backref(
+            'progress', cascade='all,delete-orphan', lazy='dynamic'
+        )
     )
     annotator = relationship(
         'User', backref=backref('progress', lazy='dynamic')
@@ -197,14 +201,18 @@ class Progress(db.Model):
 class Boundary(db.Model):
     id = Column(Integer, primary_key=True)
     # ----------------------------------------------------------------------- #
-    verse_id = Column(Integer, ForeignKey('verse.id'), nullable=False)
+    verse_id = Column(Integer, ForeignKey('verse.id', ondelete='CASCADE'),
+                      nullable=False, index=True)
     token_id = Column(Integer, ForeignKey('token.id'), nullable=False)
     # ----------------------------------------------------------------------- #
     annotator_id = Column(Integer, ForeignKey('user.id'), nullable=False)
     updated_at = Column(DateTime, default=dt.utcnow, onupdate=dt.utcnow)
 
     verse = relationship(
-        'Verse', backref=backref('boundaries', lazy='dynamic')
+        'Verse',
+        backref=backref(
+            'boundaries', cascade='all,delete-orphan', lazy='dynamic'
+        )
     )
     token = relationship('Token', foreign_keys=[token_id])
     annotator = relationship(
