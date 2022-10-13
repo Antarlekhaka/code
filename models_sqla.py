@@ -475,14 +475,6 @@ class DiscourseLabel(db.Model):
 #     task = relationship('Task', backref=backref('labels'))
 
 
-# class Task(db.Model):
-#     __tablename__ = "task"
-#     id = Column(Integer, primary_key=True)
-#     type = Column(String(255), nullable=False)
-#     name = Column(String(255), nullable=False)
-#     description = Column(String(255))
-#     is_deleted = Column(Boolean, default=False, nullable=False)
-
 ###############################################################################
 # Setup Flask-Security
 
