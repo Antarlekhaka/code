@@ -1739,18 +1739,18 @@ def action():
 
             for line in data:
                 unit = {
-                    "id": line.metadata["line_id"],
-                    "verse": line.metadata['chapter_verse_id'],
+                    "id": int(line.metadata["sent_id"]),
+                    "verse": int(line.metadata["sent_counter"]),
                     "text": line.metadata["text"],
                     "tokens": [
                         {
                             "id": token.get("id") or "",
                             "form": token.get("form") or "",
-                            "unsandhied": token.get("unsandhied") or "",
                             "lemma": token.get("lemma") or "",
                             "upos": token.get("upos") or "",
                             "xpos": token.get("xpos") or "",
-                            "feats": token.get("feats") or {}
+                            "feats": token.get("feats") or {},
+                            "misc": token.get("misc") or {}
                         }
                         for token in line
                     ]
@@ -1805,13 +1805,16 @@ def action():
                             token.analysis = _token
                             token.display = {
                                 "Word": _token["form"],
-                                "Padapāṭha": _token["unsandhied"],
                                 "Lemma": _token["lemma"],
                                 "UPOS": _token["upos"],
                                 "XPOS": _token["xpos"],
                                 "Features": "<br>".join(
                                     f"{k}={v}"
                                     for k, v in _token["feats"].items()
+                                ),
+                                "Misc": "<br>".join(
+                                    f"{k}={v}"
+                                    for k, v in _token["misc"].items()
                                 )
                             }
                             db.session.add(token)

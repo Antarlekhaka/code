@@ -7,7 +7,6 @@ DCS CoNLL-U Parsing Utility
 """
 
 from pathlib import Path
-from typing import Tuple
 
 import conllu
 
@@ -30,29 +29,27 @@ def parse_int(text: str) -> int or None:
 class DigitalCorpusSanskrit:
     INTERNAL_SCHEME = sanscript.IAST
     FIELDS = [
-        "id",  # 01
-        "form",  # 02 word form or punctuation symbol
+        "id",      # 01
+        "form",    # 02 word form or punctuation symbol
         # if it contains multiple words, the annotation
         # follows the proposals for multiword annotation
         # (URL: format.html#words-tokens-and-empty-nodes)
-        "lemma",  # 03 lemma or stem, lexical id of lemma is in column 11
-        "upos",  # 04 universal POS tags
-        "xpos",  # 05 language specific POS tags, described in `pos.csv`
-        "feats",  # 06
-        "head",  # 07
+        "lemma",   # 03 lemma or stem, lexical id of lemma is in column 11
+        "upos",    # 04 universal POS tags
+        "xpos",    # 05 language specific POS tags, described in `pos.csv`
+        "feats",   # 06
+        "head",    # 07
         "deprel",  # 08
-        "deps",  # 09
-        "misc",  # 10
-        "lemma_id",  # 11 numeric, matches first column of `dictionary.csv`
-        "unsandhied",  # 12
-        "sense_id",  # 13 numeric, matches first column of `word-senses.csv`
+        "deps",    # 09
+        "misc"     # 10
+        # Misc Fields
+        # LemmaId: matches first column of `dictionary.csv`
+        # OccId: id of this occurence of the word
+        # Unsandhied: Unsandhied word form (padapāṭha version)
+        # WordSem: Ids of word semantic concepts, matches first column of `word-senses.csv`
+        # Punctuation: [`comma`, `fullStop`] not part of original Sanskrit text but inserted in a separate layer
+        # IsMantra: true if this word forms a part of a mantra as recorded in Bloomfield's Vedic Concordance
     ]
-    METADATA_INFO = {
-        "text_line": "text",
-        "text_line_id": "line_id",
-        "text_line_counter": "chapter_verse_id",
-        "text_line_subcounter": "verse_line_id",
-    }
 
     def __init__(self, scheme=sanscript.DEVANAGARI):
         self.scheme = scheme
@@ -77,8 +74,7 @@ class DigitalCorpusSanskrit:
             line
             for line in conllu.parse(
                 dcs_conllu_content,
-                fields=self.FIELDS,
-                metadata_parsers={"__fallback__": self._metadata_parser}
+                fields=self.FIELDS
             )
             if line
         ]
@@ -138,30 +134,32 @@ class DigitalCorpusSanskrit:
         if self.scheme == self.INTERNAL_SCHEME:
             return token
 
-        transliterate_keys = ["form", "lemma", "unsandhied"]
+        transliterate_keys = ["form", "lemma", "misc.Unsandhied"]
         for key in transliterate_keys:
-            if key not in token:
+            if "." in key:
+                _key, _subkey = key.split(".", 1)
+            else:
+                _key = key
+                _subkey = None
+
+            if _key not in token:
                 continue
-            token[key] = transliterate(
-                token[key], self.INTERNAL_SCHEME, self.scheme
-            )
+
+            if token[_key] is None:
+                continue
+
+            if _subkey is None:
+                token[_key] = transliterate(
+                    token[_key], self.INTERNAL_SCHEME, self.scheme
+                )
+            else:
+                if token[_key][_subkey] is None:
+                    continue
+                token[_key][_subkey] = transliterate(
+                    token[_key][_subkey], self.INTERNAL_SCHEME, self.scheme
+                )
         return token
 
     # ----------------------------------------------------------------------- #
-
-    def _metadata_parser(self, k: str, v: str) -> Tuple[str, str]:
-        """Metadata Parser for `conllu.parse()`"""
-        parts = k.split(":", 1)
-
-        key = parts[0].strip()
-        value = parts[1].strip()
-
-        key = self.METADATA_INFO.get(key, key)
-
-        if key in ["line_id", "chapter_verse_id", "verse_line_id"]:
-            value = parse_int(value)
-
-        return key, value
-
 
 ###############################################################################
