@@ -14,7 +14,9 @@
 
 - [ ] "Submit and go to next verse" ?
 
-- [ ] Accept CSV/JSON files for initialization of various labels
+- [ ] Initialization of various tabels
+  - [x] Accept JSON files
+  - [ ] Accept CSV files
 
 - [ ] Admin
   - [ ] Download Data
