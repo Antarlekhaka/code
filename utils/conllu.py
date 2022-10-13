@@ -46,9 +46,12 @@ class DigitalCorpusSanskrit:
         # LemmaId: matches first column of `dictionary.csv`
         # OccId: id of this occurence of the word
         # Unsandhied: Unsandhied word form (padapāṭha version)
-        # WordSem: Ids of word semantic concepts, matches first column of `word-senses.csv`
-        # Punctuation: [`comma`, `fullStop`] not part of original Sanskrit text but inserted in a separate layer
-        # IsMantra: true if this word forms a part of a mantra as recorded in Bloomfield's Vedic Concordance
+        # WordSem: Ids of word semantic concepts, matches first column of
+        #          `word-senses.csv`
+        # Punctuation: [`comma`, `fullStop`] not part of original Sanskrit text
+        #               but inserted in a separate layer
+        # IsMantra: true if this word forms a part of a mantra as recorded in
+        #           Bloomfield's Vedic Concordance
     ]
 
     def __init__(self, scheme=sanscript.DEVANAGARI):
@@ -159,6 +162,54 @@ class DigitalCorpusSanskrit:
                     token[_key][_subkey], self.INTERNAL_SCHEME, self.scheme
                 )
         return token
+
+    # ----------------------------------------------------------------------- #
+
+    def read_conllu_data(self, dcs_conllu_data: str):
+        """
+        Parse a DCS CoNLL-U File
+        Prepare it for Data Input (Group Verses etc)
+
+        Parameters
+        ----------
+        dcs_conllu_data : str
+            DCS CoNLL-U Content
+        """
+
+        data = self.parse_conllu(dcs_conllu_data)
+        chapter_lines = []
+
+        for line in data:
+            unit = {
+                "id": int(line.metadata["sent_id"]),
+                "verse_id": int(line.metadata["sent_counter"]),
+                "text": line.metadata["text"],
+                "tokens": [
+                    {
+                        "id": token.get("id") or "",
+                        "form": token.get("form") or "",
+                        "lemma": token.get("lemma") or "",
+                        "upos": token.get("upos") or "",
+                        "xpos": token.get("xpos") or "",
+                        "feats": token.get("feats") or {},
+                        "misc": token.get("misc") or {}
+                    }
+                    for token in line
+                ]
+            }
+            chapter_lines.append(unit)
+
+        # Group verses
+        verses = []
+        last_verse_id = None
+        for _line in chapter_lines:
+            line_verse_id = _line.get("verse_id")
+            if line_verse_id is None or line_verse_id != last_verse_id:
+                last_verse_id = line_verse_id
+                verses.append([])
+            verses[-1].append(_line)
+
+        return verses
 
     # ----------------------------------------------------------------------- #
 

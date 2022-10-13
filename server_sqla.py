@@ -1728,44 +1728,25 @@ def action():
                 flash("No corpus selected.")
                 return redirect(request.referrer)
 
+            # NOTE: "processing" which should give data as
+            # [[[], [], [], ...], [[], [], [], ...], ...]
+            # data: list of verses
+            # verse: list of lines
+            # line: dict (id, verse_id, text, tokens)
+            # should have metadata, text, line_id, chapter_verse_id
+
+            # tokens: list of dict
+            # token: dict 10 CoNLL-U mandatory fields
+            # in particular,
+            # "id", "form", "lemma", "upos", "xpos", "feats", "misc"
+            # function should take file and produce such output
+
             try:
-                data = DCS.parse_conllu(chapter_file.read().decode())
+                verses = DCS.read_conllu_data(chapter_file.read().decode())
             except Exception as e:
                 webapp.logger.exception(e)
                 flash("Invalid file format.")
                 return redirect(request.referrer)
-
-            chapter_lines = []
-
-            for line in data:
-                unit = {
-                    "id": int(line.metadata["sent_id"]),
-                    "verse": int(line.metadata["sent_counter"]),
-                    "text": line.metadata["text"],
-                    "tokens": [
-                        {
-                            "id": token.get("id") or "",
-                            "form": token.get("form") or "",
-                            "lemma": token.get("lemma") or "",
-                            "upos": token.get("upos") or "",
-                            "xpos": token.get("xpos") or "",
-                            "feats": token.get("feats") or {},
-                            "misc": token.get("misc") or {}
-                        }
-                        for token in line
-                    ]
-                }
-                chapter_lines.append(unit)
-
-            # Group verses
-            verses = []
-            last_verse_id = None
-            for _line in chapter_lines:
-                line_verse_id = _line.get('verse')
-                if line_verse_id is None or line_verse_id != last_verse_id:
-                    last_verse_id = line_verse_id
-                    verses.append([])
-                verses[-1].append(_line)
 
             # --------------------------------------------------------------- #
             # Insert Data
