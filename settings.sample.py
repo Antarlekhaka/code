@@ -19,13 +19,14 @@ APP_NAME = "Antarlekhaka, a Multiple-Task Annotation Framework"
 APP_TITLE = "Antarlekhaka"
 
 APP_DIR = os.path.dirname(os.path.realpath(__file__))
-LOG_FILE = os.path.join(APP_DIR, "antarlekha.log")
+LOG_FILE = os.path.join(APP_DIR, "antarlekhaka.log")
 
 # DB_DIR is used for specifying directory containing SQLite3 database
-# Query file is placed inside the DATA_DIR
 
 DB_DIR = "db"
 DATA_DIR = "data"
+TABLES_DIR = os.path.join(DATA_DIR, "tables")
+CORPUS_DIR = os.path.join(DATA_DIR, "corpus")
 
 # --------------------------------------------------------------------------- #
 
@@ -36,57 +37,7 @@ APPLICATION_CONFIG = {
     ],
     "unnamed_prefix": "X",
     "row_detail_formatter": "generic",
-    "tasks": [
-        {
-            "id": 1,
-            "name": "sentence_boundary",
-            "title": "Sentence Bondary",
-            "short": "SnB",
-            "help": "Mark the sentence boundary.",
-        },
-        {
-            "id": 2,
-            "name": "anvaya",
-            "title": "Anvaya",
-            "short": "Anv",
-            "help": "Arrange the words in the correct order.",
-        },
-        {
-            "id": 3,
-            "name": "named_entity",
-            "title": "Named Entity Recognition",
-            "short": "NER",
-            "help": "Identify named entities and their types.",
-        },
-        {
-            "id": 4,
-            "name": "token_graph",
-            "title": "Action Graph",
-            "short": "ActGr",
-            "help": "Create action graph in the form of triplets.",
-        },
-        {
-            "id": 5,
-            "name": "coreference",
-            "title": "Co-reference Resolution",
-            "short": "Coref",
-            "help": "Idenitfy coreferences.",
-        },
-        {
-            "id": 6,
-            "name": "sentence_classification",
-            "title": "Sentence Classification",
-            "short": "SnClf",
-            "help": "Classify sentences.",
-        },
-        {
-            "id": 7,
-            "name": "intersentence_connection",
-            "title": "Discourse Graph",
-            "short": "DscGr",
-            "help": "Identify intersentence connections to create the discourse graph.",
-        },
-    ],
+
     # TODO: handle corpus speific things through config?
     # corpus agnostic treatment will require changes to JS too
     # e.g. assumptions about / usage of "unsandhied"
@@ -277,6 +228,8 @@ app.custom_pages = CUSTOM_PAGES
 app.dir = APP_DIR
 app.db_dir = os.path.join(APP_DIR, DB_DIR)
 app.data_dir = os.path.join(APP_DIR, DATA_DIR)
+app.tables_dir = os.path.join(APP_DIR, TABLES_DIR)
+app.corpus_dir = os.path.join(APP_DIR, CORPUS_DIR)
 
 app.log_file = LOG_FILE
 

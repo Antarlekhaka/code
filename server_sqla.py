@@ -240,9 +240,18 @@ def init_database():
                    'annotator', 'member']
         )
 
-    # Populate Task table if empty
+    # ----------------------------------------------------------------------- #
+    # Populate various tables if empty
+
+    objects = []
+
+    # Task
     if not Task.query.first():
-        for idx, task in enumerate(app.config["tasks"], start=1):
+        task_data_file = os.path.join(app.tables_dir, "task.json")
+        with open(task_data_file, encoding="utf-8") as f:
+            tasks_data = json.load(f)
+
+        for idx, task in enumerate(tasks_data, start=1):
             t = Task()
             t.id = task["id"]
             t.name = task["name"]
@@ -250,9 +259,38 @@ def init_database():
             t.short = task["short"]
             t.help = task["help"]
             t.order = idx
-            db.session.add(t)
+            objects.append(t)
+
+        webapp.logger.info(f"Loaded {idx} tasks.")
+
+    # Labels
+    label_models = [EntityLabel, RelationLabel, SentenceLabel, DiscourseLabel]
+    for label_model in label_models:
+        if not label_model.query.first():
+            table_name = label_model.__tablename__
+            table_data_file = os.path.join(
+                app.tables_dir, f"{table_name}.json"
+            )
+            with open(table_data_file, encoding="utf-8") as f:
+                table_data = json.load(f)
+
+            for idx, label in enumerate(table_data, start=1):
+                lm = label_model()
+                lm.label = label["label"]
+                lm.description = label["description"]
+                objects.append(lm)
+
+            webapp.logger.info(f"Loaded {idx} {table_name}s.")
+
+    # Save
+    if objects:
+        db.session.bulk_save_objects(objects)
+
+    # ----------------------------------------------------------------------- #
 
     db.session.commit()
+
+# --------------------------------------------------------------------------- #
 
 
 @user_registered.connect_via(webapp)
