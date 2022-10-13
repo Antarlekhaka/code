@@ -1,0 +1,34 @@
+[
+    {
+        "label": "k1",
+        "description": "कर्ता"
+    },
+    {
+        "label": "k2",
+        "description": "कर्म"
+    },
+    {
+        "label": "k3",
+        "description": "करण"
+    },
+    {
+        "label": "k4",
+        "description": "सम्प्रदान"
+    },
+    {
+        "label": "k5",
+        "description": "अपादान"
+    },
+    {
+        "label": "k7",
+        "description": "अधिकरण"
+    },
+    {
+        "label": "k7l",
+        "description": "देशाधिकरण"
+    },
+    {
+        "label": "k7t",
+        "description": "कालाधिकरण"
+    }
+]
