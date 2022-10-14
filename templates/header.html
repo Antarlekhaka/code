@@ -174,8 +174,8 @@
         'home': ('show_home', 'Home'),
         'corpus': ('show_corpus', 'Corpus'),
     }-%}
-    {% set querier_navigation = {
-        'query': ('show_query', 'Query')
+    {% set annotator_navigation = {
+        'export': ('show_export', 'Export')
     }-%}
     {% set user_navigation = {
         'settings': ('show_settings', 'Settings')
@@ -191,8 +191,8 @@
             {% set current_user_name = current_user.username %}
         {% endif %}
 
-        {% if current_user.has_role('querier') %}
-            {% set _dummy = navigation_bar.update(querier_navigation) %}
+        {% if current_user.has_role('annotator') %}
+            {% set _dummy = navigation_bar.update(annotator_navigation) %}
         {% endif %}
 
         {% set _dummy = navigation_bar.update(user_navigation) %}

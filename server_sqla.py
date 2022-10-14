@@ -468,6 +468,28 @@ def show_admin():
     return render_template('admin.html', data=data)
 
 
+@webapp.route("/export")
+@auth_required()
+def show_export():
+    data = {}
+    data['title'] = 'Export'
+    data['corpus_list'] = [
+        {
+            'id': corpus.id,
+            'name': corpus.name,
+            'chapters': [
+                {
+                    'id': chapter.id,
+                    'name': chapter.name
+                }
+                for chapter in corpus.chapters.all()
+            ]
+        }
+        for corpus in Corpus.query.all()
+    ]
+    return render_template('export.html', data=data)
+
+
 @webapp.route("/settings")
 @auth_required()
 @permissions_required('view_ucp')
@@ -1504,7 +1526,7 @@ def action():
             'annotation_download',
         ],
         'curator': [],
-        'annotator': [],
+        'annotator': ['user_annotation_download'],
         'member': ['update_settings']
     }
     valid_actions = [
