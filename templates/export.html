@@ -1,0 +1,70 @@
+{% set active_page = "export" %}
+{% include "header.html" %}
+<div class="container p-3">
+    <div class="card">
+        <div class="card-header">
+            Export Annotations
+        </div>
+        <div class="card-body">
+            <form method=POST enctype=multipart/form-data action="{{url_for('action')}}">
+                <input type="hidden" name="csrf_token" value={{csrf_token()}}>
+                <div class="form-group row">
+                    <label class="col-sm-2" for="download_output_format">Format</label>
+                    <div class="col-sm-2">
+                        <select class="lead selectpicker" name="output_format" id="download_output_format"
+                            data-container="body"
+                            data-width="100%">
+                            <option value="standard">Standard</option>
+                            <option value="simple">Simple</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label class="col-sm-2" for="download_task_id">Task</label>
+                    <div class="col-sm-6">
+                        <select class="lead selectpicker" name="task_id" id="download_task_id"
+                            data-container="body"
+                            data-width="100%"
+                            data-live-search="true"
+                            data-actions-box="true"
+                            data-select-all-text="All"
+                            data-deselect-all-text="None"
+                            data-selected-text-format="count"
+                            multiple required>
+                            {% for task in constants.tasks %}
+                            <option value="{{task.id}}">{{task.title}}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <label class="col-sm-2" for="download_chapter_id">Chapter</label>
+                    <div class="col-sm-6">
+                        <select class="lead selectpicker" name="chapter_id" id="download_chapter_id"
+                            data-container="body"
+                            data-width="100%"
+                            data-live-search="true"
+                            data-actions-box="true"
+                            data-select-all-text="All"
+                            data-deselect-all-text="None"
+                            data-selected-text-format="count"
+                            multiple required>
+                            {% for corpus in data.corpus_list %}
+                            {% for chapter in corpus.chapters %}
+                            <option value="{{chapter.id}}">{{corpus.name}} - {{chapter.name}}</option>
+                            {% endfor %}
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-sm-1">
+                        <button type="submit" name="action" value="user_annotation_download" class="btn btn-secondary float-right">
+                            <i class="fa fa-download"></i>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% include "footer.html" %}

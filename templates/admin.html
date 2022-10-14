@@ -10,7 +10,7 @@
                 <input type="hidden" name="csrf_token" value={{csrf_token()}}>
                 <div class="form-group row">
                     <label class="col-sm-1 col-form-label" for="target_user">User</label>
-                    <div class="col-sm-3 my-auto">
+                    <div class="col-sm-3">
                         <select class="lead m-1 selectpicker" name="target_user" id="target_user" data-live-search="true">
                             {% for user in data.users %}
                             <option value="{{user.username}}">{{user.username}}</option>
@@ -18,14 +18,14 @@
                         </select>
                     </div>
                     <label class="col-sm-1 col-form-label" for="target_role">Role</label>
-                    <div class="col-sm-3 my-auto">
+                    <div class="col-sm-3">
                         <select class="lead m-1 selectpicker" name="target_role" id="target_role" data-live-search="true">
                             {% for role in data.roles %}
                             <option value="{{role}}">{{role}}</option>
                             {% endfor %}
                         </select>
                     </div>
-                    <div class="col-sm my-auto">
+                    <div class="col-sm">
                         <button type="submit" name="action" value="user_role_add" class="btn btn-success m-1">
                             Add
                         </button>
@@ -145,8 +145,8 @@
                                 <input type="hidden" name="csrf_token" value={{csrf_token()}}>
 
                                 <div class="form-group row">
-                                    <label class="col-sm-2" for="download_annotator_id">User</label>
-                                    <div class="col-sm-3">
+                                    <label class="col-sm-2  col-form-label" for="download_annotator_id">User</label>
+                                    <div class="col-sm-6">
                                         <select class="lead selectpicker" name="annotator_id" id="download_annotator_id"
                                             data-container="body"
                                             data-width="100%"
@@ -155,15 +155,17 @@
                                             data-select-all-text="All"
                                             data-deselect-all-text="None"
                                             data-selected-text-format="count"
-                                            multiple>
+                                            multiple required>
                                             {% for user in data.annotators %}
                                             <option value="{{user.id}}">{{user.username}}</option>
                                             {% endfor %}
                                         </select>
                                     </div>
+                                </div>
 
-                                    <label class="col-sm-1" for="download_task_id">Task</label>
-                                    <div class="col-sm-5">
+                                <div class="form-group row">
+                                    <label class="col-sm-2 col-form-label" for="download_task_id">Task</label>
+                                    <div class="col-sm-6">
                                         <select class="lead selectpicker" name="task_id" id="download_task_id"
                                             data-container="body"
                                             data-width="100%"
@@ -172,7 +174,7 @@
                                             data-select-all-text="All"
                                             data-deselect-all-text="None"
                                             data-selected-text-format="count"
-                                            multiple>
+                                            multiple required>
                                             {% for task in constants.tasks %}
                                             <option value="{{task.id}}">{{task.title}}</option>
                                             {% endfor %}
@@ -181,8 +183,8 @@
                                 </div>
 
                                 <div class="form-group row">
-                                    <label class="col-sm-2" for="download_chapter_id">Chapter</label>
-                                    <div class="col-sm-9">
+                                    <label class="col-sm-2 col-form-label" for="download_chapter_id">Chapter</label>
+                                    <div class="col-sm-6">
                                         <select class="lead selectpicker" name="chapter_id" id="download_chapter_id"
                                             data-container="body"
                                             data-width="100%"
@@ -191,7 +193,7 @@
                                             data-select-all-text="All"
                                             data-deselect-all-text="None"
                                             data-selected-text-format="count"
-                                            multiple>
+                                            multiple required>
                                             {% for corpus in data.corpus_list %}
                                             {% for chapter in corpus.chapters %}
                                             <option value="{{chapter.id}}">{{corpus.name}} - {{chapter.name}}</option>
