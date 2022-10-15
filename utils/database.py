@@ -8,6 +8,7 @@ Database Utility Functions
 
 import logging
 from typing import Dict, List
+from collections import defaultdict
 
 from sqlalchemy.orm.properties import ColumnProperty
 from sqlalchemy.orm.relationships import RelationshipProperty
@@ -15,7 +16,7 @@ from sqlalchemy.orm.relationships import RelationshipProperty
 from models_sqla import User, Role
 from models_sqla import Corpus, Chapter, Verse, Line, Token
 from models_sqla import (
-    Progress,
+    Task, Progress,
     Boundary,
     Anvaya,
     Entity,
@@ -54,6 +55,73 @@ def search_model(
                 LOGGER.info(f"'{property_name}' is a 'RelationshipProperty'.")
 
     return model.query.filter(*conditions).offset(offset).limit(limit)
+
+
+###############################################################################
+
+def export_data(
+    annotator_ids: List[int],
+    chapter_ids: List[int],
+    task_ids: List[int],
+    output_format: str = "standard"
+):
+    """Export Data
+
+    Parameters
+    ----------
+    annotator_ids : List[int]
+        Annotator IDs
+    chapter_ids : List[int]
+        Chapter IDs
+    task_ids : List[int]
+        Task IDs
+    output_format : str, optional
+        Output Format, "standard" or "simple"
+        The default is "standard".
+
+    Returns
+    -------
+    _type_
+        _description_
+    """
+
+    chapters = Chapter.query.filter(Chapter.id.in_(chapter_ids)).all()
+    annotators = User.query.filter(User.id.in_(annotator_ids)).all()
+    tasks = Task.query.filter(Task.id.in_(task_ids)).all()
+
+    data = defaultdict(dict)
+
+    for chapter in chapters:
+        for annotator in annotators:
+            line_query = Line.query.filter(
+                Line.verse.has(Verse.chapter_id == chapter.id)
+            )
+            line_ids = [
+                line.id for line in line_query.all()
+            ]
+
+            for task in tasks:
+                print(
+                    f"Fetching annotation for Task {task.id} ({task.name}) "
+                    f"from Chapter {chapter.id} ({chapter.name}) "
+                    f"for User {annotator.id} ({annotator.username})."
+                )
+                if task.name == "sentence_boundary":
+                    pass
+                if task.name == "anvaya":
+                    pass
+                if task.name == "named_entity":
+                    pass
+                if task.name == "token_graph":
+                    pass
+                if task.name == "coreference":
+                    pass
+                if task.name == "sentence_classification":
+                    pass
+                if task.name == "intersentence_connection":
+                    pass
+
+    return data
 
 
 ###############################################################################

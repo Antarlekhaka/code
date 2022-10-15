@@ -16,13 +16,19 @@ from sqlalchemy.orm import class_mapper
 from models_sqla import db
 from models_sqla import User, Role
 from models_sqla import Corpus, Chapter, Verse, Line, Token
-from models_sqla import Lexicon  # , NodeLabel, RelationLabel, Node, Relation
-from models_sqla import Anvaya, Boundary
+from models_sqla import (
+    Boundary, Anvaya,
+    Entity, TokenGraph, Coreference,
+    SentenceClassification, DiscourseGraph
+)
+from models_sqla import (
+    EntityLabel, RelationLabel, SentenceLabel, DiscourseLabel
+)
 
 from settings import app
 
 from utils.database import (
-    search_model, get_sentences, get_verse_data, get_chapter_data
+    search_model, get_sentences, get_verse_data, get_chapter_data, export_data
 )
 
 ###############################################################################
@@ -40,9 +46,12 @@ webapp.app_context().push()
 
 MODELS = {}
 
-for model in [User, Role, Corpus, Chapter, Verse, Line, Token,
-              Lexicon,  # NodeLabel, RelationLabel, Node, Relation,
-              Anvaya, Boundary]:
+for model in [
+    User, Role, Corpus, Chapter, Verse, Line, Token,
+    EntityLabel, RelationLabel, SentenceLabel, DiscourseLabel,
+    Boundary, Anvaya, Entity, TokenGraph, Coreference,
+    SentenceClassification, DiscourseGraph
+]:
     name = re.sub(r'(?<!^)(?=[A-Z])', '_', model.__name__).lower()
     MODELS[name] = model
 
