@@ -66,5 +66,36 @@
             </form>
         </div>
     </div>
+    {% if data.result %}
+    <hr>
+    <ul class="nav nav-pills my-3" id="pills-tab" role="tablist">
+        {% for task in data.tasks %}
+        {% if task.id == 1 %}
+            {% set active_class = "active" %}
+            {% set aria_selected = "true" %}
+        {% else %}
+            {% set active_class = "" %}
+            {% set aria_selected = "false" %}
+        {% endif %}
+        <li class="nav-item" title="{{task.title}}">
+          <a class="nav-link {{active_class}}" id="task-{{task.id}}-tab" data-toggle="pill" href="#task-{{task.id}}-tab-content" role="tab" aria-controls="task-{{task.id}}-tab-content" aria-selected="{{aria_selected}}">{{task.short}}</a>
+        </li>
+        {% endfor %}
+    </ul>
+
+    <div class="tab-content" id="pills-tab-content">
+        {% for task in data.tasks %}
+        {% if task.id == 1 %}
+            {% set active_class = "active" %}
+        {% else %}
+            {% set active_class = "" %}
+        {% endif %}
+        <div class="tab-pane {{active_class}}" id="task-{{task.id}}-tab-content" role="tabpanel" aria-labelledby="task-{{task.id}}-tab">
+            Task {{task.name}} Result
+        </div>
+        {% endfor %}
+    </div>
+
+    {% endif %}
 </div>
 {% include "footer.html" %}

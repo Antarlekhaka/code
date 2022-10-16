@@ -468,7 +468,7 @@ def show_admin():
     return render_template('admin.html', data=data)
 
 
-@webapp.route("/export")
+@webapp.route("/export", methods=["GET", "POST"])
 @auth_required()
 def show_export():
     data = {}
@@ -487,6 +487,24 @@ def show_export():
         }
         for corpus in Corpus.query.all()
     ]
+    data['tasks'] = [
+        {
+            "id": task.id,
+            "name": task.name,
+            "title": task.title,
+            "short": task.short,
+            "help": task.help,
+            "order": task.order
+        }
+        for task in Task.query.filter(
+            Task.is_deleted == False  # noqa # '== False' is required
+        ).order_by(Task.order).all()
+    ]
+    annotation_result = session.get('annotation_result')
+    if annotation_result:
+        data['result'] = annotation_result
+        del session['annotation_result']
+
     return render_template('export.html', data=data)
 
 
@@ -1839,6 +1857,11 @@ def action():
 
     if action == 'annotation_download':
         flash("Work in progress")
+        return redirect(request.referrer)
+
+    if action == 'user_annotation_download':
+        flash("Work in progress")
+        session['annotation_result'] = True
         return redirect(request.referrer)
 
     # ----------------------------------------------------------------------- #
