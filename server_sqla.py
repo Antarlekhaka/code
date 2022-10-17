@@ -501,6 +501,21 @@ def show_export():
         ).order_by(Task.order).all()
     ]
 
+    if request.method == "POST":
+        annotator_id = current_user.id
+        chapter_ids = request.form.getlist('chapter_id')
+        annotation_data = export_data(
+            annotator_ids=[annotator_id],
+            chapter_ids=chapter_ids,
+            task_ids=[],
+            output_format="simple"
+        )
+        annotation_result = {
+            k[0]: v
+            for k, v in annotation_data["visual"].items()
+        }
+        data["result"] = annotation_result
+
     return render_template('export.html', data=data)
 
 
@@ -1856,53 +1871,6 @@ def action():
         print(request.form)
         return redirect(request.referrer)
 
-    if action == 'show_user_annotation':
-        flash("Work in progress")
-        annotator_id = current_user.id
-        chapter_ids = request.form.getlist('chapter_id')
-        data = export_data([annotator_id], chapter_ids, [])
-        annotation_result = {
-            k[0]: v
-            for k, v in data["data"].items()
-        }
-
-        # ------------------------------------------------------------------- #
-        # Ad-Hoc
-        # TODO: figure out how to pass data to a view
-        # TODO: else move the action to export view instead of in this /action
-
-        data = {}
-        data['title'] = 'Export'
-        data['corpus_list'] = [
-            {
-                'id': corpus.id,
-                'name': corpus.name,
-                'chapters': [
-                    {
-                        'id': chapter.id,
-                        'name': chapter.name
-                    }
-                    for chapter in corpus.chapters.all()
-                ]
-            }
-            for corpus in Corpus.query.all()
-        ]
-        data['tasks'] = [
-            {
-                "id": task.id,
-                "name": task.name,
-                "title": task.title,
-                "short": task.short,
-                "help": task.help,
-                "order": task.order
-            }
-            for task in Task.query.filter(
-                Task.is_deleted == False  # noqa # '== False' is required
-            ).order_by(Task.order).all()
-        ]
-
-        data['result'] = annotation_result
-        return render_template('export.html', data=data)
 
     # ----------------------------------------------------------------------- #
     # Update Settings
