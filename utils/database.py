@@ -89,37 +89,119 @@ def export_data(
     annotators = User.query.filter(User.id.in_(annotator_ids)).all()
     tasks = Task.query.filter(Task.id.in_(task_ids)).all()
 
-    data = defaultdict(dict)
+    data = {
+        "chapter": {},
+        "annotation": {},
+        "data": {}
+    }
 
     for chapter in chapters:
-        for annotator in annotators:
-            line_query = Line.query.filter(
-                Line.verse.has(Verse.chapter_id == chapter.id)
-            )
-            line_ids = [
-                line.id for line in line_query.all()
-            ]
+        # ------------------------------------------------------------------- #
 
-            for task in tasks:
-                print(
-                    f"Fetching annotation for Task {task.id} ({task.name}) "
-                    f"from Chapter {chapter.id} ({chapter.name}) "
-                    f"for User {annotator.id} ({annotator.username})."
+        chapter_data = {
+            "tokens": {},
+            "verse_tokens": defaultdict(list),
+        }
+        line_query = Line.query.filter(
+            Line.verse.has(Verse.chapter_id == chapter.id)
+        )
+        for line in line_query.all():
+            verse_id = line.verse_id
+            line_tokens = {
+                token.id: {
+                    'id': token.id,
+                    'inner_id': token.inner_id,
+                    'verse_id': verse_id,
+                    'line_id': token.line_id,
+                    'order': token.order,
+                    'text': token.text,
+                    'lemma': token.lemma,
+                    'analysis': token.analysis,
+                    'annotator_id': token.annotator_id
+                }
+                for token in line.tokens.all()
+                if (
+                    token.annotator_id is None or
+                    token.annotator_id in annotator_ids
                 )
-                if task.name == "sentence_boundary":
-                    pass
-                if task.name == "anvaya":
-                    pass
-                if task.name == "named_entity":
-                    pass
-                if task.name == "token_graph":
-                    pass
-                if task.name == "coreference":
-                    pass
-                if task.name == "sentence_classification":
-                    pass
-                if task.name == "intersentence_connection":
-                    pass
+            }
+            chapter_data["tokens"].update(line_tokens)
+            chapter_data["verse_tokens"][verse_id].append(list(line_tokens))
+
+        data["chapter"][chapter.id] = chapter_data
+
+        # ------------------------------------------------------------------- #
+
+        verse_ids = [verse.id for verse in chapter.verses]
+        for annotator in annotators:
+            annotation_id = (chapter.id, annotator.id)
+            annotation_data = defaultdict(dict)
+            task_data = defaultdict(dict)
+
+            # --------------------------------------------------------------- #
+            boundary_query = Boundary.query.filter(
+                Boundary.verse_id.in_(verse_ids),
+                Boundary.annotator_id == annotator.id
+            ).order_by(Boundary.token_id)
+
+            for boundary in boundary_query.all():
+                boundary_id = boundary.id
+                verse_id = boundary.verse_id
+
+                annotation_data["sentence_boundary"][boundary_id] = {
+                    'id': boundary_id,
+                    'token_id': boundary.token_id,
+                    'verse_id': boundary.verse_id,
+                    'annotator_id': boundary.annotator_id
+                }
+
+                anvaya_query = Anvaya.query.filter(
+                    Anvaya.boundary_id == boundary_id,
+                    Anvaya.annotator_id == annotator.id
+                ).order_by(Anvaya.order)
+                annotation_data["anvaya"][boundary_id] = [
+                    a.token_id for a in anvaya_query.all()
+                ]
+
+            # --------------------------------------------------------------- #
+
+            boundary_tokens = [
+                boundary["token_id"]
+                for boundary in annotation_data["sentence_boundary"].values()
+            ]
+            next_boundary = boundary_tokens[0] if boundary_tokens else None
+
+            display_text = []
+            for verse_id, verse_tokens in chapter_data["verse_tokens"].items():
+                for line_tokens in verse_tokens:
+                    line_text = []
+                    for token_id in line_tokens:
+                        token = chapter_data["tokens"][token_id]
+
+                        if token["text"] and token["text"] not in ["_"]:
+                            if token["annotator_id"] is None:
+                                line_text.append(token["text"])
+
+                            if next_boundary and next_boundary == token_id:
+                                line_text.append("##")
+                                boundary_tokens.pop(0)
+                                next_boundary = (
+                                    boundary_tokens[0]
+                                    if boundary_tokens
+                                    else None
+                                )
+
+                    display_text.append(line_text)
+                display_text.append([])
+            task_data["sentence_boundary"] = "\n".join(
+                " ".join(line_text)
+                for line_text in display_text
+            )
+
+            # --------------------------------------------------------------- #
+
+            data["data"][annotation_id] = task_data
+            data["annotation"][annotation_id] = annotation_data
 
     return data
 
