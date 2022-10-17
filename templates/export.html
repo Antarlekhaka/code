@@ -19,7 +19,7 @@
                         </select>
                     </div>
                 </div>
-                <div class="form-group row">
+                <!-- <div class="form-group row">
                     <label class="col-sm-2" for="download_task_id">Task</label>
                     <div class="col-sm-6">
                         <select class="lead selectpicker" name="task_id" id="download_task_id"
@@ -36,7 +36,7 @@
                             {% endfor %}
                         </select>
                     </div>
-                </div>
+                </div> -->
 
                 <div class="form-group row">
                     <label class="col-sm-2" for="download_chapter_id">Chapter</label>
@@ -91,7 +91,10 @@
             {% set active_class = "" %}
         {% endif %}
         <div class="tab-pane {{active_class}}" id="task-{{task.id}}-tab-content" role="tabpanel" aria-labelledby="task-{{task.id}}-tab">
-            Task {{task.name}} Result
+            {% for chapter_id, chapter_result in data.result.items() %}
+            <pre>{{chapter_result[task.name]}}</pre>
+            <hr>
+            {% endfor %}
         </div>
         {% endfor %}
     </div>

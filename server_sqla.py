@@ -71,7 +71,7 @@ from models_sqla import (db, user_datastore,
 from settings import app
 
 from utils.reverseproxied import ReverseProxied
-from utils.database import get_verse_data, get_chapter_data
+from utils.database import export_data, get_verse_data, get_chapter_data
 from utils.conllu import DigitalCorpusSanskrit
 
 ###############################################################################
@@ -1857,11 +1857,20 @@ def action():
 
     if action == 'annotation_download':
         flash("Work in progress")
+        print(request.form)
         return redirect(request.referrer)
 
     if action == 'user_annotation_download':
         flash("Work in progress")
-        session['annotation_result'] = True
+        annotator_id = current_user.id
+        chapter_ids = request.form.getlist('chapter_id')
+        data = export_data([annotator_id], chapter_ids, [])
+        annotation_result = {
+            k[0]: v
+            for k, v in data["data"].items()
+        }
+
+        session['annotation_result'] = annotation_result
         return redirect(request.referrer)
 
     # ----------------------------------------------------------------------- #
