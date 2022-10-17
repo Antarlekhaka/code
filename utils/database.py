@@ -111,15 +111,15 @@ def export_data(
             verse_id = line.verse_id
             line_tokens = {
                 token.id: {
-                    'id': token.id,
-                    'inner_id': token.inner_id,
-                    'verse_id': verse_id,
-                    'line_id': token.line_id,
-                    'order': token.order,
-                    'text': token.text,
-                    'lemma': token.lemma,
-                    'analysis': token.analysis,
-                    'annotator_id': token.annotator_id
+                    "id": token.id,
+                    "inner_id": token.inner_id,
+                    "verse_id": verse_id,
+                    "line_id": token.line_id,
+                    "order": token.order,
+                    "text": token.text,
+                    "lemma": token.lemma,
+                    "analysis": token.analysis,
+                    "annotator_id": token.annotator_id
                 }
                 for token in line.tokens.all()
                 if (
@@ -377,10 +377,10 @@ def get_chapter_data(chapter_id: int, user: User, all: bool = False) -> dict:
     ]
     annotator_ids = []
 
-    if user.has_permission('annotate'):
+    if user.has_permission("annotate"):
         annotator_ids = [user.id]
 
-    if user.has_permission('curate') or user.has_role('admin'):
+    if user.has_permission("curate") or user.has_role("admin"):
         annotator_ids = None if all else [user.id]
 
     return get_verse_data(verse_ids, annotator_ids=annotator_ids)
@@ -416,35 +416,34 @@ def get_verse_data(
     data = {}
 
     # TODO: Consider rewriting with a focus on Verse instead of Line
-    # TODO: Remember to remove .limit(30)
     # NOTE: Line ID is important for tokens
     # Do we want to change the database structure to remove Line table
     # altogether and only keep only a line_id field in Verse table?
 
-    for line in line_object_query.limit(30):
+    for line in line_object_query:
         verse_id = line.verse_id
         if not data.get(verse_id):
             data[verse_id] = {
-                'verse_id': verse_id,
-                'text': [line.text],
-                'display': [[
+                "verse_id": verse_id,
+                "text": [line.text],
+                "display": [[
                     token.display
                     for token in line.tokens.all()
                     if not token.annotator_id
                     # tokens that do not have annotator_id are original
                 ]],
-                'tokens': [[
+                "tokens": [[
                     {
-                        'id': token.id,
-                        'inner_id': token.inner_id,
-                        'verse_id': verse_id,
-                        'line_id': token.line_id,
-                        'order': token.order,
-                        'text': token.text,
-                        'lemma': token.lemma,
-                        'analysis': token.analysis,
-                        # 'display': token.display,
-                        'annotator_id': token.annotator_id
+                        "id": token.id,
+                        "inner_id": token.inner_id,
+                        "verse_id": verse_id,
+                        "line_id": token.line_id,
+                        "order": token.order,
+                        "text": token.text,
+                        "lemma": token.lemma,
+                        "analysis": token.analysis,
+                        # "display": token.display,
+                        "annotator_id": token.annotator_id
                     }
                     for token in line.tokens.all()
                     if (
@@ -455,18 +454,18 @@ def get_verse_data(
                     # so, may be directly fetch with annotator_id or null
                     # (instead of doing this in Python)
                     # (null is needed for tokens from original corpus)
-                    # Could also consider keeping original tokens in 'tokens'
-                    # and adding a '_tokens' for custom tokens
+                    # Could also consider keeping original tokens in "tokens"
+                    # and adding a "_tokens" for custom tokens
                 ]],
-                'boundary': {},
-                'sentences': {},
-                'anvaya': {},
-                'entity': [],
-                'relation': [],
-                'coreference': [],
-                'sentence_classification': [],
-                'intersentence_connection': [],
-                'progress': [
+                "boundary": {},
+                "sentences": {},
+                "anvaya": {},
+                "entity": [],
+                "relation": [],
+                "coreference": [],
+                "sentence_classification": [],
+                "intersentence_connection": [],
+                "progress": [
                     {
                         "task_id": p.task_id,
                         "task_short": p.task.short,
@@ -481,25 +480,25 @@ def get_verse_data(
                 ]
             }
         else:
-            data[verse_id]['text'].append(line.text)
-            data[verse_id]['display'].append([
+            data[verse_id]["text"].append(line.text)
+            data[verse_id]["display"].append([
                 token.display
                 for token in line.tokens.all()
                 if not token.annotator_id
                 # tokens that do not have annotator_id are original
             ])
-            data[verse_id]['tokens'].append([
+            data[verse_id]["tokens"].append([
                 {
-                    'id': token.id,
-                    'inner_id': token.inner_id,
-                    'verse_id': verse_id,
-                    'line_id': token.line_id,
-                    'order': token.order,
-                    'text': token.text,
-                    'lemma': token.lemma,
-                    'analysis': token.analysis,
-                    # 'display': token.display,
-                    'annotator_id': token.annotator_id
+                    "id": token.id,
+                    "inner_id": token.inner_id,
+                    "verse_id": verse_id,
+                    "line_id": token.line_id,
+                    "order": token.order,
+                    "text": token.text,
+                    "lemma": token.lemma,
+                    "analysis": token.analysis,
+                    # "display": token.display,
+                    "annotator_id": token.annotator_id
                 }
                 for token in line.tokens.all()
                 if (
@@ -522,14 +521,14 @@ def get_verse_data(
     # boundary specific data - BEGIN
     for boundary in boundary_query.all():
         verse_id = boundary.verse_id
-        data[verse_id]['boundary'][boundary.id] = {
-            'id': boundary.id,
-            'token_id': boundary.token_id,
-            'verse_id': boundary.verse_id,
-            'annotator_id': boundary.annotator_id,
-            'annotator': boundary.annotator.username,
+        data[verse_id]["boundary"][boundary.id] = {
+            "id": boundary.id,
+            "token_id": boundary.token_id,
+            "verse_id": boundary.verse_id,
+            "annotator_id": boundary.annotator_id,
+            "annotator": boundary.annotator.username,
         }
-        data[verse_id]['sentences'] = get_sentences(
+        data[verse_id]["sentences"] = get_sentences(
             verse_id, boundary.annotator_id
         )
         anvaya_query = Anvaya.query.filter(
@@ -539,13 +538,13 @@ def get_verse_data(
         sentence_anvaya = [
             a.token_id for a in anvaya_query.all()
         ]
-        # if anvaya doesn't exist, apply heuristic
+        # if anvaya doesn"t exist, apply heuristic
         if not sentence_anvaya:
             sentence_anvaya = get_anvaya(
-                data[verse_id]['sentences'][boundary.id]
+                data[verse_id]["sentences"][boundary.id]
             )
 
-        data[verse_id]['anvaya'][boundary.id] = sentence_anvaya
+        data[verse_id]["anvaya"][boundary.id] = sentence_anvaya
         # TODO: consider if we should provide predicted anvaya separately
         #       instead of in the same field
 
@@ -556,14 +555,14 @@ def get_verse_data(
             Entity.annotator_id.in_(annotator_ids)
         )
 
-        data[verse_id]['entity'].extend([
+        data[verse_id]["entity"].extend([
             {
-                'id': entity.id,
-                'boundary_id': entity.boundary_id,
-                'token_id': entity.token_id,
-                'label_id': entity.label_id,
-                'annotator_id': entity.annotator_id,
-                'is_deleted': entity.is_deleted
+                "id": entity.id,
+                "boundary_id": entity.boundary_id,
+                "token_id": entity.token_id,
+                "label_id": entity.label_id,
+                "annotator_id": entity.annotator_id,
+                "is_deleted": entity.is_deleted
             }
             for entity in entity_query.all()
         ])
@@ -575,15 +574,15 @@ def get_verse_data(
             TokenGraph.annotator_id.in_(annotator_ids)
         )
 
-        data[verse_id]['relation'].extend([
+        data[verse_id]["relation"].extend([
             {
-                'id': relation.id,
-                'boundary_id': relation.boundary_id,
-                'src_id': relation.src_id,
-                'label_id': relation.label_id,
-                'dst_id': relation.dst_id,
-                'annotator_id': relation.annotator_id,
-                'is_deleted': relation.is_deleted
+                "id": relation.id,
+                "boundary_id": relation.boundary_id,
+                "src_id": relation.src_id,
+                "label_id": relation.label_id,
+                "dst_id": relation.dst_id,
+                "annotator_id": relation.annotator_id,
+                "is_deleted": relation.is_deleted
             }
             for relation in token_graph_query.all()
         ])
@@ -595,14 +594,14 @@ def get_verse_data(
             Coreference.annotator_id.in_(annotator_ids)
         )
 
-        data[verse_id]['coreference'].extend([
+        data[verse_id]["coreference"].extend([
             {
-                'id': coreference.id,
-                'boundary_id': coreference.boundary_id,
-                'src_id': coreference.src_id,
-                'dst_id': coreference.dst_id,
-                'annotator_id': coreference.annotator_id,
-                'is_deleted': coreference.is_deleted
+                "id": coreference.id,
+                "boundary_id": coreference.boundary_id,
+                "src_id": coreference.src_id,
+                "dst_id": coreference.dst_id,
+                "annotator_id": coreference.annotator_id,
+                "is_deleted": coreference.is_deleted
             }
             for coreference in coreference_query.all()
         ])
@@ -614,13 +613,13 @@ def get_verse_data(
             SentenceClassification.annotator_id.in_(annotator_ids)
         )
 
-        data[verse_id]['sentence_classification'].extend([
+        data[verse_id]["sentence_classification"].extend([
             {
-                'id': sentclf.id,
-                'boundary_id': sentclf.boundary_id,
-                'label_id': sentclf.label_id,
-                'annotator_id': sentclf.annotator_id,
-                'is_deleted': sentclf.is_deleted
+                "id": sentclf.id,
+                "boundary_id": sentclf.boundary_id,
+                "label_id": sentclf.label_id,
+                "annotator_id": sentclf.annotator_id,
+                "is_deleted": sentclf.is_deleted
             }
             for sentclf in sentence_classification_query.all()
         ])
@@ -633,17 +632,17 @@ def get_verse_data(
             DiscourseGraph.annotator_id.in_(annotator_ids)
         )
 
-        data[verse_id]['intersentence_connection'].extend([
+        data[verse_id]["intersentence_connection"].extend([
             {
-                'id': isc.id,
-                'src_boundary_id': isc.src_boundary_id,
-                'src_token_id': isc.src_token_id,
-                'dst_boundary_id': isc.dst_boundary_id,
-                'dst_token_id': isc.dst_token_id,
-                'label_id': isc.label_id,
-                'relation_type': isc.relation_type,
-                'annotator_id': isc.annotator_id,
-                'is_deleted': isc.is_deleted
+                "id": isc.id,
+                "src_boundary_id": isc.src_boundary_id,
+                "src_token_id": isc.src_token_id,
+                "dst_boundary_id": isc.dst_boundary_id,
+                "dst_token_id": isc.dst_token_id,
+                "label_id": isc.label_id,
+                "relation_type": isc.relation_type,
+                "annotator_id": isc.annotator_id,
+                "is_deleted": isc.is_deleted
             }
             for isc in intersentence_connection_query.all()
         ])
@@ -703,13 +702,13 @@ def get_sentences(
         Token.line.has(Line.verse_id == verse_id),
         Token.annotator_id != None  # noqa
     ).all()
-    sentences['extra'] = {
+    sentences["extra"] = {
         token.id: {
-            'id': token.id,
-            'text': token.text,
-            'lemma': token.lemma,
-            'analysis': token.analysis,
-            'annotator_id': token.annotator_id
+            "id": token.id,
+            "text": token.text,
+            "lemma": token.lemma,
+            "analysis": token.analysis,
+            "annotator_id": token.annotator_id
         }
         for token in extra_tokens
     }
@@ -722,14 +721,14 @@ def get_sentences(
 
         sentences[boundary.id] = {
             token.id: {
-                'id': token.id,
-                'sentence_id': boundary.id,
-                'boundary_id': boundary.id,
-                'order': token.order,
-                'text': token.text,
-                'lemma': token.lemma,
-                'analysis': token.analysis,
-                'annotator_id': token.annotator_id
+                "id": token.id,
+                "sentence_id": boundary.id,
+                "boundary_id": boundary.id,
+                "order": token.order,
+                "text": token.text,
+                "lemma": token.lemma,
+                "analysis": token.analysis,
+                "annotator_id": token.annotator_id
             }
             for token in tokens
         }
