@@ -143,9 +143,12 @@ def export_data(
                 Boundary.verse_id.in_(verse_ids),
                 Boundary.annotator_id == annotator.id
             ).order_by(Boundary.token_id)
+            boundary_ids = []
 
             for boundary in boundary_query.all():
                 boundary_id = boundary.id
+                boundary_ids.append(boundary_id)
+
                 verse_id = boundary.verse_id
 
                 annotation_data["sentence_boundary"][boundary_id] = {
@@ -155,6 +158,9 @@ def export_data(
                     'annotator_id': boundary.annotator_id
                 }
 
+                # ----------------------------------------------------------- #
+                # TODO: Take out of boundary_id
+
                 anvaya_query = Anvaya.query.filter(
                     Anvaya.boundary_id == boundary_id,
                     Anvaya.annotator_id == annotator.id
@@ -162,6 +168,49 @@ def export_data(
                 annotation_data["anvaya"][boundary_id] = [
                     a.token_id for a in anvaya_query.all()
                 ]
+
+                # ----------------------------------------------------------- #
+                # TODO: Take out of boundary_id
+
+                entity_query = Entity.query.filter(
+                    Entity.boundary_id == boundary.id,
+                    Entity.annotator_id == annotator.id,
+                    Entity.is_deleted == False  # noqa
+                )
+                annotation_data["named_entity"][boundary_id] = [
+                    {
+                        'id': entity.id,
+                        'boundary_id': entity.boundary_id,
+                        'token_id': entity.token_id,
+                        'label_id': entity.label_id,
+                        'label_label': entity.label.label,
+                        'label_description': entity.label.description,
+                    }
+                    for entity in entity_query.all()
+                ]
+
+            # --------------------------------------------------------------- #
+
+            token_graph_query = TokenGraph.query.filter(
+                TokenGraph.boundary_id.in_(boundary_ids),
+                TokenGraph.annotator_id == annotator.id,
+                TokenGraph.is_deleted == False  # noqa
+            )
+
+            annotation_data["token_graph"] = [
+                {
+                    'id': relation.id,
+                    'boundary_id': relation.boundary_id,
+                    'src_id': relation.src_id,
+                    'label_id': relation.label_id,
+                    'dst_id': relation.dst_id,
+                    'annotator_id': relation.annotator_id,
+                    'is_deleted': relation.is_deleted
+                }
+                for relation in token_graph_query.all()
+            ]
+
+            # --------------------------------------------------------------- #
 
             # --------------------------------------------------------------- #
 
@@ -197,6 +246,71 @@ def export_data(
                 " ".join(line_text)
                 for line_text in display_text
             )
+
+            # --------------------------------------------------------------- #
+
+            preference = ["misc.Unsandhied", "form", "lemma"]
+            display_text = []
+            for _, token_ids in annotation_data["anvaya"].items():
+                sentence_text = []
+                for token_id in token_ids:
+                    token = chapter_data["tokens"][token_id]
+                    for key in preference:
+                        if "." in key:
+                            k1, k2 = key.split(".", 1)
+                            token_text = token["analysis"].get(k1, {}).get(k2)
+                        else:
+                            token_text = token["analysis"].get(key)
+                        if token_text and token_text not in ["_"]:
+                            sentence_text.append(token_text)
+                            break
+
+                display_text.append(sentence_text)
+
+            task_data["anvaya"] = "\n\n".join(
+                " ".join(sentence_text)
+                for sentence_text in display_text
+            )
+
+            # --------------------------------------------------------------- #
+
+            preference = ["lemma", "misc.Unsandhied", "form"]
+            display_text = [
+                [["Token", "Text", "Label", "Description"]]
+            ]
+            for _, entity_list in annotation_data["named_entity"].items():
+                sentence_entity_rows = []
+                for entity in entity_list:
+                    entity_token_id = entity["token_id"]
+                    entity_token = chapter_data["tokens"][entity_token_id]
+                    for key in preference:
+                        if "." in key:
+                            k1, k2 = key.split(".", 1)
+                            token_text = entity_token["analysis"].get(
+                                k1, {}
+                            ).get(k2)
+                        else:
+                            token_text = entity_token["analysis"].get(key)
+
+                        if token_text and token_text not in ["_"]:
+                            break
+
+                    sentence_entity_rows.append([
+                        str(entity["token_id"]),
+                        token_text,
+                        entity["label_label"],
+                        entity["label_description"]
+                    ])
+                display_text.append(sentence_entity_rows)
+
+            task_data["named_entity"] = "\n".join(
+                "\n".join(
+                    "\t".join(entity_row) for entity_row in sentence_rows
+                )
+                for sentence_rows in display_text
+            )
+
+            task_data["token_graph"] = str(annotation_data["token_graph"])
 
             # --------------------------------------------------------------- #
 

@@ -500,10 +500,6 @@ def show_export():
             Task.is_deleted == False  # noqa # '== False' is required
         ).order_by(Task.order).all()
     ]
-    annotation_result = session.get('annotation_result')
-    if annotation_result:
-        data['result'] = annotation_result
-        del session['annotation_result']
 
     return render_template('export.html', data=data)
 
@@ -1544,7 +1540,7 @@ def action():
             'annotation_download',
         ],
         'curator': [],
-        'annotator': ['user_annotation_download'],
+        'annotator': ['show_user_annotation'],
         'member': ['update_settings']
     }
     valid_actions = [
@@ -1860,7 +1856,7 @@ def action():
         print(request.form)
         return redirect(request.referrer)
 
-    if action == 'user_annotation_download':
+    if action == 'show_user_annotation':
         flash("Work in progress")
         annotator_id = current_user.id
         chapter_ids = request.form.getlist('chapter_id')
@@ -1870,8 +1866,43 @@ def action():
             for k, v in data["data"].items()
         }
 
-        session['annotation_result'] = annotation_result
-        return redirect(request.referrer)
+        # ------------------------------------------------------------------- #
+        # Ad-Hoc
+        # TODO: figure out how to pass data to a view
+        # TODO: else move the action to export view instead of in this /action
+
+        data = {}
+        data['title'] = 'Export'
+        data['corpus_list'] = [
+            {
+                'id': corpus.id,
+                'name': corpus.name,
+                'chapters': [
+                    {
+                        'id': chapter.id,
+                        'name': chapter.name
+                    }
+                    for chapter in corpus.chapters.all()
+                ]
+            }
+            for corpus in Corpus.query.all()
+        ]
+        data['tasks'] = [
+            {
+                "id": task.id,
+                "name": task.name,
+                "title": task.title,
+                "short": task.short,
+                "help": task.help,
+                "order": task.order
+            }
+            for task in Task.query.filter(
+                Task.is_deleted == False  # noqa # '== False' is required
+            ).order_by(Task.order).all()
+        ]
+
+        data['result'] = annotation_result
+        return render_template('export.html', data=data)
 
     # ----------------------------------------------------------------------- #
     # Update Settings
@@ -1911,11 +1942,13 @@ def action():
 
 
 if __name__ == '__main__':
-    # import socket
-    # hostname = socket.gethostname()
-    # host = socket.gethostbyname(hostname)
+    import socket
 
     host = 'localhost'
+
+    hostname = socket.gethostname()
+    host = socket.gethostbyname(hostname)
+
     port = '5000'
 
     webapp.run(host=host, port=port, debug=True)
