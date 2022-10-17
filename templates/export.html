@@ -3,7 +3,7 @@
 <div class="container p-3">
     <div class="card">
         <div class="card-header">
-            Export Annotations
+            View Annotations
         </div>
         <div class="card-body">
             <form method=POST enctype=multipart/form-data action="{{url_for('action')}}">
@@ -58,8 +58,8 @@
                         </select>
                     </div>
                     <div class="col-sm-1">
-                        <button type="submit" name="action" value="user_annotation_download" class="btn btn-secondary float-right">
-                            <i class="fa fa-download"></i>
+                        <button type="submit" name="action" value="show_user_annotation" class="btn btn-secondary float-right">
+                            <i class="fa fa-eye"></i>
                         </button>
                     </div>
                 </div>
@@ -91,10 +91,7 @@
             {% set active_class = "" %}
         {% endif %}
         <div class="tab-pane {{active_class}}" id="task-{{task.id}}-tab-content" role="tabpanel" aria-labelledby="task-{{task.id}}-tab">
-            {% for chapter_id, chapter_result in data.result.items() %}
-            <pre>{{chapter_result[task.name]}}</pre>
-            <hr>
-            {% endfor %}
+            {% include "result_" + task.name + ".html" %}
         </div>
         {% endfor %}
     </div>

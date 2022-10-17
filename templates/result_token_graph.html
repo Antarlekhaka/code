@@ -1,0 +1,7 @@
+{% extends "result_base.html" %}
+{% block body %}
+{% for chapter_id, chapter_result in data.result.items() %}
+<pre class="pre-scrollable">{{chapter_result[task.name]}}</pre>
+<hr>
+{% endfor %}
+{% endblock %}
