@@ -96,6 +96,39 @@
         {% endfor %}
     </div>
 
+    <script>
+        $(".download-task-data").click(function() {
+            const task_name = $(this).data("task");
+            const target_id = $(this).data("target");
+            const text_to_write = document.getElementById(target_id).innerText;
+            const text_file_as_blob = new Blob([text_to_write], {type:'text/plain'});
+            const filename_to_save_as = `${task_name}.txt`;
+
+            const download_link = document.createElement("a");
+            download_link.download = filename_to_save_as;
+            download_link.innerHTML = "Download File";
+            if (window.webkitURL != null)
+            {
+                // Chrome allows the link to be clicked
+                // without actually adding it to the DOM.
+                download_link.href = window.webkitURL.createObjectURL(text_file_as_blob);
+            }
+            else
+            {
+                // Firefox requires the link to be added to the DOM
+                // before it can be clicked.
+                download_link.href = window.URL.createObjectURL(text_file_as_blob);
+                download_link.onclick = function(){
+                    document.body.removeChild(download_link);
+                };
+                download_link.style.display = "none";
+                document.body.appendChild(download_link);
+            }
+
+            download_link.click();
+        });
+
+    </script>
     {% endif %}
 </div>
 {% include "footer.html" %}
