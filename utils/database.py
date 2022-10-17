@@ -92,16 +92,18 @@ def export_data(
     data = {
         "chapter": {},
         "annotation": {},
-        "data": {}
+        "visual": {}
     }
+    # ----------------------------------------------------------------------- #
 
     for chapter in chapters:
-        # ------------------------------------------------------------------- #
-
         chapter_data = {
             "tokens": {},
             "verse_tokens": defaultdict(list),
         }
+
+        # ------------------------------------------------------------------- #
+
         line_query = Line.query.filter(
             Line.verse.has(Verse.chapter_id == chapter.id)
         )
@@ -128,6 +130,8 @@ def export_data(
             chapter_data["tokens"].update(line_tokens)
             chapter_data["verse_tokens"][verse_id].append(list(line_tokens))
 
+        # ------------------------------------------------------------------- #
+
         data["chapter"][chapter.id] = chapter_data
 
         # ------------------------------------------------------------------- #
@@ -139,78 +143,83 @@ def export_data(
             task_data = defaultdict(dict)
 
             # --------------------------------------------------------------- #
+
             boundary_query = Boundary.query.filter(
                 Boundary.verse_id.in_(verse_ids),
                 Boundary.annotator_id == annotator.id
             ).order_by(Boundary.token_id)
-            boundary_ids = []
 
-            for boundary in boundary_query.all():
-                boundary_id = boundary.id
-                boundary_ids.append(boundary_id)
-
-                verse_id = boundary.verse_id
-
-                annotation_data["sentence_boundary"][boundary_id] = {
-                    'id': boundary_id,
-                    'token_id': boundary.token_id,
-                    'verse_id': boundary.verse_id,
-                    'annotator_id': boundary.annotator_id
+            annotation_data["sentence_boundary"] = {
+                boundary.id: {
+                    "token_id": boundary.token_id,
+                    "verse_id": boundary.verse_id,
                 }
-
-                # ----------------------------------------------------------- #
-                # TODO: Take out of boundary_id
-
-                anvaya_query = Anvaya.query.filter(
-                    Anvaya.boundary_id == boundary_id,
-                    Anvaya.annotator_id == annotator.id
-                ).order_by(Anvaya.order)
-                annotation_data["anvaya"][boundary_id] = [
-                    a.token_id for a in anvaya_query.all()
-                ]
-
-                # ----------------------------------------------------------- #
-                # TODO: Take out of boundary_id
-
-                entity_query = Entity.query.filter(
-                    Entity.boundary_id == boundary.id,
-                    Entity.annotator_id == annotator.id,
-                    Entity.is_deleted == False  # noqa
-                )
-                annotation_data["named_entity"][boundary_id] = [
-                    {
-                        'id': entity.id,
-                        'boundary_id': entity.boundary_id,
-                        'token_id': entity.token_id,
-                        'label_id': entity.label_id,
-                        'label_label': entity.label.label,
-                        'label_description': entity.label.description,
-                    }
-                    for entity in entity_query.all()
-                ]
+                for boundary in boundary_query.all()
+            }
+            boundary_ids = list(annotation_data["sentence_boundary"])
 
             # --------------------------------------------------------------- #
+
+            anvaya_query = Anvaya.query.filter(
+                Anvaya.boundary_id.in_(boundary_ids),
+                Anvaya.annotator_id == annotator.id
+            ).join(Boundary).order_by(Boundary.token_id, Anvaya.order)
+            annotation_data["anvaya"] = [
+                {
+                    "verse_id": anvaya.boundary.verse_id,
+                    "boundary_id": anvaya.boundary_id,
+                    "token_id": anvaya.token_id
+                }
+                for anvaya in anvaya_query.all()
+            ]
+
+            # --------------------------------------------------------------- #
+
+            entity_query = Entity.query.filter(
+                Entity.boundary_id.in_(boundary_ids),
+                Entity.annotator_id == annotator.id,
+                Entity.is_deleted == False  # noqa
+            ).order_by(Entity.token_id)
+            annotation_data["named_entity"] = [
+                {
+                    "verse_id": entity.boundary.verse_id,
+                    "boundary_id": entity.boundary_id,
+                    "token_id": entity.token_id,
+                    "label_id": entity.label_id,
+                    "label_label": entity.label.label,
+                    "label_description": entity.label.description,
+                }
+                for entity in entity_query.all()
+            ]
+
+        # ------------------------------------------------------------------- #
 
             token_graph_query = TokenGraph.query.filter(
                 TokenGraph.boundary_id.in_(boundary_ids),
                 TokenGraph.annotator_id == annotator.id,
                 TokenGraph.is_deleted == False  # noqa
-            )
+            ).order_by(TokenGraph.src_id, TokenGraph.dst_id)
 
             annotation_data["token_graph"] = [
                 {
-                    'id': relation.id,
-                    'boundary_id': relation.boundary_id,
-                    'src_id': relation.src_id,
-                    'label_id': relation.label_id,
-                    'dst_id': relation.dst_id,
-                    'annotator_id': relation.annotator_id,
-                    'is_deleted': relation.is_deleted
+                    "verse_id": relation.boundary.verse_id,
+                    "boundary_id": relation.boundary_id,
+                    "src_id": relation.src_id,
+                    "label_id": relation.label_id,
+                    "dst_id": relation.dst_id,
                 }
                 for relation in token_graph_query.all()
             ]
 
             # --------------------------------------------------------------- #
+
+            data["annotation"][annotation_id] = annotation_data
+
+        # ------------------------------------------------------------------- #
+        # Visual
+        # ------------------------------------------------------------------- #
+
+        for annotation_id, annotation_data in data["annotation"].items():
 
             # --------------------------------------------------------------- #
 
@@ -241,7 +250,9 @@ def export_data(
                                 )
 
                     display_text.append(line_text)
+                display_text[-1].extend(["//", str(verse_id)])
                 display_text.append([])
+
             task_data["sentence_boundary"] = "\n".join(
                 " ".join(line_text)
                 for line_text in display_text
@@ -251,20 +262,31 @@ def export_data(
 
             preference = ["misc.Unsandhied", "form", "lemma"]
             display_text = []
-            for _, token_ids in annotation_data["anvaya"].items():
-                sentence_text = []
-                for token_id in token_ids:
-                    token = chapter_data["tokens"][token_id]
-                    for key in preference:
-                        if "." in key:
-                            k1, k2 = key.split(".", 1)
-                            token_text = token["analysis"].get(k1, {}).get(k2)
-                        else:
-                            token_text = token["analysis"].get(key)
-                        if token_text and token_text not in ["_"]:
-                            sentence_text.append(token_text)
-                            break
 
+            current_boundary_id = None
+            sentence_text = []
+            for anvaya in annotation_data["anvaya"]:
+                if current_boundary_id is None:
+                    current_boundary_id = anvaya["boundary_id"]
+                    sentence_text = [f"{anvaya['verse_id']}:"]
+
+                if current_boundary_id != anvaya["boundary_id"]:
+                    display_text.append(sentence_text)
+                    sentence_text = [f"{anvaya['verse_id']}:"]
+                    current_boundary_id = anvaya["boundary_id"]
+
+                token_id = anvaya["token_id"]
+                token = chapter_data["tokens"][token_id]
+                for key in preference:
+                    if "." in key:
+                        k1, k2 = key.split(".", 1)
+                        token_text = token["analysis"].get(k1, {}).get(k2)
+                    else:
+                        token_text = token["analysis"].get(key)
+                    if token_text and token_text not in ["_"]:
+                        sentence_text.append(token_text)
+                        break
+            else:
                 display_text.append(sentence_text)
 
             task_data["anvaya"] = "\n\n".join(
@@ -276,46 +298,47 @@ def export_data(
 
             preference = ["lemma", "misc.Unsandhied", "form"]
             display_text = [
-                [["Token", "Text", "Label", "Description"]]
+                ["Verse", "Text", "Label", "Description"]
             ]
-            for _, entity_list in annotation_data["named_entity"].items():
-                sentence_entity_rows = []
-                for entity in entity_list:
-                    entity_token_id = entity["token_id"]
-                    entity_token = chapter_data["tokens"][entity_token_id]
-                    for key in preference:
-                        if "." in key:
-                            k1, k2 = key.split(".", 1)
-                            token_text = entity_token["analysis"].get(
-                                k1, {}
-                            ).get(k2)
-                        else:
-                            token_text = entity_token["analysis"].get(key)
 
-                        if token_text and token_text not in ["_"]:
-                            break
+            for entity in annotation_data["named_entity"]:
+                entity_token_id = entity["token_id"]
+                entity_token = chapter_data["tokens"][entity_token_id]
+                for key in preference:
+                    if "." in key:
+                        k1, k2 = key.split(".", 1)
+                        token_text = entity_token["analysis"].get(
+                            k1, {}
+                        ).get(k2)
+                    else:
+                        token_text = entity_token["analysis"].get(key)
 
-                    sentence_entity_rows.append([
-                        str(entity["token_id"]),
-                        token_text,
-                        entity["label_label"],
-                        entity["label_description"]
-                    ])
-                display_text.append(sentence_entity_rows)
+                    if token_text and token_text not in ["_"]:
+                        break
+
+                display_text.append([
+                    str(entity["verse_id"]),
+                    token_text,
+                    entity["label_label"],
+                    entity["label_description"]
+                ])
 
             task_data["named_entity"] = "\n".join(
-                "\n".join(
-                    "\t".join(entity_row) for entity_row in sentence_rows
-                )
-                for sentence_rows in display_text
+                "\t".join(entity_row)
+                for entity_row in display_text
             )
+
+            # --------------------------------------------------------------- #
 
             task_data["token_graph"] = str(annotation_data["token_graph"])
 
             # --------------------------------------------------------------- #
 
-            data["data"][annotation_id] = task_data
-            data["annotation"][annotation_id] = annotation_data
+            task_data["coreference"] = str(annotation_data["coreference"])
+
+            # --------------------------------------------------------------- #
+
+            data["visual"][annotation_id] = task_data
 
     return data
 
