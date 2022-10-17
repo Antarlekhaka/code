@@ -1516,7 +1516,7 @@ def api_verse(verse_id):
 
 @webapp.route("/action", methods=["POST"])
 @auth_required()
-def action():
+def perform_action():
     status = False
     try:
         action = request.form['action']
