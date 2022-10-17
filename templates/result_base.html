@@ -1,3 +1,10 @@
 {% block body %}
-Result for Task "{{task.title}}"
+{% for chapter_id, chapter_result in data.result.items() %}
+<pre id="pre_{{task.name}}" class="pre-scrollable rounded p-3 bg-light text-info">{{chapter_result[task.name]}}</pre>
+<hr>
+<button id="download_{{task.name}}" data-task="{{task.name}}" data-target="pre_{{task.name}}" class="btn btn-secondary float-right download-task-data">
+    <i class="fa fa-download"></i>
+</button>
+
+{% endfor %}
 {% endblock %}
