@@ -1910,13 +1910,19 @@ def perform_action():
 
 
 if __name__ == '__main__':
+    import argparse
     import socket
 
-    host = 'localhost'
-
     hostname = socket.gethostname()
-    host = socket.gethostbyname(hostname)
+    default_host = socket.gethostbyname(hostname)
+    default_port = '5000'
 
-    port = '5000'
+    parser = argparse.ArgumentParser(description="Antarlekhaka Server")
+    parser.add_argument("-H", "--host", help="Hostname", default=default_host)
+    parser.add_argument("-P", "--port", help="Port", default=default_port)
+    args = vars(parser.parse_args())
+
+    host = args["host"]
+    port = args["port"]
 
     webapp.run(host=host, port=port, debug=True)
