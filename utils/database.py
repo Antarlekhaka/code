@@ -9,6 +9,7 @@ Database Utility Functions
 import logging
 from typing import Dict, List
 from collections import defaultdict
+import uuid
 
 from sqlalchemy.orm.properties import ColumnProperty
 from sqlalchemy.orm.relationships import RelationshipProperty
@@ -33,6 +34,10 @@ from utils.heuristic import get_anvaya
 LOGGER = logging.getLogger(__name__)
 
 ###############################################################################
+
+
+def get_unique_id():
+    return uuid.uuid4()
 
 
 def search_model(
@@ -94,6 +99,9 @@ def export_data(
         "annotation": {},
         "visual": {}
     }
+
+    node_ids = {}
+
     # ----------------------------------------------------------------------- #
 
     for chapter in chapters:
@@ -206,6 +214,8 @@ def export_data(
                     "boundary_id": relation.boundary_id,
                     "src_id": relation.src_id,
                     "label_id": relation.label_id,
+                    "label_label": relation.label.label,
+                    "label_description": relation.label.description,
                     "dst_id": relation.dst_id,
                 }
                 for relation in token_graph_query.all()
@@ -298,7 +308,8 @@ def export_data(
 
             preference = ["lemma", "misc.Unsandhied", "form"]
             display_text = [
-                ["Verse", "Text", "Label", "Description"]
+                ["Verse", "Text", "Label", "Description"],
+                ["=====", "====", "=====", "==========="]
             ]
 
             for entity in annotation_data["named_entity"]:
@@ -330,7 +341,58 @@ def export_data(
 
             # --------------------------------------------------------------- #
 
-            task_data["token_graph"] = str(annotation_data["token_graph"])
+            preference = ["lemma", "misc.Unsandhied", "form"]
+            display_text = []
+
+            token_graph_data = {
+                "nodes": [],
+                "edges": []
+            }
+
+            for relation in annotation_data["token_graph"]:
+                from_id = None
+                to_id = None
+
+                for token_id in [relation["src_id"], relation["dst_id"]]:
+                    token = chapter_data["tokens"][token_id]
+                    for key in preference:
+                        if "." in key:
+                            k1, k2 = key.split(".", 1)
+                            token_text = token["analysis"].get(k1, {}).get(k2)
+                        else:
+                            token_text = token["analysis"].get(key)
+
+                        if token_text and token_text not in ["_"]:
+                            break
+                    if token_text not in node_ids:
+                        node_ids[token_text] = get_unique_id()
+
+                        token_graph_data["nodes"].append({
+                            "id": node_ids[token_text],
+                            "label": token_text,
+                            "value": 3,
+                            "group": None
+                        })
+
+                    if token_id == relation["src_id"]:
+                        from_id = node_ids[token_text]
+                    if token_id == relation["dst_id"]:
+                        to_id = node_ids[token_text]
+
+                token_graph_data["edges"].append({
+                    "from": from_id,
+                    "to": to_id,
+                    "label": relation["label_label"],
+                    "title": relation["label_description"],
+                    "arrows": {
+                        "to": {
+                            "enabled": True
+                        }
+                    },
+                    "value": 3,
+                })
+
+            task_data["token_graph"] = token_graph_data
 
             # --------------------------------------------------------------- #
 
