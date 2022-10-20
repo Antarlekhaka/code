@@ -1,1 +1,113 @@
 {% extends "result_base.html" %}
+{% block body %}
+<script src="{{url_for('static', filename='plugins/js/vis-network.min.js')}}"></script>
+<script>
+    const SENTENCE_GRAPH_OPTIONS = {
+        nodes: {
+            shape: 'box',
+            scaling: {
+                min: 12,
+                max: 24,
+                label: {
+                    min: 15,
+                    max: 30,
+                    drawThreshold: 12,
+                    maxVisible: 30
+                }
+            },
+            font: {
+                size: 16,
+                face: 'Noto Serif Devanagari'
+            },
+            margin: 8
+        },
+        edges: {
+            width: 0.15,
+            color: {
+                inherit: 'both'
+            },
+            scaling: {
+                min: 1,
+                max: 5,
+                label: {
+                    min: 10,
+                    max: 25,
+                    drawThreshold: 5,
+                    maxVisible: 20
+                }
+            },
+            font: {
+                size: 5,
+                face: 'Noto Serif Devanagari',
+            }
+        },
+        interaction: {
+            tooltipDelay: 100,
+            hideEdgesOnDrag: false,
+            hideEdgesOnZoom: false
+        },
+        layout: {
+            hierarchical: {
+               enabled: true,
+               sortMethod: 'directed',
+               levelSeparation: 200,
+               nodeSpacing: 150,
+               treeSpacing: 250,
+            },
+        },
+        physics: false
+    };
+    var SENTENCE_GRAPH_DATA = {};
+    var SENTENCE_GRAPH_NETWORK = {};
+</script>
+{% for chapter_id, chapter_result in data.result.items() %}
+<script>
+    SENTENCE_GRAPH_DATA["{{chapter_id}}"] =  JSON.parse('{{chapter_result[task.name] | tojson }}');
+</script>
+<button id="sentence-graph-snapshot-button-{{chapter_id}}" title="Snapshot" data-chapter="{{chapter_id}}" class="btn btn-primary mr-auto float-right sentence-graph-snapshot">
+    <i class="fa fa-camera"></i>
+</button>
+<div class="border rounded px-2 py-1" id="sentence-graph-{{chapter_id}}" style="height: 55vh;">
+    No edges found.
+</div>
+{% endfor %}
+<script>
+    $(".sentence-graph-snapshot").click(function() {
+        const $snapshot_button = $(this);
+        const chapter_id = $snapshot_button.data('chapter');
+        const download_anchor = document.createElement('a');
+        download_anchor.href = $snapshot_button.data('src');
+        download_anchor.download = `discourse_graph_${chapter_id}.png`;
+        document.body.appendChild(download_anchor);
+        download_anchor.click();
+        document.body.removeChild(download_anchor);
+    });
+
+    function draw_sentence_graph(chapter_id) {
+        const container = document.getElementById(`sentence-graph-${chapter_id}`);
+        SENTENCE_GRAPH_NETWORK[chapter_id] = new vis.Network(container, SENTENCE_GRAPH_DATA[chapter_id], GRAPH_OPTIONS);
+
+        // get a JSON object
+        SENTENCE_GRAPH_NETWORK[chapter_id].on("afterDrawing", function (ctx) {
+            const data_url = ctx.canvas.toDataURL();
+            $(`#sentence-graph-snapshot-button-${chapter_id}`).data("src", data_url);
+        });
+    }
+
+    $(document).ready(function () {
+        for (const chapter_id of Object.keys(SENTENCE_GRAPH_DATA)) {
+            draw_sentence_graph(chapter_id);
+        }
+    });
+
+    $('a[data-toggle="pill"]').on('shown.bs.tab', function (event) {
+        const active_tab = event.target;
+        const task_id = active_tab.id.replace(/task-([0-9]+)-tab/, "$1");
+        if (task_id == "4") {
+            for (const chapter_id of Object.keys(SENTENCE_GRAPH_DATA)) {
+                SENTENCE_GRAPH_NETWORK[chapter_id].fit();
+            }
+        }
+    });
+</script>
+{% endblock %}
