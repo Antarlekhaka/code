@@ -223,6 +223,66 @@ def export_data(
 
             # --------------------------------------------------------------- #
 
+            coreference_query = Coreference.query.filter(
+                Coreference.boundary_id.in_(boundary_ids),
+                Coreference.annotator_id == annotator.id,
+                Coreference.is_deleted == False  # noqa
+            ).order_by(Coreference.src_id)
+
+            annotation_data["coreference"] = [
+                {
+                    "verse_id": coreference.boundary.verse_id,
+                    "boundary_id": coreference.boundary_id,
+                    "src_id": coreference.src_id,
+                    "dst_id": coreference.dst_id,
+                }
+                for coreference in coreference_query.all()
+            ]
+
+            # --------------------------------------------------------------- #
+
+            sentence_classification_query = SentenceClassification.query.filter(
+                SentenceClassification.boundary_id.in_(boundary_ids),
+                SentenceClassification.annotator_id == annotator.id,
+                SentenceClassification.is_deleted == False  # noqa
+            ).join(Boundary).order_by(Boundary.token_id)
+
+            annotation_data["sentence_classification"] = [
+                {
+                    "verse_id": sentclf.boundary.verse_id,
+                    "boundary_id": sentclf.boundary_id,
+                    "label_id": sentclf.label_id,
+                    "label_label": sentclf.label.label,
+                }
+                for sentclf in sentence_classification_query.all()
+            ]
+
+            # --------------------------------------------------------------- #
+
+            # NOTE: We show connections that at the src_boundary_id
+            intersentence_connection_query = DiscourseGraph.query.filter(
+                DiscourseGraph.src_boundary_id.in_(boundary_ids),
+                DiscourseGraph.annotator_id == annotator.id,
+                DiscourseGraph.is_deleted == False  # noqa
+            ).order_by(DiscourseGraph.src_token_id)
+
+            annotation_data["intersentence_connection"] = [
+                {
+                    "src_verse_id": isc.src_boundary.verse_id,
+                    "src_boundary_id": isc.src_boundary_id,
+                    "src_token_id": isc.src_token_id,
+                    "dst_verse_id": isc.dst_boundary.verse_id,
+                    "dst_boundary_id": isc.dst_boundary_id,
+                    "dst_token_id": isc.dst_token_id,
+                    "label_id": isc.label_id,
+                    "label_label": isc.label.label,
+                    "relation_type": isc.relation_type,
+                }
+                for isc in intersentence_connection_query.all()
+            ]
+
+            # --------------------------------------------------------------- #
+
             data["annotation"][annotation_id] = annotation_data
 
         # ------------------------------------------------------------------- #
@@ -273,17 +333,23 @@ def export_data(
             preference = ["misc.Unsandhied", "form", "lemma"]
             display_text = []
 
+            sentences = {}
             current_boundary_id = None
-            sentence_text = []
+            sentence_tokens = []
+
             for anvaya in annotation_data["anvaya"]:
                 if current_boundary_id is None:
                     current_boundary_id = anvaya["boundary_id"]
-                    sentence_text = [f"{anvaya['verse_id']}:"]
 
                 if current_boundary_id != anvaya["boundary_id"]:
-                    display_text.append(sentence_text)
-                    sentence_text = [f"{anvaya['verse_id']}:"]
+                    sentence_text = " ".join(sentence_tokens)
+                    sentences[current_boundary_id] = sentence_text
+                    display_text.append(
+                        f"{anvaya['verse_id']}:\t{sentence_text}"
+                    )
+
                     current_boundary_id = anvaya["boundary_id"]
+                    sentence_tokens = []
 
                 token_id = anvaya["token_id"]
                 token = chapter_data["tokens"][token_id]
@@ -294,13 +360,17 @@ def export_data(
                     else:
                         token_text = token["analysis"].get(key)
                     if token_text and token_text not in ["_"]:
-                        sentence_text.append(token_text)
+                        sentence_tokens.append(token_text)
                         break
             else:
-                display_text.append(sentence_text)
+                sentence_text = " ".join(sentence_tokens)
+                sentences[current_boundary_id] = sentence_text
+                display_text.append(
+                    f"{anvaya['verse_id']}:\t{sentence_text}"
+                )
 
             task_data["anvaya"] = "\n\n".join(
-                " ".join(sentence_text)
+                sentence_text
                 for sentence_text in display_text
             )
 
@@ -308,8 +378,8 @@ def export_data(
 
             preference = ["lemma", "misc.Unsandhied", "form"]
             display_text = [
-                ["Verse", "Text", "Label", "Description"],
-                ["=====", "====", "=====", "==========="]
+                ["Verse", "Token", "Label", "Description"],
+                ["=====", "=====", "=====", "==========="]
             ]
 
             for entity in annotation_data["named_entity"]:
@@ -342,7 +412,6 @@ def export_data(
             # --------------------------------------------------------------- #
 
             preference = ["lemma", "misc.Unsandhied", "form"]
-            display_text = []
 
             token_graph_data = {
                 "nodes": [],
@@ -396,7 +465,51 @@ def export_data(
 
             # --------------------------------------------------------------- #
 
+            preference = ["lemma", "misc.Unsandhied", "form"]
+
+            clusters = defaultdict(list)
+
+            for coref in annotation_data["coreference"]:
+                src_text = None
+                dst_text = None
+
+                for token_id in [coref["src_id"], coref["dst_id"]]:
+                    token = chapter_data["tokens"][token_id]
+                    for key in preference:
+                        if "." in key:
+                            k1, k2 = key.split(".", 1)
+                            token_text = token["analysis"].get(k1, {}).get(k2)
+                        else:
+                            token_text = token["analysis"].get(key)
+
+                        if token_text and token_text not in ["_"]:
+                            break
+
+                    if token_id == coref["src_id"]:
+                        src_text = token_text
+                    if token_id == coref["dst_id"]:
+                        dst_text = token_text
+
+            # TODO: form clusters (how?) id-based? or text-based?
+
             task_data["coreference"] = str(annotation_data["coreference"])
+
+            # --------------------------------------------------------------- #
+
+            display_text = [
+                ["Verse", "Sentence", "Label", "Description"],
+                ["=====", "========", "=====", "==========="]
+            ]
+
+            task_data["sentence_classification"] = str(
+                annotation_data["sentence_classification"]
+            )
+
+            # --------------------------------------------------------------- #
+
+            task_data["intersentence_connection"] = str(
+                annotation_data["intersentence_connection"]
+            )
 
             # --------------------------------------------------------------- #
 
