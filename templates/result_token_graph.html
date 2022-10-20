@@ -64,7 +64,7 @@
 <script>
     DATA["{{chapter_id}}"] =  JSON.parse('{{chapter_result[task.name] | tojson }}');
 </script>
-<button id="snapshot-graph-button-{{chapter_id}}" title="Snapshot" class="btn btn-primary mr-auto float-right snapshot-graph">
+<button id="graph-snapshot-button-{{chapter_id}}" title="Snapshot" data-chapter="{{chapter_id}}" class="btn btn-primary mr-auto float-right graph-snapshot">
     <i class="fa fa-camera"></i>
 </button>
 <div class="border rounded px-2 py-1" id="graph-{{chapter_id}}" style="height: 55vh;">
@@ -72,12 +72,12 @@
 </div>
 {% endfor %}
 <script>
-    $(".snapshot-graph").click(function() {
+    $(".graph-snapshot").click(function() {
         const $snapshot_button = $(this);
+        const chapter_id = $snapshot_button.data('chapter');
         const download_anchor = document.createElement('a');
         download_anchor.href = $snapshot_button.data('src');
-        /* TODO: name using verse_id / boundary_idx ? */
-        download_anchor.download = 'graph.png';
+        download_anchor.download = `graph_${chapter_id}.png`;
         document.body.appendChild(download_anchor);
         download_anchor.click();
         document.body.removeChild(download_anchor);
@@ -90,7 +90,7 @@
         // get a JSON object
         NETWORK[chapter_id].on("afterDrawing", function (ctx) {
             const data_url = ctx.canvas.toDataURL();
-            $(`#snapshot-graph-button-${chapter_id}`).data("src", data_url);
+            $(`#graph-snapshot-button-${chapter_id}`).data("src", data_url);
         });
     }
 
