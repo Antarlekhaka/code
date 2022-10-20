@@ -72,6 +72,7 @@ from settings import app
 
 from utils.reverseproxied import ReverseProxied
 from utils.database import export_data, get_verse_data, get_chapter_data
+from utils.export import simple_format, standard_format
 from utils.conllu import DigitalCorpusSanskrit
 
 ###############################################################################
@@ -507,12 +508,12 @@ def show_export():
         annotation_data = export_data(
             annotator_ids=[annotator_id],
             chapter_ids=chapter_ids,
-            task_ids=[],
-            output_format="simple"
+            task_ids=[]
         )
+        simple_data = simple_format(annotation_data)
         annotation_result = {
             k[0]: v
-            for k, v in annotation_data["visual"].items()
+            for k, v in simple_data.items()
         }
         data["result"] = annotation_result
 

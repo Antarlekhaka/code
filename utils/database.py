@@ -9,7 +9,6 @@ Database Utility Functions
 import logging
 from typing import Dict, List
 from collections import defaultdict
-import uuid
 
 from sqlalchemy.orm.properties import ColumnProperty
 from sqlalchemy.orm.relationships import RelationshipProperty
@@ -34,10 +33,6 @@ from utils.heuristic import get_anvaya
 LOGGER = logging.getLogger(__name__)
 
 ###############################################################################
-
-
-def get_unique_id():
-    return uuid.uuid4()
 
 
 def search_model(
@@ -97,10 +92,7 @@ def export_data(
     data = {
         "chapter": {},
         "annotation": {},
-        "visual": {}
     }
-
-    node_ids = {}
 
     # ----------------------------------------------------------------------- #
 
@@ -148,7 +140,6 @@ def export_data(
         for annotator in annotators:
             annotation_id = (chapter.id, annotator.id)
             annotation_data = defaultdict(dict)
-            task_data = defaultdict(dict)
 
             # --------------------------------------------------------------- #
 
@@ -172,6 +163,9 @@ def export_data(
                 Anvaya.boundary_id.in_(boundary_ids),
                 Anvaya.annotator_id == annotator.id
             ).join(Boundary).order_by(Boundary.token_id, Anvaya.order)
+
+            # TODO: avoid .boundary.verse_id call ?
+            # fetch from task_data["sentence_boundary"] ?
             annotation_data["anvaya"] = [
                 {
                     "verse_id": anvaya.boundary.verse_id,
@@ -188,6 +182,9 @@ def export_data(
                 Entity.annotator_id == annotator.id,
                 Entity.is_deleted == False  # noqa
             ).order_by(Entity.token_id)
+
+            # TODO: avoid .boundary.verse_id call ?
+            # fetch from task_data["sentence_boundary"] ?
             annotation_data["named_entity"] = [
                 {
                     "verse_id": entity.boundary.verse_id,
@@ -208,6 +205,8 @@ def export_data(
                 TokenGraph.is_deleted == False  # noqa
             ).order_by(TokenGraph.src_id, TokenGraph.dst_id)
 
+            # TODO: avoid .boundary.verse_id call ?
+            # fetch from task_data["sentence_boundary"] ?
             annotation_data["token_graph"] = [
                 {
                     "verse_id": relation.boundary.verse_id,
@@ -229,6 +228,8 @@ def export_data(
                 Coreference.is_deleted == False  # noqa
             ).order_by(Coreference.src_id)
 
+            # TODO: avoid .boundary.verse_id call ?
+            # fetch from task_data["sentence_boundary"] ?
             annotation_data["coreference"] = [
                 {
                     "verse_id": coreference.boundary.verse_id,
@@ -247,6 +248,8 @@ def export_data(
                 SentenceClassification.is_deleted == False  # noqa
             ).join(Boundary).order_by(Boundary.token_id)
 
+            # TODO: avoid .boundary.verse_id call ?
+            # fetch from task_data["sentence_boundary"] ?
             annotation_data["sentence_classification"] = [
                 {
                     "verse_id": sentclf.boundary.verse_id,
@@ -266,6 +269,11 @@ def export_data(
                 DiscourseGraph.is_deleted == False  # noqa
             ).order_by(DiscourseGraph.src_token_id)
 
+            # TODO: avoid .src_boundary.verse_id call ?
+            # TODO: avoid .dst_boundary.verse_id call ?
+            # fetch from task_data["sentence_boundary"] ?
+            # any guarantee that .dst_boundary. will be present?
+
             annotation_data["intersentence_connection"] = [
                 {
                     "src_verse_id": isc.src_boundary.verse_id,
@@ -284,236 +292,6 @@ def export_data(
             # --------------------------------------------------------------- #
 
             data["annotation"][annotation_id] = annotation_data
-
-        # ------------------------------------------------------------------- #
-        # Visual
-        # ------------------------------------------------------------------- #
-
-        for annotation_id, annotation_data in data["annotation"].items():
-
-            # --------------------------------------------------------------- #
-
-            boundary_tokens = [
-                boundary["token_id"]
-                for boundary in annotation_data["sentence_boundary"].values()
-            ]
-            next_boundary = boundary_tokens[0] if boundary_tokens else None
-
-            display_text = []
-            for verse_id, verse_tokens in chapter_data["verse_tokens"].items():
-                for line_tokens in verse_tokens:
-                    line_text = []
-                    for token_id in line_tokens:
-                        token = chapter_data["tokens"][token_id]
-
-                        if token["text"] and token["text"] not in ["_"]:
-                            if token["annotator_id"] is None:
-                                line_text.append(token["text"])
-
-                            if next_boundary and next_boundary == token_id:
-                                line_text.append("##")
-                                boundary_tokens.pop(0)
-                                next_boundary = (
-                                    boundary_tokens[0]
-                                    if boundary_tokens
-                                    else None
-                                )
-
-                    display_text.append(line_text)
-                display_text[-1].extend(["//", str(verse_id)])
-                display_text.append([])
-
-            task_data["sentence_boundary"] = "\n".join(
-                " ".join(line_text)
-                for line_text in display_text
-            )
-
-            # --------------------------------------------------------------- #
-
-            preference = ["misc.Unsandhied", "form", "lemma"]
-            display_text = []
-
-            sentences = {}
-            current_boundary_id = None
-            sentence_tokens = []
-
-            for anvaya in annotation_data["anvaya"]:
-                if current_boundary_id is None:
-                    current_boundary_id = anvaya["boundary_id"]
-
-                if current_boundary_id != anvaya["boundary_id"]:
-                    sentence_text = " ".join(sentence_tokens)
-                    sentences[current_boundary_id] = sentence_text
-                    display_text.append(
-                        f"{anvaya['verse_id']}:\t{sentence_text}"
-                    )
-
-                    current_boundary_id = anvaya["boundary_id"]
-                    sentence_tokens = []
-
-                token_id = anvaya["token_id"]
-                token = chapter_data["tokens"][token_id]
-                for key in preference:
-                    if "." in key:
-                        k1, k2 = key.split(".", 1)
-                        token_text = token["analysis"].get(k1, {}).get(k2)
-                    else:
-                        token_text = token["analysis"].get(key)
-                    if token_text and token_text not in ["_"]:
-                        sentence_tokens.append(token_text)
-                        break
-            else:
-                sentence_text = " ".join(sentence_tokens)
-                sentences[current_boundary_id] = sentence_text
-                display_text.append(
-                    f"{anvaya['verse_id']}:\t{sentence_text}"
-                )
-
-            task_data["anvaya"] = "\n\n".join(
-                sentence_text
-                for sentence_text in display_text
-            )
-
-            # --------------------------------------------------------------- #
-
-            preference = ["lemma", "misc.Unsandhied", "form"]
-            display_text = [
-                ["Verse", "Token", "Label", "Description"],
-                ["=====", "=====", "=====", "==========="]
-            ]
-
-            for entity in annotation_data["named_entity"]:
-                entity_token_id = entity["token_id"]
-                entity_token = chapter_data["tokens"][entity_token_id]
-                for key in preference:
-                    if "." in key:
-                        k1, k2 = key.split(".", 1)
-                        token_text = entity_token["analysis"].get(
-                            k1, {}
-                        ).get(k2)
-                    else:
-                        token_text = entity_token["analysis"].get(key)
-
-                    if token_text and token_text not in ["_"]:
-                        break
-
-                display_text.append([
-                    str(entity["verse_id"]),
-                    token_text,
-                    entity["label_label"],
-                    entity["label_description"]
-                ])
-
-            task_data["named_entity"] = "\n".join(
-                "\t".join(entity_row)
-                for entity_row in display_text
-            )
-
-            # --------------------------------------------------------------- #
-
-            preference = ["lemma", "misc.Unsandhied", "form"]
-
-            token_graph_data = {
-                "nodes": [],
-                "edges": []
-            }
-
-            for relation in annotation_data["token_graph"]:
-                from_id = None
-                to_id = None
-
-                for token_id in [relation["src_id"], relation["dst_id"]]:
-                    token = chapter_data["tokens"][token_id]
-                    for key in preference:
-                        if "." in key:
-                            k1, k2 = key.split(".", 1)
-                            token_text = token["analysis"].get(k1, {}).get(k2)
-                        else:
-                            token_text = token["analysis"].get(key)
-
-                        if token_text and token_text not in ["_"]:
-                            break
-                    if token_text not in node_ids:
-                        node_ids[token_text] = get_unique_id()
-
-                        token_graph_data["nodes"].append({
-                            "id": node_ids[token_text],
-                            "label": token_text,
-                            "value": 3,
-                            "group": None
-                        })
-
-                    if token_id == relation["src_id"]:
-                        from_id = node_ids[token_text]
-                    if token_id == relation["dst_id"]:
-                        to_id = node_ids[token_text]
-
-                token_graph_data["edges"].append({
-                    "from": from_id,
-                    "to": to_id,
-                    "label": relation["label_label"],
-                    "title": relation["label_description"],
-                    "arrows": {
-                        "to": {
-                            "enabled": True
-                        }
-                    },
-                    "value": 3,
-                })
-
-            task_data["token_graph"] = token_graph_data
-
-            # --------------------------------------------------------------- #
-
-            preference = ["lemma", "misc.Unsandhied", "form"]
-
-            clusters = defaultdict(list)
-
-            for coref in annotation_data["coreference"]:
-                src_text = None
-                dst_text = None
-
-                for token_id in [coref["src_id"], coref["dst_id"]]:
-                    token = chapter_data["tokens"][token_id]
-                    for key in preference:
-                        if "." in key:
-                            k1, k2 = key.split(".", 1)
-                            token_text = token["analysis"].get(k1, {}).get(k2)
-                        else:
-                            token_text = token["analysis"].get(key)
-
-                        if token_text and token_text not in ["_"]:
-                            break
-
-                    if token_id == coref["src_id"]:
-                        src_text = token_text
-                    if token_id == coref["dst_id"]:
-                        dst_text = token_text
-
-            # TODO: form clusters (how?) id-based? or text-based?
-
-            task_data["coreference"] = str(annotation_data["coreference"])
-
-            # --------------------------------------------------------------- #
-
-            display_text = [
-                ["Verse", "Sentence", "Label", "Description"],
-                ["=====", "========", "=====", "==========="]
-            ]
-
-            task_data["sentence_classification"] = str(
-                annotation_data["sentence_classification"]
-            )
-
-            # --------------------------------------------------------------- #
-
-            task_data["intersentence_connection"] = str(
-                annotation_data["intersentence_connection"]
-            )
-
-            # --------------------------------------------------------------- #
-
-            data["visual"][annotation_id] = task_data
 
     return data
 
