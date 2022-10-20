@@ -2,7 +2,7 @@
 {% block body %}
 <script src="{{url_for('static', filename='plugins/js/vis-network.min.js')}}"></script>
 <script>
-    const GRAPH_OPTIONS = {
+    const TOKEN_GRAPH_OPTIONS = {
         nodes: {
             shape: 'box',
             scaling: {
@@ -57,46 +57,46 @@
         },
         physics: false
     };
-    var DATA = {};
-    var NETWORK = {};
+    var TOKEN_GRAPH_DATA = {};
+    var TOKEN_GRAPH_NETWORK = {};
 </script>
 {% for chapter_id, chapter_result in data.result.items() %}
 <script>
-    DATA["{{chapter_id}}"] =  JSON.parse('{{chapter_result[task.name] | tojson }}');
+    TOKEN_GRAPH_DATA["{{chapter_id}}"] =  JSON.parse('{{chapter_result[task.name] | tojson }}');
 </script>
-<button id="graph-snapshot-button-{{chapter_id}}" title="Snapshot" data-chapter="{{chapter_id}}" class="btn btn-primary mr-auto float-right graph-snapshot">
+<button id="token-graph-snapshot-button-{{chapter_id}}" title="Snapshot" data-chapter="{{chapter_id}}" class="btn btn-primary mr-auto float-right token-graph-snapshot">
     <i class="fa fa-camera"></i>
 </button>
-<div class="border rounded px-2 py-1" id="graph-{{chapter_id}}" style="height: 55vh;">
-    No edges have been added yet.
+<div class="border rounded px-2 py-1" id="token-graph-{{chapter_id}}" style="height: 55vh;">
+    No edges found.
 </div>
 {% endfor %}
 <script>
-    $(".graph-snapshot").click(function() {
+    $(".token-graph-snapshot").click(function() {
         const $snapshot_button = $(this);
         const chapter_id = $snapshot_button.data('chapter');
         const download_anchor = document.createElement('a');
         download_anchor.href = $snapshot_button.data('src');
-        download_anchor.download = `graph_${chapter_id}.png`;
+        download_anchor.download = `token_graph_${chapter_id}.png`;
         document.body.appendChild(download_anchor);
         download_anchor.click();
         document.body.removeChild(download_anchor);
     });
 
-    function draw_graph(chapter_id) {
-        const container = document.getElementById(`graph-${chapter_id}`);
-        NETWORK[chapter_id] = new vis.Network(container, DATA[chapter_id], GRAPH_OPTIONS);
+    function draw_token_graph(chapter_id) {
+        const container = document.getElementById(`token-graph-${chapter_id}`);
+        TOKEN_GRAPH_NETWORK[chapter_id] = new vis.Network(container, TOKEN_GRAPH_DATA[chapter_id], TOKEN_GRAPH_OPTIONS);
 
         // get a JSON object
-        NETWORK[chapter_id].on("afterDrawing", function (ctx) {
+        TOKEN_GRAPH_NETWORK[chapter_id].on("afterDrawing", function (ctx) {
             const data_url = ctx.canvas.toDataURL();
-            $(`#graph-snapshot-button-${chapter_id}`).data("src", data_url);
+            $(`#token-graph-snapshot-button-${chapter_id}`).data("src", data_url);
         });
     }
 
     $(document).ready(function () {
-        for (const chapter_id of Object.keys(DATA)) {
-            draw_graph(chapter_id);
+        for (const chapter_id of Object.keys(TOKEN_GRAPH_DATA)) {
+            draw_token_graph(chapter_id);
         }
     });
 
@@ -104,8 +104,8 @@
         const active_tab = event.target;
         const task_id = active_tab.id.replace(/task-([0-9]+)-tab/, "$1");
         if (task_id == "4") {
-            for (const chapter_id of Object.keys(DATA)) {
-                NETWORK[chapter_id].fit();
+            for (const chapter_id of Object.keys(TOKEN_GRAPH_DATA)) {
+                TOKEN_GRAPH_NETWORK[chapter_id].fit();
             }
         }
     });
