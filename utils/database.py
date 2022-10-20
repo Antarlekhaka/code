@@ -256,6 +256,7 @@ def export_data(
                     "boundary_id": sentclf.boundary_id,
                     "label_id": sentclf.label_id,
                     "label_label": sentclf.label.label,
+                    "label_description": sentclf.label.description,
                 }
                 for sentclf in sentence_classification_query.all()
             ]
@@ -284,6 +285,7 @@ def export_data(
                     "dst_token_id": isc.dst_token_id,
                     "label_id": isc.label_id,
                     "label_label": isc.label.label,
+                    "label_description": isc.label.description,
                     "relation_type": isc.relation_type,
                 }
                 for isc in intersentence_connection_query.all()
