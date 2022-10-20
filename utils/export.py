@@ -6,8 +6,8 @@ Export Data
 
 ###############################################################################
 
-from typing import List
 import uuid
+from typing import List
 from collections import defaultdict
 
 import networkx as nx
@@ -98,20 +98,23 @@ def simple_format(data):
             display_text = []
 
             current_boundary_id = None
+            current_verse_id = None
             sentence_tokens = []
 
             for anvaya in annotation_data["anvaya"]:
                 if current_boundary_id is None:
                     current_boundary_id = anvaya["boundary_id"]
+                    current_verse_id = anvaya["verse_id"]
 
                 if current_boundary_id != anvaya["boundary_id"]:
                     sentence_text = " ".join(sentence_tokens)
                     sentences[current_boundary_id] = sentence_text
                     display_text.append(
-                        f"{anvaya['verse_id']}:\t{sentence_text}"
+                        f"{current_verse_id}:\t{sentence_text}"
                     )
 
                     current_boundary_id = anvaya["boundary_id"]
+                    current_verse_id = anvaya["verse_id"]
                     sentence_tokens = []
 
                 token_id = anvaya["token_id"]
@@ -121,9 +124,7 @@ def simple_format(data):
             else:
                 sentence_text = " ".join(sentence_tokens)
                 sentences[current_boundary_id] = sentence_text
-                display_text.append(
-                    f"{anvaya['verse_id']}:\t{sentence_text}"
-                )
+                display_text.append(f"{current_verse_id}:\t{sentence_text}")
 
             task_data["anvaya"] = "\n\n".join(
                 sentence_text
@@ -239,8 +240,17 @@ def simple_format(data):
                 ["=====", "========", "=====", "==========="]
             ]
 
-            task_data["sentence_classification"] = str(
-                annotation_data["sentence_classification"]
+            for snclf in annotation_data["sentence_classification"]:
+                display_text.append([
+                    str(snclf["verse_id"]),
+                    sentences[snclf["boundary_id"]],
+                    snclf["label_label"],
+                    snclf["label_description"]
+                ])
+
+            task_data["sentence_classification"] = "\n".join(
+                "\t".join(sentence_row)
+                for sentence_row in display_text
             )
 
             # --------------------------------------------------------------- #
