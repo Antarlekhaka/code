@@ -1702,23 +1702,16 @@ function add_intersentence_connection_row($source_token, $target_token, relation
 }
 
 function prepare_intersentence_connection_data($data_location) {
-    // TODO: update for discourse graph
-
     var data = {
         nodes: [],
         edges: []
     };
 
-    // temporary id store
-    // TODO: consider replacing it with actual node_ids
-    //       don't think there's any real benefit either way
     var node_ids = {};
     var node_id = 0;
     function get_node_id() {
         return ++node_id;
     }
-
-    // var intersentence_connection_data = [];
 
     const $intersentence_connection_annotation_rows = $task_7_intersentence_connection_annotation_container.find('.intersentence-connection-annotation-row');
     $intersentence_connection_annotation_rows.each(function(_index, intersentence_connection_row) {
@@ -1758,18 +1751,6 @@ function prepare_intersentence_connection_data($data_location) {
 
         const relation_label_value = $relation.selectpicker("val");
         const relation_label = $relation.find(`[value=${relation_label_value}]`).data("subtext");
-
-        // intersentence_connection_data.push({
-        //     "src_boundary_id": $source_token.data("boundary-id"),
-        //     "src_token_id": $source_token.data("token-id"),
-        //     "label_id": $relation.selectpicker("val"),
-        //     "dst_boundary_id": $target_token.data("boundary-id"),
-        //     "dst_token_id": $target_token.data("token-id"),
-        //     "relation_type": relation_type
-        // });
-
-
-        // TODO: colour encoding as per relation_type ?
 
         if (!node_ids.hasOwnProperty(source_entity)) {
             node_ids[source_entity] = get_node_id();
