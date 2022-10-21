@@ -1729,14 +1729,21 @@ function prepare_intersentence_connection_data($data_location) {
         // type == 3: sentence-sentence connection
 
         var relation_type = 0
+        var source_group_id = 0;
+        var target_group_id = 0;
+
         if (source_is_sentence_token && target_is_sentence_token) {
             relation_type = 3;
+            source_group_id = 1;
+            target_group_id = 1;
         } else {
             if (source_is_sentence_token) {
                 relation_type = 2;
+                source_group_id = 1;
             }
             if (target_is_sentence_token) {
                 relation_type = 1;
+                target_group_id = 1;
             }
         }
 
@@ -1763,7 +1770,7 @@ function prepare_intersentence_connection_data($data_location) {
                     `Token ID: ${$source_token.data("token-id")}`,
                 ].join("\n"), // title (visible on hover)
                 value: 3,
-                group: null // group-id (upos/xpos based?)
+                group: source_group_id
             });
         }
         if (!node_ids.hasOwnProperty(target_entity)) {
@@ -1777,7 +1784,7 @@ function prepare_intersentence_connection_data($data_location) {
                     `Token ID: ${$target_token.data("token-id")}`,
                 ].join("\n"), // title (visible on hover)
                 value: 3,
-                group: null // group-id (upos/xpos based?)
+                group: target_group_id
             });
         }
 
