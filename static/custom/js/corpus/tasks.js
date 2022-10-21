@@ -9,6 +9,8 @@ const default_token_class_common = "btn";
 const default_token_class_normal = "btn-light";
 const default_token_class_subtoken = "btn-warning";
 const default_token_class_manual = "btn-secondary";
+const default_token_class_multitoken = "btn-info";
+
 const default_token_element = "<span />";
 const default_token_data = {};
 
@@ -25,6 +27,8 @@ function generate_token_button(options) {
     const token_class_normal = options.token_class_normal || default_token_class_normal;
     const token_class_subtoken = options.token_class_subtoken || default_token_class_subtoken;
     const token_class_manual = options.token_class_manual || default_token_class_manual;
+    const token_class_multitoken = options.token_class_multitoken || default_token_class_multitoken;
+
     const token_data = options.token_data || default_token_data;
 
     var token_class = token_class_normal;
@@ -41,6 +45,10 @@ function generate_token_button(options) {
         token_text = token.analysis.misc.Unsandhied;
         // setting token_text again is actually redundant
         // since we already use token.analysis.misc.Unsandhied whenever available
+    }
+
+    if (token.inner_id.includes("-")) {
+        token_class = token_class_multitoken;
     }
 
     // can both text and unsandhied be null?
