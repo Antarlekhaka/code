@@ -1,9 +1,11 @@
 {% block body %}
 {% for chapter_id, chapter_result in data.result.items() %}
-<button id="download_{{task.name}}_{{chapter_id}}" data-chapter="{{chapter_id}}" data-task="{{task.name}}" data-target="pre_{{task.name}}_{{chapter_id}}" class="btn btn-secondary float-right task-download">
-    <i class="fa fa-download"></i>
-</button>
-<pre id="pre_{{task.name}}_{{chapter_id}}" class="pre-scrollable border rounded p-3 text-info">{{chapter_result[task.name]}}</pre>
+<div class="border rounded">
+    <button id="download_{{task.name}}_{{chapter_id}}" data-chapter="{{chapter_id}}" data-task="{{task.name}}" data-target="pre_{{task.name}}_{{chapter_id}}" class="btn btn-secondary float-right task-download">
+        <i class="fa fa-download"></i>
+    </button>
+    <pre id="pre_{{task.name}}_{{chapter_id}}" class="pre-scrollable p-3 text-info">{{chapter_result[task.name]}}</pre>
+</div>
 <hr>
 
 {% endfor %}
