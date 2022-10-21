@@ -103,7 +103,8 @@
     $('a[data-toggle="pill"]').on('shown.bs.tab', function (event) {
         const active_tab = event.target;
         const task_id = active_tab.id.replace(/task-([0-9]+)-tab/, "$1");
-        if (task_id == "4") {
+        const task_name = active_tab.dataset.task;
+        if (task_name == "token_graph") {
             for (const chapter_id of Object.keys(TOKEN_GRAPH_DATA)) {
                 TOKEN_GRAPH_NETWORK[chapter_id].fit();
             }
