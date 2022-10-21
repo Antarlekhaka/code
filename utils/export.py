@@ -39,7 +39,8 @@ def get_token_text(token: dict, key_preference: List[str]):
 
 
 def simple_format(data):
-    node_ids = {}
+    token_graph_node_ids = {}
+    discourse_graph_node_ids = {}
     simple_data = {}
 
     for chpater_id, chapter_data in data["chapter"].items():
@@ -110,7 +111,7 @@ def simple_format(data):
                     sentence_text = " ".join(sentence_tokens)
                     sentences[current_boundary_id] = sentence_text
                     display_text.append(
-                        f"{current_verse_id}:\t{sentence_text}"
+                        f"{current_verse_id}: {sentence_text}"
                     )
 
                     current_boundary_id = anvaya["boundary_id"]
@@ -124,7 +125,7 @@ def simple_format(data):
             else:
                 sentence_text = " ".join(sentence_tokens)
                 sentences[current_boundary_id] = sentence_text
-                display_text.append(f"{current_verse_id}:\t{sentence_text}")
+                display_text.append(f"{current_verse_id}: {sentence_text}")
 
             task_data["anvaya"] = "\n\n".join(
                 sentence_text
@@ -174,20 +175,20 @@ def simple_format(data):
                     token = chapter_data["tokens"][token_id]
                     token_text = get_token_text(token, preference)
 
-                    if token_text not in node_ids:
-                        node_ids[token_text] = get_unique_id()
+                    if token_text not in token_graph_node_ids:
+                        token_graph_node_ids[token_text] = get_unique_id()
 
                         token_graph_data["nodes"].append({
-                            "id": node_ids[token_text],
+                            "id": token_graph_node_ids[token_text],
                             "label": token_text,
                             "value": 3,
                             "group": None
                         })
 
                     if token_id == relation["src_id"]:
-                        from_id = node_ids[token_text]
+                        from_id = token_graph_node_ids[token_text]
                     if token_id == relation["dst_id"]:
-                        to_id = node_ids[token_text]
+                        to_id = token_graph_node_ids[token_text]
 
                 token_graph_data["edges"].append({
                     "from": from_id,
@@ -223,7 +224,11 @@ def simple_format(data):
                     token = chapter_data["tokens"][token_id]
                     token_text = get_token_text(token, preference)
                     cluster_text.append(
-                        f"{token_text}/{token['verse_id']}/{token['order']}"
+                        "/".join([
+                            token_text,
+                            f"v{token['verse_id']}",
+                            f"{token['inner_id']}"
+                        ])
                     )
 
                 display_text.append(cluster_text)
@@ -255,9 +260,75 @@ def simple_format(data):
 
             # --------------------------------------------------------------- #
 
-            task_data["intersentence_connection"] = str(
-                annotation_data["intersentence_connection"]
-            )
+            preference = ["lemma", "misc.Unsandhied", "form"]
+
+            discourse_graph_data = {
+                "nodes": [],
+                "edges": []
+            }
+
+            for relation in annotation_data["intersentence_connection"]:
+                from_id = None
+                to_id = None
+
+                src_token = chapter_data["tokens"][relation["src_token_id"]]
+                dst_token = chapter_data["tokens"][relation["dst_token_id"]]
+                relation_type = relation["relation_type"]
+
+                src_title = sentences[relation["src_boundary_id"]]
+                dst_title = sentences[relation["dst_boundary_id"]]
+
+                if relation_type in [2, 3]:
+                    src_token_text = f"S-{relation['src_boundary_id']}"
+                    src_group = 1
+                else:
+                    src_token_text = get_token_text(src_token, preference)
+                    src_group = 0
+
+                if relation_type in [1, 3]:
+                    dst_token_text = f"S-{relation['dst_boundary_id']}"
+                    dst_group = 1
+                else:
+                    dst_token_text = get_token_text(dst_token, preference)
+                    dst_group = 0
+
+                if src_token_text not in discourse_graph_node_ids:
+                    discourse_graph_node_ids[src_token_text] = get_unique_id()
+
+                    discourse_graph_data["nodes"].append({
+                        "id": discourse_graph_node_ids[src_token_text],
+                        "label": src_token_text,
+                        "title": src_title,
+                        "value": 3,
+                        "group": src_group
+                    })
+
+                if dst_token_text not in discourse_graph_node_ids:
+                    discourse_graph_node_ids[dst_token_text] = get_unique_id()
+
+                    discourse_graph_data["nodes"].append({
+                        "id": discourse_graph_node_ids[dst_token_text],
+                        "label": dst_token_text,
+                        "title": dst_title,
+                        "value": 3,
+                        "group": dst_group
+                    })
+
+                discourse_graph_data["edges"].append({
+                    "from": discourse_graph_node_ids[src_token_text],
+                    "to": discourse_graph_node_ids[dst_token_text],
+                    "label": relation["label_label"],
+                    "title": relation["label_description"],
+                    "arrows": {
+                        "to": {
+                            "enabled": True
+                        }
+                    },
+                    "value": 3,
+                })
+
+            print(discourse_graph_data)
+            task_data["intersentence_connection"] = discourse_graph_data
 
             # --------------------------------------------------------------- #
 
