@@ -96,8 +96,12 @@ def simple_format(data):
             preference = ["misc.Unsandhied", "form", "lemma"]
 
             sentences = {}
-            display_text = []
+            display_text = [
+                ["", "Verse", "Anvaya"],
+                ["", "-----", "------"]
+            ]
 
+            sent_idx = 0
             current_boundary_id = None
             current_verse_id = None
             sentence_tokens = []
@@ -108,10 +112,11 @@ def simple_format(data):
                     current_verse_id = anvaya["verse_id"]
 
                 if current_boundary_id != anvaya["boundary_id"]:
+                    sent_idx += 1
                     sentence_text = " ".join(sentence_tokens)
                     sentences[current_boundary_id] = sentence_text
                     display_text.append(
-                        f"{current_verse_id}: {sentence_text}"
+                        [str(sent_idx), str(current_verse_id), sentence_text]
                     )
 
                     current_boundary_id = anvaya["boundary_id"]
@@ -123,13 +128,16 @@ def simple_format(data):
                 token_text = get_token_text(token, preference)
                 sentence_tokens.append(token_text)
             else:
+                sent_idx += 1
                 sentence_text = " ".join(sentence_tokens)
                 sentences[current_boundary_id] = sentence_text
-                display_text.append(f"{current_verse_id}: {sentence_text}")
+                display_text.append(
+                    [str(sent_idx), str(current_verse_id), sentence_text]
+                )
 
-            task_data["anvaya"] = "\n\n".join(
-                sentence_text
-                for sentence_text in display_text
+            task_data["anvaya"] = "\n".join(
+                "\t".join(sentence_row)
+                for sentence_row in display_text
             )
 
             # --------------------------------------------------------------- #
@@ -138,7 +146,7 @@ def simple_format(data):
 
             display_text = [
                 ["Verse", "Token", "Label", "Description"],
-                ["=====", "=====", "=====", "==========="]
+                ["-----", "-----", "-----", "-----------"]
             ]
 
             for entity in annotation_data["named_entity"]:
@@ -193,8 +201,8 @@ def simple_format(data):
                 token_graph_data["edges"].append({
                     "from": from_id,
                     "to": to_id,
-                    "label": relation["label_label"],
-                    "title": relation["label_description"],
+                    "label": relation["label_description"],
+                    "title": relation["label_label"],
                     "arrows": {
                         "to": {
                             "enabled": True
@@ -207,7 +215,7 @@ def simple_format(data):
 
             # --------------------------------------------------------------- #
 
-            preference = ["lemma", "misc.Unsandhied", "form"]
+            preference = ["misc.Unsandhied", "form", "lemma"]
 
             coreference_graph = nx.DiGraph()
             coreference_graph.add_edges_from([
@@ -218,7 +226,7 @@ def simple_format(data):
             display_text = []
 
             clusters = nx.weakly_connected_components(coreference_graph)
-            for cluster in clusters:
+            for cluster_idx, cluster in enumerate(clusters):
                 cluster_text = []
                 for token_id in cluster:
                     token = chapter_data["tokens"][token_id]
@@ -226,14 +234,15 @@ def simple_format(data):
                     cluster_text.append(
                         "/".join([
                             token_text,
-                            f"v{token['verse_id']}",
-                            f"{token['inner_id']}"
+                            f"verse-{token['verse_id']}",
+                            f"line-{token['line_id']}",
+                            f"token-{token['inner_id']}"
                         ])
                     )
 
                 display_text.append(cluster_text)
 
-            task_data["coreference"] = "\n\n".join(
+            task_data["coreference"] = "\n".join(
                 ", ".join(cluster_text)
                 for cluster_text in display_text
             )
@@ -241,12 +250,15 @@ def simple_format(data):
             # --------------------------------------------------------------- #
 
             display_text = [
-                ["Verse", "Sentence", "Label", "Description"],
-                ["=====", "========", "=====", "==========="]
+                ["", "Verse", "Sentence", "Label", "Description"],
+                ["", "-----", "--------", "-----", "-----------"]
             ]
 
-            for snclf in annotation_data["sentence_classification"]:
+            for snclf_idx, snclf in enumerate(
+                annotation_data["sentence_classification"], 1
+            ):
                 display_text.append([
+                    str(snclf_idx),
                     str(snclf["verse_id"]),
                     sentences[snclf["boundary_id"]],
                     snclf["label_label"],
