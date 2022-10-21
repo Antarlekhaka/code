@@ -471,6 +471,7 @@ def show_admin():
 
 @webapp.route("/export", methods=["GET", "POST"])
 @auth_required()
+@permissions_required('annotate')
 def show_export():
     data = {}
     data['title'] = 'Export'
