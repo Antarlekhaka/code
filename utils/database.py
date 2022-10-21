@@ -677,6 +677,7 @@ def get_sentences(
         sentences[boundary.id] = {
             token.id: {
                 "id": token.id,
+                "inner_id": token.inner_id,
                 "sentence_id": boundary.id,
                 "boundary_id": boundary.id,
                 "order": token.order,
