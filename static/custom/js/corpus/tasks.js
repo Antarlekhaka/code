@@ -1298,7 +1298,7 @@ function add_coref_row($source_token, $target_token) {
     // add arrow
     var $column = $("<div />", {
         class: "col-sm-2",
-        html: '<span class="btn btn-secondary mb-1 mr-1"><i class="fas fa-arrow-right"></i></span>'
+        html: '<span class="btn btn-secondary mb-1 mr-1"><i class="fas fa-arrows-left-right"></i></span>'
     }).appendTo($row);
 
     // add target token
