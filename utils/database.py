@@ -10,20 +10,22 @@ import logging
 from typing import Dict, List
 from collections import defaultdict
 
+from sqlalchemy import func
 from sqlalchemy.orm.properties import ColumnProperty
 from sqlalchemy.orm.relationships import RelationshipProperty
 
-from models_sqla import User, Role
+from models_sqla import db, User, Role
 from models_sqla import Corpus, Chapter, Verse, Line, Token
 from models_sqla import (
-    Task, Progress,
+    Task,
     Boundary,
     Anvaya,
     Entity,
     TokenGraph,
     Coreference,
     SentenceClassification,
-    DiscourseGraph
+    DiscourseGraph,
+    SubmitLog
 )
 
 from utils.heuristic import get_anvaya
@@ -62,8 +64,7 @@ def search_model(
 def export_data(
     annotator_ids: List[int],
     chapter_ids: List[int],
-    task_ids: List[int],
-    output_format: str = "standard"
+    task_ids: List[int]
 ):
     """Export Data
 
@@ -75,9 +76,6 @@ def export_data(
         Chapter IDs
     task_ids : List[int]
         Task IDs
-    output_format : str, optional
-        Output Format, "standard" or "simple"
-        The default is "standard".
 
     Returns
     -------
@@ -87,7 +85,6 @@ def export_data(
 
     chapters = Chapter.query.filter(Chapter.id.in_(chapter_ids)).all()
     annotators = User.query.filter(User.id.in_(annotator_ids)).all()
-    tasks = Task.query.filter(Task.id.in_(task_ids)).all()
 
     data = {
         "chapter": {},
@@ -426,12 +423,21 @@ def get_verse_data(
                         "task_short": p.task.short,
                         "verse_id": p.verse_id,
                         "annotator_id": p.annotator_id,
-                        "updated_at": p.updated_at
+                        "updated_at": latest_update_time
                     }
-                    for p in Progress.query.filter(
-                        Progress.verse_id == verse_id,
-                        Progress.annotator_id.in_(annotator_ids),
-                    ).all()
+
+                    for p, latest_update_time in db.session.query(
+                        SubmitLog,
+                        func.max(SubmitLog.updated_at)
+                    ).filter(
+                        SubmitLog.verse_id == verse_id,
+                        SubmitLog.annotator_id.in_(annotator_ids),
+                        Task.is_deleted == False  # noqa
+                    ).group_by(
+                        SubmitLog.task_id
+                    ).join(
+                        Task
+                    ).order_by(Task.order).all()
                 ]
             }
         else:

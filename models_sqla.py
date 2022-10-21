@@ -169,7 +169,7 @@ class Task(db.Model):
     is_deleted = Column(Boolean, default=False, nullable=False)
 
 
-class Progress(db.Model):
+class SubmitLog(db.Model):
     id = Column(Integer, primary_key=True)
     verse_id = Column(Integer, ForeignKey('verse.id', ondelete='CASCADE'),
                       nullable=False, index=True)
@@ -180,18 +180,14 @@ class Progress(db.Model):
     verse = relationship(
         'Verse',
         backref=backref(
-            'progress', cascade='all,delete-orphan', lazy='dynamic'
+            'submits', cascade='all,delete-orphan', lazy='dynamic'
         )
     )
     annotator = relationship(
-        'User', backref=backref('progress', lazy='dynamic')
+        'User', backref=backref('submits', lazy='dynamic')
     )
     task = relationship(
-        'Task', backref=backref('progress', lazy='dynamic')
-    )
-    __table_args__ = (
-         Index('progress_verse_id_annotator_id_task_id',
-               'verse_id', 'annotator_id', 'task_id', unique=True),
+        'Task', backref=backref('submits', lazy='dynamic')
     )
 
 
@@ -436,7 +432,6 @@ class DiscourseGraph(db.Model):
 
 
 class EntityLabel(db.Model):
-    __tablename__ = 'entity_label'
     id = Column(Integer, primary_key=True)
     label = Column(String(255), nullable=False)
     description = Column(String(255))
@@ -444,7 +439,6 @@ class EntityLabel(db.Model):
 
 
 class RelationLabel(db.Model):
-    __tablename__ = 'relation_label'
     id = Column(Integer, primary_key=True)
     label = Column(String(255), nullable=False)
     description = Column(String(255))
@@ -452,7 +446,6 @@ class RelationLabel(db.Model):
 
 
 class SentenceLabel(db.Model):
-    __tablename__ = 'sentence_label'
     id = Column(Integer, primary_key=True)
     label = Column(String(255), nullable=False)
     description = Column(String(255))
@@ -460,7 +453,6 @@ class SentenceLabel(db.Model):
 
 
 class DiscourseLabel(db.Model):
-    __tablename__ = 'discourse_label'
     id = Column(Integer, primary_key=True)
     label = Column(String(255), nullable=False)
     description = Column(String(255))
@@ -472,7 +464,7 @@ class DiscourseLabel(db.Model):
 # * task can later be replaced by task_id
 # Task "type" can be generic
 
-# class Label(db.Model):
+# class GenericLabel(db.Model):
 #     __tablename__ = 'generic_label'
 #     id = Column(Integer, primary_key=True)
 #     task_id = Column(Integer, ForeignKey('task.id'), nullable=False)

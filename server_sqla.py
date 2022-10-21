@@ -62,7 +62,7 @@ from flask_migrate import Migrate
 from models_sqla import (db, user_datastore,
                          CustomLoginForm, CustomRegisterForm,
                          Corpus, Chapter, Verse, Line, Token,
-                         Task, Progress, Anvaya, Boundary,
+                         Task, SubmitLog, Anvaya, Boundary,
                          EntityLabel, Entity,
                          RelationLabel, TokenGraph,
                          Coreference,
@@ -178,8 +178,8 @@ DCS = DigitalCorpusSanskrit()
 # Database Utlity Functions
 
 
-def update_progress(verse_id: int, annotator_id: int, task_id: int):
-    """Update Progress
+def record_submit(verse_id: int, annotator_id: int, task_id: int):
+    """Record Submit
 
     Parameters
     ----------
@@ -190,22 +190,11 @@ def update_progress(verse_id: int, annotator_id: int, task_id: int):
     task_id : int
         Task ID
     """
-    progress_query = Progress.query.filter(
-        Progress.verse_id == verse_id,
-        Progress.annotator_id == annotator_id,
-        Progress.task_id == task_id
-    )
-    progress = progress_query.one_or_none()
-    if progress is None:
-        progress = Progress()
-        progress.verse_id = verse_id
-        progress.annotator_id = annotator_id
-        progress.task_id = task_id
-
-    # TODO: Is there a better way than manually triggering this?
-    progress.updated_at = datetime.datetime.utcnow()
-
-    db.session.add(progress)
+    submit_log = SubmitLog()
+    submit_log.verse_id = verse_id
+    submit_log.annotator_id = annotator_id
+    submit_log.task_id = task_id
+    db.session.add(submit_log)
     db.session.commit()
 
 
@@ -785,7 +774,7 @@ def api():
                 api_response["message"] = "No changes were submitted."
                 api_response["style"] = "warning"
 
-            update_progress(
+            record_submit(
                 verse_id=verse_id,
                 annotator_id=annotator_id,
                 task_id=task_id
@@ -900,7 +889,7 @@ def api():
                 api_response["message"] = "No changes were submitted."
                 api_response["style"] = "warning"
 
-            update_progress(
+            record_submit(
                 verse_id=verse_id,
                 annotator_id=annotator_id,
                 task_id=task_id
@@ -1000,7 +989,7 @@ def api():
                 api_response["message"] = "No changes were submitted."
                 api_response["style"] = "warning"
 
-            update_progress(
+            record_submit(
                 verse_id=verse_id,
                 annotator_id=annotator_id,
                 task_id=task_id
@@ -1104,7 +1093,7 @@ def api():
                 api_response["message"] = "No changes were submitted."
                 api_response["style"] = "warning"
 
-            update_progress(
+            record_submit(
                 verse_id=verse_id,
                 annotator_id=annotator_id,
                 task_id=task_id
@@ -1216,7 +1205,7 @@ def api():
                 api_response["message"] = "No changes were submitted."
                 api_response["style"] = "warning"
 
-            update_progress(
+            record_submit(
                 verse_id=verse_id,
                 annotator_id=annotator_id,
                 task_id=task_id
@@ -1311,7 +1300,7 @@ def api():
                 api_response["message"] = "No changes were submitted."
                 api_response["style"] = "warning"
 
-            update_progress(
+            record_submit(
                 verse_id=verse_id,
                 annotator_id=annotator_id,
                 task_id=task_id
@@ -1445,7 +1434,7 @@ def api():
                 api_response["message"] = "No changes were submitted."
                 api_response["style"] = "warning"
 
-            update_progress(
+            record_submit(
                 verse_id=verse_id,
                 annotator_id=annotator_id,
                 task_id=task_id

@@ -2,15 +2,12 @@
 
 - [ ] Export Data
   - [ ] Every task in 2 formats
-    - [ ] suitable for annotators
-    - [ ] annotator visualization?
+    - [x] suitable for annotators
+    - [x] annotator visualization
     - [ ] (admin) suitable for programmers
     - [ ] decide a standard format
 - [ ] Connect to Sangrahaka
   - [ ] Import entities (do it manually in database)
-
-
-- [ ] Log all Submits instead of just latest per task per annotator?
 
 - [ ] "Submit and go to next verse" ?
 
@@ -50,6 +47,7 @@
 
 ---
 
+- [x] Log all Submits instead of just latest per task per annotator?
 - [x] DiscourseGraph show graph
 - [x] Add triplets for token graph
 - [x] Show sentence with Token Graph
