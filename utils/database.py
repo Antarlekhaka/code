@@ -636,8 +636,23 @@ def get_sentences(
     """
     sentences = {}
 
-    # TODO: Consider only verses from this chapter
-    # TODO: If too many tokens, emit an error
+    # get first token from the chapter the verse_id belongs to
+    verse = Verse.query.get(verse_id)
+
+    chapter_id = verse.chapter_id
+    chapter_first_verse = Verse.query.filter(
+        Verse.chapter_id == chapter_id
+    ).order_by(Verse.id).first()
+    chapter_first_line = Line.query.filter(
+        Line.verse_id == chapter_first_verse.id
+    ).order_by(Line.id).first()
+    chapter_first_token = Token.query.filter(
+        Token.line_id == chapter_first_line.id
+    ).order_by(Token.id).first()
+
+    verse_first_token = Token.query.filter(
+        Token.line.has(Line.verse_id == verse_id)
+    ).order_by(Token.id).first()
 
     # boundaries present in the current verse
     boundaries = Boundary.query.filter(
@@ -656,9 +671,12 @@ def get_sentences(
     ).order_by(Boundary.token_id.desc()).first()
 
     previous_boundary_token_id = (
-        previous_boundary.token_id if previous_boundary else -1
+        previous_boundary.token_id
+        if previous_boundary.verse_id >= chapter_first_verse.id
+        else chapter_first_token.id - 1
     )
     # ----------------------------------------------------------------------- #
+
     extra_tokens = Token.query.filter(
         Token.line.has(Line.verse_id == verse_id),
         Token.annotator_id != None  # noqa
@@ -673,7 +691,10 @@ def get_sentences(
         }
         for token in extra_tokens
     }
+
     # ----------------------------------------------------------------------- #
+    # TODO: If too many tokens, emit error? / consider first token of verse?
+
     for boundary in boundaries:
         tokens = Token.query.filter(
             Token.id > previous_boundary_token_id,

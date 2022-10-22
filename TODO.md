@@ -64,10 +64,9 @@
 
 ## Bugs
 
-- [ ] If sentence boundary is marked for a verse in the next chapter, all the nodes in between get counted as sentences
-
 - [ ] If there are deleted items, it triggers a "Successfully updated" message even if there are no changes. Refer to `server_sqla.py` for further details.
 
+- [x] If sentence boundary is marked for a verse in the next chapter, all the nodes in between get counted as sentences
 - [x] Task 4 not recording
 - [x] Task 4 display only displays single relation out of existing ones
 - [x] After marking sentence boundary, transition to anvaya task doesnt take proper sentence as anvaya, need to call `setup_anvaya()` again. Probably async issue.
