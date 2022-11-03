@@ -672,7 +672,10 @@ def get_sentences(
 
     previous_boundary_token_id = (
         previous_boundary.token_id
-        if previous_boundary.verse_id >= chapter_first_verse.id
+        if (
+            previous_boundary is not None and
+            previous_boundary.verse_id >= chapter_first_verse.id
+        )
         else chapter_first_token.id - 1
     )
     # ----------------------------------------------------------------------- #
