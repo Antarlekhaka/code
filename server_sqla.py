@@ -238,6 +238,11 @@ def init_database():
     # Task
     if not Task.query.first():
         task_data_file = os.path.join(app.tables_dir, "task.json")
+        if not os.path.isfile(task_data_file):
+            task_data_file = os.path.join(
+                app.tables_dir, "samples", "task.json"
+            )
+
         with open(task_data_file, encoding="utf-8") as f:
             tasks_data = json.load(f)
 
