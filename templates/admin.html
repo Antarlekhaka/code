@@ -39,6 +39,63 @@
         </div>
     </div>
     <div class="card mt-2">
+        <form method="POST" enctype="multipart/form-data" action="{{url_for('perform_action')}}">
+            <input type="hidden" name="csrf_token" value={{csrf_token()}}>
+            <div class="card-header lead">
+                Tasks
+                <button type="submit" name="action" value="update_tasks" class="btn btn-sm btn-primary float-right">Update</button>
+            </div>
+            <div class="card-body p-0 m-0">
+                <table id="task-table" class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th class="pl-4">ID</th>
+                            <th>Title</th>
+                            <th>Active</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="task-table-body">
+                    {% for task in data.tasks %}
+                    <tr data-target="#task-{{task.id}}-order">
+                        <input type="hidden" name="task-{{task.id}}-order" id="task-{{task.id}}-order" value="{{task.order}}">
+                        <td class="pl-4">{{task.id}}</td>
+                        <td>{{task.title}}</td>
+                        <td>
+                            <input type="checkbox" name="task-{{task.id}}-status" id="task-{{task.id}}-toggle"
+                            {% if not task.is_deleted %}checked{% endif %} data-toggle="toggle"
+                            data-on="Yes"
+                            data-off="No">
+                        </td>
+                        <td><i class="fa fa-up-down"></i></td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                <script>
+                    const $task_table_body = $("#task-table-body");
+                    $(function() {
+                        $task_table_body.sortable({
+                            opacity: 0.75,
+                            revert: true,
+                            cursor: "move",
+                            tolerance: "pointer",
+                            placeholder: 'tr bg-secondary',
+                        }).on("sortupdate", function(e, ui) {
+                            // ui.item contains the current dragged element.
+                            // Triggered when the user stopped sorting and the DOM position has changed.
+                            $task_table_body.find("tr").each(function(index, element) {
+                                const input_selector = element.dataset.target;
+                                const $input_element = $(input_selector);
+                                $input_element.val(index + 1);
+                            });
+                        });
+                    });
+                </script>
+            </div>
+        </form>
+    </div>
+    <div class="card mt-2">
         <div class="card-header lead">
             Data
         </div>
