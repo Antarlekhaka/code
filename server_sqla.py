@@ -439,6 +439,16 @@ def show_admin():
         for role in role_query.order_by(role_model.level).all()
         if role.level < user_level
     ]
+    data['tasks'] = [
+        {
+            'id': task.id,
+            'name': task.name,
+            'title': task.title,
+            'order': task.order,
+            'is_deleted': task.is_deleted
+        }
+        for task in Task.query.order_by(Task.order).all()
+    ]
 
     data['corpus_list'] = [
         {
