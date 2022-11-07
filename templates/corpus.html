@@ -51,7 +51,7 @@
             {% if current_user.has_permission("annotate") %}
             <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
                 {% for task in constants.tasks %}
-                {% if task.id == 1 %}
+                {% if loop.index == 1 %}
                     {% set active_class = "active" %}
                     {% set aria_selected = "true" %}
                 {% else %}
@@ -66,7 +66,7 @@
 
             <div class="tab-content" id="pills-tab-content">
                 {% for task in constants.tasks %}
-                {% if task.id == 1 %}
+                {% if loop.index == 1 %}
                     {% set active_class = "active" %}
                 {% else %}
                     {% set active_class = "" %}
