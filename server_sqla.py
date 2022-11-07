@@ -1540,6 +1540,9 @@ def perform_action():
         'admin': [
             'user_role_add', 'user_role_remove',
 
+            # Task Order/Status Update
+            'task_update',
+
             # Add/Remove Labels
 
             # - Named Entity Type
@@ -1667,6 +1670,22 @@ def perform_action():
             else:
                 flash("No changes were made.")
 
+        return redirect(request.referrer)
+
+    # ----------------------------------------------------------------------- #
+    # Task Update
+    if action == 'task_update':
+        print(request.form)
+        tasks = Task.query.all()
+        for task in tasks:
+            task_active = request.form.get(f"task-{task.id}-status") == "on"
+            task.is_deleted = not task_active
+            task_order = request.form.get(f"task-{task.id}-order")
+            if task_order:
+                task.order = int(task_order)
+        db.session.bulk_save_objects(tasks)
+        db.session.commit()
+        flash("Tasks updated!", "success")
         return redirect(request.referrer)
 
     # ----------------------------------------------------------------------- #

@@ -43,7 +43,7 @@
             <input type="hidden" name="csrf_token" value={{csrf_token()}}>
             <div class="card-header lead">
                 Tasks
-                <button type="submit" name="action" value="update_tasks" class="btn btn-sm btn-primary float-right">Update</button>
+                <button type="submit" name="action" value="task_update" class="btn btn-sm btn-primary float-right">Update</button>
             </div>
             <div class="card-body p-0 m-0">
                 <table id="task-table" class="table table-hover">
@@ -76,9 +76,8 @@
                     const $task_table_body = $("#task-table-body");
                     $(function() {
                         $task_table_body.sortable({
-                            opacity: 0.75,
-                            revert: true,
                             cursor: "move",
+                            containment: "parent",
                             tolerance: "pointer",
                             placeholder: 'tr bg-secondary',
                         }).on("sortupdate", function(e, ui) {
