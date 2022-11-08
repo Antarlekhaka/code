@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """
 Database Utility Functions
+
+Note: Functions are usable only in an application context.
 """
 
 ###############################################################################
@@ -33,6 +35,109 @@ from utils.heuristic import get_anvaya
 ###############################################################################
 
 LOGGER = logging.getLogger(__name__)
+
+###############################################################################
+
+# Format for verse_data
+# [[{}, {}, {}, ...], [{}, {}, {}, ...], ...]
+# data: list of verses
+# verse: list of lines
+# line: dict (id, verse_id, text, tokens)
+# should have metadata, text, line_id, chapter_verse_id
+
+# tokens: list of dict
+# token: dict 10 CoNLL-U mandatory fields
+# in particular,
+# "id", "form", "lemma", "upos", "xpos", "feats", "misc"
+# `DCS.read_conllu_data` returns data it in this format
+
+
+def add_chapter(
+    corpus_id: int,
+    chapter_name: str,
+    chapter_description: str,
+    verse_data: List[List[Dict]]
+):
+    """Add Chapter Data
+
+    Parameters
+    ----------
+    corpus_id : int
+        Corpus ID
+    chapter_name : str
+        Chapter Name
+    chapter_description : str
+        Chapter Description
+    verse_data : List[List[Dict]]
+        Verse data as formatted by `DCS.read_conllu_data()`
+    """
+
+    result = {
+        "message": None,
+        "style": None
+    }
+
+    try:
+        chapter = Chapter()
+        chapter.corpus_id = corpus_id
+        chapter.name = chapter_name
+        chapter.description = chapter_description
+
+        for _verse in verse_data:
+            verse = Verse()
+            verse.chapter = chapter
+            for _line in _verse:
+                line = Line()
+                if _line.get('id'):
+                    line.id = _line.get('id')
+                line.verse = verse
+                line.text = _line.get('text', '')
+
+                for _idx, _token in enumerate(
+                    _line["tokens"], start=1
+                ):
+                    inner_id = _token["id"]
+                    inner_id = (
+                        "".join(map(str, inner_id))
+                        if isinstance(inner_id, (list, tuple))
+                        else str(inner_id)
+                    )
+                    del _token["id"]
+
+                    token = Token()
+                    token.inner_id = inner_id
+                    token.order = _idx * 10
+                    token.line = line
+                    token.text = _token["form"]
+                    token.lemma = _token["lemma"]
+                    token.analysis = _token
+                    token.display = {
+                        "Word": _token["form"],
+                        "Lemma": _token["lemma"],
+                        "UPOS": _token["upos"],
+                        "XPOS": _token["xpos"],
+                        "Features": "<br>".join(
+                            f"{k}={v}"
+                            for k, v in _token["feats"].items()
+                        ),
+                        "Misc": "<br>".join(
+                            f"{k}={v}"
+                            for k, v in _token["misc"].items()
+                        )
+                    }
+                    db.session.add(token)
+
+    except Exception as e:
+        result["message"] = "An error occurred while inserting data."
+        result["style"] = "danger"
+        LOGGER.exception(e)
+    else:
+        db.session.commit()
+        result["message"] = f"Chapter '{chapter_name}' added successfully."
+        result["style"] = "success"
+
+    return result
+
 
 ###############################################################################
 
