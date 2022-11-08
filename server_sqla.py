@@ -72,6 +72,7 @@ from settings import app
 
 from utils.reverseproxied import ReverseProxied
 from utils.database import export_data, get_verse_data, get_chapter_data
+from utils.database import add_chapter
 from utils.export import simple_format, standard_format
 from utils.conllu import DigitalCorpusSanskrit
 
@@ -1805,17 +1806,18 @@ def perform_action():
                 return redirect(request.referrer)
 
             # NOTE: "processing" which should give data as
-            # [[[], [], [], ...], [[], [], [], ...], ...]
+            # [[{}, {}, {}, ...], [{}, {}, {}, ...], ...]
             # data: list of verses
             # verse: list of lines
             # line: dict (id, verse_id, text, tokens)
-            # should have metadata, text, line_id, chapter_verse_id
+            # should have metadata, text, sent_id, sent_counter
 
             # tokens: list of dict
             # token: dict 10 CoNLL-U mandatory fields
             # in particular,
             # "id", "form", "lemma", "upos", "xpos", "feats", "misc"
             # function should take file and produce such output
+            # `DCS.read_conllu_data` formats it in this format
 
             try:
                 verses = DCS.read_conllu_data(chapter_file.read().decode())
@@ -1826,65 +1828,15 @@ def perform_action():
 
             # --------------------------------------------------------------- #
             # Insert Data
-            try:
-                chapter = Chapter()
-                chapter.corpus_id = corpus.id
-                chapter.name = chapter_name
-                chapter.description = chapter_description
 
-                for _verse in verses:
-                    verse = Verse()
-                    verse.chapter = chapter
-                    for _line in _verse:
-                        line = Line()
-                        if _line.get('id'):
-                            line.id = _line.get('id')
-                        line.verse = verse
-                        line.text = _line.get('text', '')
+            result = add_chapter(
+                corpus_id=corpus.id,
+                chapter_name=chapter_name,
+                chapter_description=chapter_description,
+                verse_data=verses
+            )
+            flash(result["message"], result["style"])
 
-                        for _idx, _token in enumerate(
-                            _line["tokens"], start=1
-                        ):
-                            inner_id = _token["id"]
-                            inner_id = (
-                                "".join(map(str, inner_id))
-                                if isinstance(inner_id, (list, tuple))
-                                else str(inner_id)
-                            )
-                            del _token["id"]
-
-                            token = Token()
-                            token.inner_id = inner_id
-                            token.order = _idx * 10
-                            token.line = line
-                            token.text = _token["form"]
-                            token.lemma = _token["lemma"]
-                            token.analysis = _token
-                            token.display = {
-                                "Word": _token["form"],
-                                "Lemma": _token["lemma"],
-                                "UPOS": _token["upos"],
-                                "XPOS": _token["xpos"],
-                                "Features": "<br>".join(
-                                    f"{k}={v}"
-                                    for k, v in _token["feats"].items()
-                                ),
-                                "Misc": "<br>".join(
-                                    f"{k}={v}"
-                                    for k, v in _token["misc"].items()
-                                )
-                            }
-                            db.session.add(token)
-
-            except Exception as e:
-                webapp.logger.exception(e)
-                flash("An error occurred while inserting data.", "danger")
-            else:
-                db.session.commit()
-                flash(
-                    f"Chapter '{chapter_name}' added successfully.",
-                    "success"
-                )
             # --------------------------------------------------------------- #
         else:
             flash("Invalid file or file extension.")
