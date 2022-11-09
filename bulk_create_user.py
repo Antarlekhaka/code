@@ -36,23 +36,14 @@ webapp.app_context().push()
 ###############################################################################
 
 
-def add_user(username, email, password, roles=None):
-    if roles is None:
-        roles = ["member"]
+def bulk_create_users(users_file: str):
+    """Create users in bulk
 
-    if not user_datastore.find_user(username=username):
-        user = user_datastore.create_user(
-            username=username,
-            email=email,
-            password=hash_password(password),
-            roles=roles
-        )
-
-        db.session.commit()
-        return user
-
-
-def add_users(users_file):
+    Parameters
+    ----------
+    users_file : str
+        Path to CSV file containing user account details
+    """
     with open(users_file, encoding="utf-8") as f:
         users_data = [
             line.split(",")
@@ -78,3 +69,18 @@ def add_users(users_file):
 
 
 ###############################################################################
+
+if __name__ == "__main__":
+    import os
+    import argparse
+    parser = argparse.ArgumentParser(description="Bulk create users")
+    parser.add_argument(
+        "input",
+        help="CSV file containing user account details"
+    )
+    args = vars(parser.parse_args())
+
+    if os.path.isfile(args["input"]):
+        bulk_create_users(args["input"])
+    else:
+        print("Please provide input file.")
