@@ -8,6 +8,7 @@ Create users in bulk
 
 ###############################################################################
 
+from typing import List
 from flask import Flask
 from flask_security import Security, hash_password
 
@@ -36,6 +37,26 @@ webapp.app_context().push()
 ###############################################################################
 
 
+def create_user(
+    username: str,
+    email: str,
+    password: str,
+    roles: List[str],
+    commit=True
+):
+    """Create a single user"""
+    if not user_datastore.find_user(username=username):
+        user = user_datastore.create_user(
+            username=username,
+            email=email,
+            password=hash_password(password),
+            roles=roles.split(" ")
+        )
+        if commit:
+            db.session.commit()
+        return user
+
+
 def bulk_create_users(users_file: str):
     """Create users in bulk
 
@@ -53,14 +74,18 @@ def bulk_create_users(users_file: str):
 
     users = []
     for user_data in users_data:
-        username, email, password, roles = user_data
-        if not user_datastore.find_user(username=username):
-            user = user_datastore.create_user(
-                username=username,
-                email=email,
-                password=hash_password(password),
-                roles=roles.split(" ")
-            )
+        username = user_data[0].strip()
+        email = user_data[1].strip()
+        password = user_data[2].strip()
+        roles = user_data.strip().split(" ")
+        user = create_user(
+            username=username,
+            email=email,
+            password=password,
+            roles=roles,
+            commit=False
+        )
+        if user is not None:
             users.append(user)
 
     if users:
