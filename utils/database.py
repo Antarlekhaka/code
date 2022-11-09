@@ -56,7 +56,7 @@ def add_chapter(
     corpus_id: int,
     chapter_name: str,
     chapter_description: str,
-    verse_data: List[List[Dict]]
+    chapter_data: List[List[Dict]]
 ):
     """Add Chapter Data
 
@@ -68,8 +68,8 @@ def add_chapter(
         Chapter Name
     chapter_description : str
         Chapter Description
-    verse_data : List[List[Dict]]
-        Verse data as formatted by `DCS.read_conllu_data()`
+    chapter_data : List[List[Dict]]
+        Chapter data as formatted by `DCS.read_conllu_data()`
     """
 
     result = {
@@ -83,7 +83,7 @@ def add_chapter(
         chapter.name = chapter_name
         chapter.description = chapter_description
 
-        for _verse in verse_data:
+        for _verse in chapter_data:
             verse = Verse()
             verse.chapter = chapter
             for _line in _verse:

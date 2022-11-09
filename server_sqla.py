@@ -1820,7 +1820,9 @@ def perform_action():
             # `DCS.read_conllu_data` formats it in this format
 
             try:
-                verses = DCS.read_conllu_data(chapter_file.read().decode())
+                chapter_data = DCS.read_conllu_data(
+                    chapter_file.read().decode()
+                )
             except Exception as e:
                 webapp.logger.exception(e)
                 flash("Invalid file format.")
@@ -1833,7 +1835,7 @@ def perform_action():
                 corpus_id=corpus.id,
                 chapter_name=chapter_name,
                 chapter_description=chapter_description,
-                verse_data=verses
+                chapter_data=chapter_data
             )
             flash(result["message"], result["style"])
 
