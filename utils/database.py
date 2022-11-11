@@ -77,6 +77,17 @@ def add_chapter(
         "style": None
     }
 
+    # Assume `chapter_name` to be unique
+    # In order to avoid the need to delete entire database when re-running
+    # the `bulk_add_chapter` function
+    # (otherwise there is unique `line_id` constraint violation)
+    if Chapter.query.filter(
+        Chapter.name == chapter_name
+    ).first():
+        result["message"] = f"Chapter '{chapter_name}' already exists."
+        result["style"] = "warning"
+        return result
+
     try:
         chapter = Chapter()
         chapter.corpus_id = corpus_id
