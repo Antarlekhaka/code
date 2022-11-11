@@ -180,24 +180,28 @@ class DigitalCorpusSanskrit:
         chapter_lines = []
 
         for line in data:
-            unit = {
-                "id": int(line.metadata["sent_id"]),
-                "verse_id": int(line.metadata["sent_counter"]),
-                "text": line.metadata["text"],
-                "tokens": [
-                    {
-                        "id": token.get("id") or "",
-                        "form": token.get("form") or "",
-                        "lemma": token.get("lemma") or "",
-                        "upos": token.get("upos") or "",
-                        "xpos": token.get("xpos") or "",
-                        "feats": token.get("feats") or {},
-                        "misc": token.get("misc") or {}
-                    }
-                    for token in line
-                ]
-            }
-            chapter_lines.append(unit)
+            try:
+                unit = {
+                    "id": int(line.metadata["sent_id"]),
+                    "verse_id": int(line.metadata["sent_counter"]),
+                    "text": line.metadata["text"],
+                    "tokens": [
+                        {
+                            "id": token.get("id") or "",
+                            "form": token.get("form") or "",
+                            "lemma": token.get("lemma") or "",
+                            "upos": token.get("upos") or "",
+                            "xpos": token.get("xpos") or "",
+                            "feats": token.get("feats") or {},
+                            "misc": token.get("misc") or {}
+                        }
+                        for token in line
+                    ]
+                }
+                chapter_lines.append(unit)
+            except Exception as e:
+                print(line)
+                raise e
 
         # Group verses
         verses = []
