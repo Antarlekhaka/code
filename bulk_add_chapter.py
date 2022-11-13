@@ -70,6 +70,24 @@ def bulk_add_chapters(chapters_file):
             chapter_description=chapter_description,
             chapter_data=chapter_data
         )
+        if result["style"] != "success":
+            print(corpus_id, chapter_name)
+            print(result["message"])
 
 
 ###############################################################################
+
+
+if __name__ == "__main__":
+    import argparse
+    parser = argparse.ArgumentParser(description="Bulk add chapters")
+    parser.add_argument(
+        "input",
+        help="CSV file containing chapter details"
+    )
+    args = vars(parser.parse_args())
+
+    if os.path.isfile(args["input"]):
+        bulk_add_chapters(args["input"])
+    else:
+        print("Please provide input file.")
