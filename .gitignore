@@ -12,6 +12,7 @@ data/corpus/*
 !data/tables/README.md
 !data/corpus/sample
 !data/corpus/README.md
+!data/corpus/*.py
 
 output/
 settings.py
