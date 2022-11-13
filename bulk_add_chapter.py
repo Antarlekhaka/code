@@ -9,6 +9,8 @@ Add chapters in bulk
 ###############################################################################
 
 import os
+import csv
+
 from flask import Flask
 
 # Local
@@ -45,11 +47,8 @@ def bulk_add_chapters(chapters_file):
         Path to CSV file containing chapter details
     """
     with open(chapters_file, encoding="utf-8") as f:
-        chapters_data = [
-            line.split(",")
-            for line in f.read().split("\n")
-            if line.strip()
-        ]
+        csvreader = csv.reader(f)
+        chapters_data = list(csvreader)
 
     for chapter_data in chapters_data:
         corpus_id = int(chapter_data[0].strip())
@@ -59,6 +58,7 @@ def bulk_add_chapters(chapters_file):
         chapter_file = chapter_data[3].strip()
 
         if not os.path.isfile(chapter_file):
+            print(f"No file {chapter_file}")
             continue
 
         with open(chapter_file, encoding="utf-8") as f:
