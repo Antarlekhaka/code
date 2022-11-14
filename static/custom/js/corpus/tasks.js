@@ -263,10 +263,11 @@ function setup_sentence_boundary(verse_id) {
                 if (token.text !== "_") {
                     var token_id = token.id;
 
-                    if (token.relative_id instanceof Array) {
+                    if (token.inner_id.includes("-")) {
+                        var id_parts = token.inner_id.split("-");
                         // if token id is of composite word,
                         // we want the marker to be after the last component
-                        token_id += token.relative_id[2] - token.relative_id[0] + 1;
+                        token_id += id_parts[1] - id_parts[0] + 1;
                     }
                     if (verse_data.verse_id == row.verse_id) {
                         display_token_last_components.push(token_id);
