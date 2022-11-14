@@ -104,14 +104,16 @@ def add_chapter(
                 line.verse = verse
                 line.text = _line.get('text', '')
 
+                is_subtoken = False
+                end_id = None
                 for _idx, _token in enumerate(
                     _line["tokens"], start=1
                 ):
-                    inner_id = _token["id"]
+                    _token_id = _token["id"]
                     inner_id = (
-                        "".join(map(str, inner_id))
-                        if isinstance(inner_id, (list, tuple))
-                        else str(inner_id)
+                        "".join(map(str, _token_id))
+                        if isinstance(_token_id, (list, tuple))
+                        else str(_token_id)
                     )
                     del _token["id"]
 
@@ -120,6 +122,8 @@ def add_chapter(
                     token.order = _idx * 10
                     token.line = line
                     token.text = _token["form"]
+                    if is_subtoken:
+                        token.text = "_"
                     token.lemma = _token["lemma"]
                     token.analysis = _token
                     token.display = {
@@ -137,6 +141,14 @@ def add_chapter(
                         )
                     }
                     db.session.add(token)
+
+                    if str(_token_id) == str(end_id):
+                        is_subtoken = False
+                        end_id = None
+
+                    if isinstance(_token_id, (list, tuple)):
+                        is_subtoken = True
+                        end_id = _token_id[-1]
 
     except Exception as e:
         result["message"] = "An error occurred while inserting data."
