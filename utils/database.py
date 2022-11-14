@@ -815,6 +815,9 @@ def get_sentences(
     sentences["extra"] = {
         token.id: {
             "id": token.id,
+            "inner_id": token.inner_id,
+            "line_id": token.line_id,
+            "verse_id": verse_id,
             "text": token.text,
             "lemma": token.lemma,
             "analysis": token.analysis,
