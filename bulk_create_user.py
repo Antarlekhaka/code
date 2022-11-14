@@ -50,7 +50,7 @@ def create_user(
             username=username,
             email=email,
             password=hash_password(password),
-            roles=roles.split(" ")
+            roles=roles
         )
         if commit:
             db.session.commit()
@@ -77,7 +77,7 @@ def bulk_create_users(users_file: str):
         username = user_data[0].strip()
         email = user_data[1].strip()
         password = user_data[2].strip()
-        roles = user_data.strip().split(" ")
+        roles = user_data[3].strip().split(" ")
         user = create_user(
             username=username,
             email=email,
