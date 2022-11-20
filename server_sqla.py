@@ -483,7 +483,7 @@ def show_export():
     data = {}
     data['title'] = 'Export'
 
-    if current_user.has_role("admin"):
+    if current_user.has_role("curator"):
         user_model = user_datastore.user_model
         user_query = user_model.query
         data['users'] = [
@@ -524,7 +524,7 @@ def show_export():
 
     if request.method == "POST":
         annotator_id = None
-        if current_user.has_role("admin"):
+        if current_user.has_role("curator"):
             annotator_id = request.form.get('annotator_id', '').strip()
 
         if not annotator_id:
