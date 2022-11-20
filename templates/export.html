@@ -8,6 +8,22 @@
         <div class="card-body">
             <form method=POST enctype=multipart/form-data action="{{url_for('show_export')}}">
                 <input type="hidden" name="csrf_token" value={{csrf_token()}}>
+                {% if data.users %}
+                <div class="form-group row">
+                    <label class="col-sm-2  col-form-label" for="download_annotator_id">User</label>
+                    <div class="col-sm-6">
+                        <select class="lead selectpicker" name="annotator_id" id="download_annotator_id"
+                            data-container="body"
+                            data-width="100%"
+                            data-live-search="true"
+                            required>
+                            {% for user in data.users %}
+                            <option value="{{user.id}}">{{user.username}}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                {% endif %}
                 <!-- <div class="form-group row">
                     <label class="col-sm-2" for="download_output_format">Format</label>
                     <div class="col-sm-2">
