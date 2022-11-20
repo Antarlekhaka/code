@@ -64,6 +64,8 @@
 
 ## Bugs
 
+- [ ] Export - boundary not shown for other users
+
 - [ ] If there are deleted items, it triggers a "Successfully updated" message even if there are no changes. Refer to `server_sqla.py` for further details.
 
 - [x] If sentence boundary is marked for a verse in the next chapter, all the nodes in between get counted as sentences
