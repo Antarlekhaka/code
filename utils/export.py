@@ -45,11 +45,6 @@ def simple_format(data):
 
     for chpater_id, chapter_data in data["chapter"].items():
 
-        # chapter_data = {
-        #     "tokens": {},
-        #     "verse_tokens": defaultdict(list),
-        # }
-
         for annotation_id, annotation_data in data["annotation"].items():
 
             task_data = defaultdict(dict)
