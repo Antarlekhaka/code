@@ -423,14 +423,16 @@ def show_admin():
     data['users'] = [
         {
             "id": user.id,
-            "username": user.username
+            "username": user.username,
+            "email": user.email
         }
         for user in user_query.all()
     ]
     data['annotators'] = [
         {
             "id": user.id,
-            "username": user.username
+            "username": user.username,
+            "email": user.email
         }
         for user in user_query.all()
         if annotator_role in user.roles
@@ -480,6 +482,18 @@ def show_admin():
 def show_export():
     data = {}
     data['title'] = 'Export'
+
+    if current_user.has_role("admin"):
+        user_model = user_datastore.user_model
+        user_query = user_model.query
+        data['users'] = [
+            {
+                "id": user.id,
+                "username": user.username,
+                "email": user.email
+            }
+            for user in user_query.all()
+        ]
     data['corpus_list'] = [
         {
             'id': corpus.id,
@@ -509,17 +523,28 @@ def show_export():
     ]
 
     if request.method == "POST":
-        annotator_id = current_user.id
+        annotator_id = None
+        if current_user.has_role("admin"):
+            annotator_id = request.form.get('annotator_id', '').strip()
+
+        if not annotator_id:
+            annotator_id = current_user.id
+
         chapter_ids = request.form.getlist('chapter_id')
+
         annotation_data = export_data(
-            annotator_ids=[annotator_id],
-            chapter_ids=chapter_ids,
+            annotator_ids=[int(annotator_id)],
+            chapter_ids=[int(chapter_id) for chapter_id in chapter_ids],
             task_ids=[]
         )
         simple_data = simple_format(annotation_data)
         annotation_result = {
             k[0]: v
             for k, v in simple_data.items()
+        }
+        data['form'] = {
+            'annotator_id': annotator_id,
+            'chapter_ids': chapter_ids
         }
         data["result"] = annotation_result
 
