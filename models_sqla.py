@@ -244,6 +244,35 @@ class Anvaya(db.Model):
     )
 
 
+class TokenTextAnnotation(db.Model):
+    id = Column(Integer, primary_key=True)
+    # ----------------------------------------------------------------------- #
+    boundary_id = Column(
+        Integer, ForeignKey('boundary.id', ondelete='CASCADE'), nullable=False
+    )
+    token_id = Column(Integer, ForeignKey('token.id'), nullable=False)
+    text = Column(String(255), nullable=False)
+    # ----------------------------------------------------------------------- #
+    annotator_id = Column(Integer, ForeignKey('user.id'), nullable=False)
+    is_deleted = Column(Boolean, default=False, nullable=False)
+    updated_at = Column(DateTime, default=dt.utcnow, onupdate=dt.utcnow)
+
+    boundary = relationship(
+        'Boundary',
+        backref=backref(
+            'annotations', cascade='all,delete-orphan', lazy='dynamic'
+        )
+    )
+    token = relationship('Token', foreign_keys=[token_id])
+    annotator = relationship(
+        'User', backref=backref('annotations', lazy='dynamic')
+    )
+    __table_args__ = (
+         Index('token_text_annotation_token_id_annotator_id',
+               'token_id', 'annotator_id', unique=True),
+    )
+
+
 class Entity(db.Model):
     id = Column(Integer, primary_key=True)
     # ----------------------------------------------------------------------- #
