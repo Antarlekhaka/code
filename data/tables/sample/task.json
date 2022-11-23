@@ -3,14 +3,14 @@
         "id": 1,
         "name": "sentence_boundary",
         "title": "Sentence Boundary",
-        "short": "SnB",
+        "short": "Boundary",
         "help": "Mark the sentence boundary."
     },
     {
         "id": 2,
         "name": "anvaya",
         "title": "Anvaya",
-        "short": "Anv",
+        "short": "Anvaya",
         "help": "Arrange the words in the correct order."
     },
     {
@@ -24,7 +24,7 @@
         "id": 4,
         "name": "token_graph",
         "title": "Action Graph",
-        "short": "ActGr",
+        "short": "Action",
         "help": "Create action graph in the form of triplets."
     },
     {
@@ -38,14 +38,21 @@
         "id": 6,
         "name": "sentence_classification",
         "title": "Sentence Classification",
-        "short": "SnClf",
+        "short": "SentClass",
         "help": "Classify sentences."
     },
     {
         "id": 7,
         "name": "intersentence_connection",
         "title": "Discourse Graph",
-        "short": "DscGr",
+        "short": "Discourse",
         "help": "Identify intersentence connections to create the discourse graph."
+    },
+    {
+        "id": 8,
+        "name": "token_text_annotation",
+        "title": "Lemmatization",
+        "short": "Lemma",
+        "help": "Identify lemmata of the tokens."
     }
 ]
