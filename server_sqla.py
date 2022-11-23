@@ -63,7 +63,7 @@ from models_sqla import (db, user_datastore,
                          CustomLoginForm, CustomRegisterForm,
                          Corpus, Chapter, Verse, Line, Token,
                          Task, SubmitLog, Anvaya, Boundary,
-                         EntityLabel, Entity,
+                         TokenTextAnnotation, EntityLabel, Entity,
                          RelationLabel, TokenGraph,
                          Coreference,
                          SentenceLabel, SentenceClassification,
@@ -683,6 +683,7 @@ def api():
             "update_sentence_boundary",
             "add_token",
             "update_anvaya",
+            "update_token_text_annotation",
             "update_named_entity",
             "update_token_graph",
             "update_coreference",
@@ -919,6 +920,106 @@ def api():
                 anvaya.order = order_id
                 anvaya.annotator_id = annotator_id
                 objects_to_update.append(anvaya)
+
+        try:
+            if objects_to_update:
+                db.session.bulk_save_objects(objects_to_update)
+                db.session.commit()
+                api_response["message"] = "Successfully updated!"
+                api_response["style"] = "success"
+            else:
+                api_response["message"] = "No changes were submitted."
+                api_response["style"] = "warning"
+
+            record_submit(
+                verse_id=verse_id,
+                annotator_id=annotator_id,
+                task_id=task_id
+            )
+            api_response["success"] = True
+            api_response["next_task"] = next_task[task_name]
+        except Exception as e:
+            webapp.logger.exception(e)
+            webapp.logger.info(request.form)
+            api_response["success"] = False
+            api_response["message"] = "Something went wrong!"
+            api_response["style"] = "danger"
+
+        api_response["data"] = None
+        return jsonify(api_response)
+
+    # ----------------------------------------------------------------------- #
+
+    if action == "update_token_text_annotation":
+        task_name = action.replace("update_", "")
+        task_id = Task.query.filter(Task.name == task_name).first().id
+
+        verse_id = int(request.form["verse_id"])
+        annotator_id = current_user.id
+        text_annotation_data = json.loads(request.form["text_annotation_data"])
+
+        objects_to_update = []
+        try:
+            text_annotation_data = {
+                int(k.split('-')[-1]): {
+                    "boundary_id": int(v["boundary_id"]),
+                    "text_annotation": v["text_annotation"]
+                }
+                for k, v in text_annotation_data.items()
+                if re.match(r'token-text-annotation-input-([0-9]+)$', k)
+            }
+        except Exception:
+            api_response["success"] = False
+            api_response["message"] = "Invalid data."
+            api_response["style"] = "danger"
+            return jsonify(api_response)
+
+        existing_text_annotations = TokenTextAnnotation.query.filter(
+            TokenTextAnnotation.boundary.has(Boundary.verse_id == verse_id),
+            TokenTextAnnotation.annotator_id == annotator_id,
+        ).all()
+        existing_text_annotation_token_ids = [
+            text_annotation.token_id
+            for text_annotation in existing_text_annotations
+        ]
+        for text_annotation in existing_text_annotations:
+            if text_annotation.token_id not in text_annotation_data:
+                # text_annotation exists but was not submitted (i.e. removed)
+                # TODO: This triggers on the deleted entities always
+                # Perhaps we need to add a check
+                # That should avoid "Successfully updated" message even when
+                # there are no updates
+                text_annotation.is_deleted = True
+                objects_to_update.append(text_annotation)
+            else:
+                # text_annotation exists and is submitted (i.e. retained)
+                # check if there are any changes to the text_annotation
+                token_id = text_annotation.token_id
+                if any([
+                    text_annotation.text != text_annotation_data[token_id]["text_annotation"],
+                    text_annotation.boundary_id != text_annotation_data[token_id]["boundary_id"],
+                    text_annotation.is_deleted is True
+                ]):
+                    text_annotation.text = text_annotation_data[token_id]["text_annotation"]
+                    text_annotation.boundary_id = text_annotation_data[token_id]["boundary_id"]
+                    text_annotation.is_deleted = False
+                    objects_to_update.append(text_annotation)
+
+        for token_id, _text_annotation_data in text_annotation_data.items():
+            if token_id in existing_text_annotation_token_ids:
+                # submitted text_annotation already exists
+                # "else" part of the previous condition block handles this
+                # so we can skip here
+                continue
+
+            # submitted text_annotation doesn't exist, create
+            text_annotation = TokenTextAnnotation()
+            text_annotation.boundary_id = _text_annotation_data["boundary_id"]
+            text_annotation.token_id = token_id
+            text_annotation.text = _text_annotation_data["text_annotation"]
+            text_annotation.annotator_id = annotator_id
+            text_annotation.is_deleted = False
+            objects_to_update.append(text_annotation)
 
         try:
             if objects_to_update:

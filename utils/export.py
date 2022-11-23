@@ -140,6 +140,31 @@ def simple_format(data):
             preference = ["lemma", "misc.Unsandhied", "form"]
 
             display_text = [
+                ["Verse", "Token", "Annotation"],
+                ["-----", "-----", "----------"]
+            ]
+
+            for text_annotation in annotation_data["token_text_annotation"]:
+                text_annotation_token_id = text_annotation["token_id"]
+                text_annotation_token = chapter_data["tokens"][text_annotation_token_id]
+                token_text = get_token_text(text_annotation_token, preference)
+
+                display_text.append([
+                    str(text_annotation["verse_id"]),
+                    token_text,
+                    text_annotation["text"]
+                ])
+
+            task_data["token_text_annotation"] = "\n".join(
+                "\t".join(text_annotation_row)
+                for text_annotation_row in display_text
+            )
+
+            # --------------------------------------------------------------- #
+
+            preference = ["lemma", "misc.Unsandhied", "form"]
+
+            display_text = [
                 ["Verse", "Token", "Label", "Description"],
                 ["-----", "-----", "-----", "-----------"]
             ]

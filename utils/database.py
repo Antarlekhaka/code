@@ -22,6 +22,7 @@ from models_sqla import (
     Task,
     Boundary,
     Anvaya,
+    TokenTextAnnotation,
     Entity,
     TokenGraph,
     Coreference,
@@ -302,6 +303,26 @@ def export_data(
 
             # --------------------------------------------------------------- #
 
+            text_annotation_query = TokenTextAnnotation.query.filter(
+                TokenTextAnnotation.boundary_id.in_(boundary_ids),
+                TokenTextAnnotation.annotator_id == annotator.id,
+                TokenTextAnnotation.is_deleted == False  # noqa
+            ).order_by(TokenTextAnnotation.token_id)
+
+            # TODO: avoid .boundary.verse_id call ?
+            # fetch from task_data["sentence_boundary"] ?
+            annotation_data["token_text_annotation"] = [
+                {
+                    "verse_id": text_annotation.boundary.verse_id,
+                    "boundary_id": text_annotation.boundary_id,
+                    "token_id": text_annotation.token_id,
+                    "text": text_annotation.text
+                }
+                for text_annotation in text_annotation_query.all()
+            ]
+
+            # --------------------------------------------------------------- #
+
             entity_query = Entity.query.filter(
                 Entity.boundary_id.in_(boundary_ids),
                 Entity.annotator_id == annotator.id,
@@ -322,7 +343,7 @@ def export_data(
                 for entity in entity_query.all()
             ]
 
-        # ------------------------------------------------------------------- #
+            # --------------------------------------------------------------- #
 
             token_graph_query = TokenGraph.query.filter(
                 TokenGraph.boundary_id.in_(boundary_ids),
@@ -540,6 +561,7 @@ def get_verse_data(
                 "boundary": {},
                 "sentences": {},
                 "anvaya": {},
+                "token_text_annotation": [],
                 "entity": [],
                 "relation": [],
                 "coreference": [],
@@ -636,6 +658,25 @@ def get_verse_data(
         data[verse_id]["anvaya"][boundary.id] = sentence_anvaya
         # TODO: consider if we should provide predicted anvaya separately
         #       instead of in the same field
+
+        # ------------------------------------------------------------------- #
+
+        text_annotation_query = TokenTextAnnotation.query.filter(
+            TokenTextAnnotation.boundary_id == boundary.id,
+            TokenTextAnnotation.annotator_id.in_(annotator_ids)
+        )
+
+        data[verse_id]["token_text_annotation"].extend([
+            {
+                "id": text_annotation.id,
+                "boundary_id": text_annotation.boundary_id,
+                "token_id": text_annotation.token_id,
+                "text": text_annotation.text,
+                "annotator_id": text_annotation.annotator_id,
+                "is_deleted": text_annotation.is_deleted
+            }
+            for text_annotation in text_annotation_query.all()
+        ])
 
         # ------------------------------------------------------------------- #
 
