@@ -1,0 +1,37 @@
+ID,Description,Weight,WebAnno,doccano,FLAT,BRAT,Sangrahaka,Antarlekhaka
+P1,Year of the last publication,0,1,0,0,1,1,1
+P2,Citations on Google Scholar,0,1,0,0,1,0,0
+P3,Citations for Corpus Development,0,1,0,0,1,0,0
+T1,Date of the last version,1,1,1,1,0.5,1,1
+T2,Availability of the source code,1,1,1,1,1,1,1
+T3,Online availability for use,1,0,0,1,0,0,0
+T4,Easiness of Installation,1,0,1,1,0.5,1,1
+T5,Quality of the documentation,1,1,1,1,1,0.5,0.5
+T6,Type of license,1,1,1,1,1,1,1
+T7,Free of charge,1,1,1,1,1,1,1
+D1,Format of the schema,1,1,1,1,0.5,1,1
+D2,Input format for documents,1,1,0.5,1,1,1,1
+D3,Output format for annotations,1,1,1,1,0.5,0,0
+F1,Allowance of multi-label annotations,1,1,0,1,1,1,1
+F2,Allowance of document level annotations,0,0,0,0,0,0,0
+F3,Support for annotation of relationships,1,1,0,0,1,1,1
+F4,Support for ontologies and terminologies,1,1,0,1,1,1,1
+F5,Support for pre-annotations,1,0.5,0,0.5,0.5,0,0
+F6,Integration with PubMed,0,0,0,0,0,0,0
+F7,Suitability for full texts,1,0.5,0.5,1,1,1,1
+F8,Allowance for saving documents partially,1,1,1,1,1,1,1
+F9,Ability to highlight parts of the text,1,1,1,1,1,1,1
+F10,Support for users and teams,1,0.5,0.5,1,0.5,0.5,0.5
+F11,Support for inter-annotator agreement,1,1,0.5,0,0.5,0.5,0.5
+F12,Data privacy,1,1,1,1,1,1,1
+F13,Support for various languages,1,1,1,1,1,1,1
+A1,Support for querying,1,0,0,0,0,1,0
+A2,Crash tolerance,1,0,0,0,0,1,0
+A3,Web-based / Distributed annotation,1,1,1,1,1,1,1
+A4,Sequential Annotation,1,0,0,0,0,1,1
+A5,Support for Sentence Boundary Annotation,1,0,0,0,0,0,1
+A6,Support for Word Order Annotation,1,0,0,0,0,0,1
+A7,Support for Token Classification Tasks,1,1,1,1,1,0,1
+A8,Support for Sentence Classification Tasks,1,0,0,0,0,0,1
+Total,,29,19.5,16,20.5,18.5,20.5,22.5
+Normalized Score,,,0.67,0.55,0.71,0.64,0.71,0.78
