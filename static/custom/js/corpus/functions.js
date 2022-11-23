@@ -38,8 +38,9 @@ function generic_row_detail_formatter(index, row) {
     return html.join("\n");
 }
 
-function column_progress_formatter(progress_value, row) {;
-    const percent = Math.round(progress_value.length / 7 * 100);
+function column_progress_formatter(progress_value, row) {
+    // TODO: remove hard-coding 8
+    const percent = Math.round(progress_value.length / 8 * 100);
     const title = []
     for (const task of progress_value) {
         const update_date = new Date(task.updated_at);

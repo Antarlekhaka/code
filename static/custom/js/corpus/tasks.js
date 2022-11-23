@@ -183,6 +183,7 @@ $refresh_verse_buttons.click(function() {
 /* ****************************** Generic Task Setup ****************************** */
 
 function setup_task(task_id, verse_id) {
+    // TODO: Use task_name instead of task_id
     switch (task_id) {
         case "1":
             setup_sentence_boundary(verse_id);
@@ -204,6 +205,9 @@ function setup_task(task_id, verse_id) {
             break;
         case "7":
             setup_intersentence_connection(verse_id);
+            break;
+        case "8":
+            setup_token_text_annotation(verse_id);
             break;
 
         default:
@@ -1910,3 +1914,167 @@ $task_7_submit.click(function () {
 });
 
 /* *********************************** END Task 7 *********************************** */
+
+/* ********************************** BEGIN Task 8 ********************************** */
+// Task 8: Token Text Annotation
+
+// Setup-8
+function setup_token_text_annotation(verse_id) {
+    console.log(`Called ${arguments.callee.name}(${Object.values(arguments).join(", ")});`);
+
+    const row = $corpus_table.bootstrapTable('getRowByUniqueId', verse_id);
+
+    $task_8_token_text_annotation_table.html("");
+    $task_8_token_non_annotation_table.html("");
+
+    var all_tokens = {};
+    var used_tokens = [];
+    var boundary_tokens = {};
+
+    for (const [boundary_id, sentence_tokens] of Object.entries(row.sentences)) {
+        $.extend(all_tokens, sentence_tokens);
+        if (boundary_id !== "extra") {
+            [].push.apply(used_tokens, row.anvaya[boundary_id]);
+            boundary_tokens[boundary_id] = row.anvaya[boundary_id];
+        }
+    }
+
+    // record existing annotation texts
+    // existing_token_text_annotations array could be avoided perhaps
+    // in that case, .includes() can be replaced with .hasOwnProperty() check
+    var existing_token_text_annotations = [];
+    var existing_texts = {};
+    for (const token_text_annotation of row.token_text_annotation) {
+        if (token_text_annotation.is_deleted) {
+            continue;
+        }
+        existing_token_text_annotations.push(token_text_annotation.token_id);
+        existing_texts[token_text_annotation.token_id] = token_text_annotation.text;
+    }
+
+    for (const [boundary_id, used_token_ids] of Object.entries(boundary_tokens)) {
+        for (const token_id of used_token_ids) {
+            const token = all_tokens[token_id];
+            var has_text_annotation = false;
+            var token_text_annotation_text = null;
+            const $token_text_annotation_row = $("<tr />", {});
+            if (existing_token_text_annotations.includes(token.id)) {
+                $task_8_token_text_annotation_table.append($token_text_annotation_row);
+                has_text_annotation = true;
+                token_text_annotation_text = existing_texts[token.id];
+            } else {
+                $task_8_token_non_annotation_table.append($token_text_annotation_row);
+            }
+
+            const $token_text_annotation_cell = $("<td />", {});
+            $token_text_annotation_row.append($token_text_annotation_cell);
+
+            const $token_text_annotation = generate_token_button({
+                token: token,
+                id_prefix: "token-text-annotation"
+            });
+            $token_text_annotation_cell.append($token_text_annotation);
+
+            const $token_text_annotation_text_cell = $("<td />");
+            $token_text_annotation_row.append($token_text_annotation_text_cell);
+
+            const $token_text_annotation_input_element = task_8_sample_token_text_annotation_text.clone();
+            $token_text_annotation_input_element.data("boundary-id", boundary_id);
+            $token_text_annotation_text_cell.append($token_text_annotation_input_element);
+
+            const token_text_annotation_input_id = `token-text-annotation-input-${token.id}`;
+            $token_text_annotation_input_element.attr("id", token_text_annotation_input_id);
+
+            if (has_text_annotation) {
+                $token_text_annotation_input_element.val(token_text_annotation_text);
+            } else {
+                $token_text_annotation_input_element.hide();
+            }
+
+            const $token_text_annotation_toggle_cell = $("<td />", {
+                class: "col-sm-1",
+            });
+            $token_text_annotation_row.append($token_text_annotation_toggle_cell);
+
+            const token_text_annotation_class = (has_text_annotation) ? "btn btn-secondary" : "btn btn-info include-token-text-annotation";
+            const token_text_annotation_html = (has_text_annotation) ? '<i class="fa fa-times"></i>' : '<i class="fa fa-plus"></i>';
+
+            const $token_text_annotation_toggle = $("<span />", {
+                id: `token-text-annotation-toggle-${token.id}`,
+                name: "token-text-annotation-toggle",
+                class: token_text_annotation_class,
+                html: token_text_annotation_html,
+                on: {
+                    click: function() {
+                        const input_selector = `#${token_text_annotation_input_id}`;
+
+                        if ($(this).hasClass("include-token-text-annotation")) {
+                            $(this).removeClass("include-token-text-annotation");
+                            $(this).removeClass("btn-info");
+                            $(this).addClass("btn-secondary");
+                            $(this).html('<i class="fa fa-times"></i>');
+                            $(input_selector).show();
+                            $task_8_token_text_annotation_table.append($(this).parents('tr'));
+                        } else {
+                            $(this).removeClass("btn-secondary");
+                            $(this).addClass("btn-info");
+                            $(this).addClass("include-token-text-annotation");
+                            $(this).html('<i class="fa fa-plus"></i>');
+                            $(input_selector).hide();
+                            $task_8_token_non_annotation_table.append($(this).parents('tr'));
+                        }
+                    }
+                }
+            });
+            $token_text_annotation_toggle_cell.append($token_text_annotation_toggle);
+        }
+    }
+}
+
+/* Task-8 Actions */
+
+// Submit-8
+$task_8_submit.click(function () {
+    // Task 8 Actions
+
+    if (!$task_8_form[0].checkValidity()) {
+        $task_8_form[0].reportValidity();
+        return;
+    }
+    const verse_id = $verse_id_containers.html();
+    var token_text_annotation_data = {}
+    $task_8_token_text_annotation_table.find("input").each(function(input_index, input_element) {
+        const token_id = input_element.id;
+        const boundary_id = $(input_element).data("boundary-id");
+        const token_text_annotation_text = $(input_element).val();
+        token_text_annotation_data[token_id] = {
+            'boundary_id': boundary_id,
+            'text_annotation': token_text_annotation_text
+        }
+    });
+
+    $.post(API_URL, {
+        action: TASK_8_SUBMIT_ACTION,
+        verse_id: verse_id,
+        text_annotation_data: JSON.stringify(token_text_annotation_data)
+    },
+    function (response) {
+        $.notify({
+            message: response.message
+        }, {
+            type: response.style
+        });
+
+        if (response.success) {
+            refresh_row_data(verse_id);
+            const first_task = response.first_task;
+            const next_task = response.next_task;
+            $tabs[next_task].click();
+            if (next_task == first_task) {
+                $corpus_table.bootstrapTable('check', storage.getItem("next_index"));
+            }
+        }
+    });
+});
+
+/* *********************************** END Task 8 *********************************** */

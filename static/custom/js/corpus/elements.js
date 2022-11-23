@@ -11,6 +11,7 @@ const $tabs = {
     "coreference": $("#task-5-tab"),
     "sentence_classification": $("#task-6-tab"),
     "intersentence_connection": $("#task-7-tab"),
+    "token_text_annotation": $("#task-8-tab"),
 }
 
 const $task_1_submit = $("#task-1-submit");
@@ -20,6 +21,7 @@ const $task_4_submit = $("#task-4-submit");
 const $task_5_submit = $("#task-5-submit");
 const $task_6_submit = $("#task-6-submit");
 const $task_7_submit = $("#task-7-submit");
+const $task_8_submit = $("#task-8-submit");
 
 // Task-1
 const $task_1_input = $("#task-1-input");
@@ -52,6 +54,12 @@ const add_token_feature_label_selector = ".add-token-feature-label";
 const add_token_feature_input_selector = ".add-token-feature-input";
 
 /* ***************** */
+
+// Task-8
+const $task_8_form = $("#token-text-annotation-form");
+const $task_8_token_text_annotation_table = $("#token-text-annotation-table");
+const $task_8_token_non_annotation_table = $("#token-non-annotation-table");
+const task_8_sample_token_text_annotation_text = $("#sample-token-text-annotation-text");
 
 // Task-3
 const $task_3_form = $("#entity-form");
