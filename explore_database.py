@@ -18,7 +18,8 @@ from models_sqla import User, Role
 from models_sqla import Corpus, Chapter, Verse, Line, Token
 from models_sqla import (
     Task, Boundary, Anvaya,
-    Entity, TokenGraph, Coreference,
+    TokenTextAnnotation, Entity,
+    TokenGraph, Coreference,
     SentenceClassification, DiscourseGraph,
     SubmitLog
 )
@@ -50,8 +51,11 @@ MODELS = {}
 for model in [
     User, Role, Corpus, Chapter, Verse, Line, Token,
     EntityLabel, RelationLabel, SentenceLabel, DiscourseLabel,
-    Task, Boundary, Anvaya, Entity, TokenGraph, Coreference,
-    SentenceClassification, DiscourseGraph, SubmitLog
+    Task, Boundary, Anvaya,
+    TokenTextAnnotation, Entity,
+    TokenGraph, Coreference,
+    SentenceClassification, DiscourseGraph,
+    SubmitLog
 ]:
     name = re.sub(r'(?<!^)(?=[A-Z])', '_', model.__name__).lower()
     MODELS[name] = model
