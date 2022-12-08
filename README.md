@@ -14,7 +14,7 @@ A web-based distributed multi-task annotation framework following sequential ann
 ## Supported Tasks
 
 * Task 1: Sentence Boundary
-* Task 2: Canonical Word Order (Anvaya)
+* Task 2: Canonical Word Order (a.k.a. Anvaya)
 * Task 3: Token Classification (e.g. Named Entity Recognition)
 * Task 4: Token Graph
 * Task 5: Co-reference Resolution (special case of Token Graph)

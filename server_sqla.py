@@ -62,7 +62,7 @@ from flask_migrate import Migrate
 from models_sqla import (db, user_datastore,
                          CustomLoginForm, CustomRegisterForm,
                          Corpus, Chapter, Verse, Line, Token,
-                         Task, SubmitLog, Anvaya, Boundary,
+                         Task, SubmitLog, WordOrder, Boundary,
                          TokenTextAnnotation, EntityLabel, Entity,
                          RelationLabel, TokenGraph,
                          Coreference,
@@ -682,7 +682,7 @@ def api():
         "annotator": [
             "update_sentence_boundary",
             "add_token",
-            "update_anvaya",
+            "update_word_order",
             "update_token_text_annotation",
             "update_named_entity",
             "update_token_graph",
@@ -756,7 +756,7 @@ def api():
         objects_to_update = []
         # If there's any change between existing tokens and marked tokens,
         # delete  all existing boundary tokens from this verse
-        # Anvaya also gets deleted as (CASCADE)
+        # WordOrder also gets deleted as (CASCADE)
         # Entity also gets deleted as (CASCADE)
         # TokenGraph also gets deleted as (CASCADE)
         # Coreference also gets deleted as (CASCADE)
@@ -790,11 +790,11 @@ def api():
             print(next_boundary)
 
             if next_boundary:
-                anvaya_of_next_boundary_query = Anvaya.query.filter(
-                    Anvaya.boundary_id == next_boundary.id,
-                    Anvaya.annotator_id == annotator_id
+                word_order_of_next_boundary_query = WordOrder.query.filter(
+                    WordOrder.boundary_id == next_boundary.id,
+                    WordOrder.annotator_id == annotator_id
                 )
-                anvaya_of_next_boundary_query.delete(synchronize_session=False)
+                word_order_of_next_boundary_query.delete(synchronize_session=False)
 
             # add new boundary markers
             for boundary_token in boundary_tokens:
@@ -876,18 +876,18 @@ def api():
 
     # ----------------------------------------------------------------------- #
 
-    if action == "update_anvaya":
+    if action == "update_word_order":
         task_name = action.replace("update_", "")
         task_id = Task.query.filter(Task.name == task_name).first().id
 
         verse_id = int(request.form["verse_id"])
         annotator_id = current_user.id
-        anvaya = json.loads(request.form["anvaya"])
+        word_order = json.loads(request.form["word_order"])
 
-        anvaya_order = {}
+        word_order_order = {}
         boundary_ids = []
 
-        for dom_boundary_id, dom_token_ids in anvaya.items():
+        for dom_boundary_id, dom_token_ids in word_order.items():
             m1 = re.match(r'boundary-([0-9]+)$', dom_boundary_id)
             if not m1:
                 api_response["message"] = "Invalid boundary ID."
@@ -902,24 +902,24 @@ def api():
                 m2 = re.match(r'token-button-([0-9]+)$', dom_token_id)
                 if m2:
                     _order.append(int(m2.group(1)))
-            anvaya_order[boundary_id] = _order
+            word_order_order[boundary_id] = _order
 
         objects_to_update = []
 
-        existing_anvaya_query = Anvaya.query.filter(
-            Anvaya.boundary_id.in_(boundary_ids),
-            Anvaya.annotator_id == annotator_id
+        existing_word_order_query = WordOrder.query.filter(
+            WordOrder.boundary_id.in_(boundary_ids),
+            WordOrder.annotator_id == annotator_id
         )
-        existing_anvaya_query.delete(synchronize_session=False)
+        existing_word_order_query.delete(synchronize_session=False)
 
-        for boundary_id, token_ids in anvaya_order.items():
+        for boundary_id, token_ids in word_order_order.items():
             for order_id, token_id in enumerate(token_ids, start=1):
-                anvaya = Anvaya()
-                anvaya.boundary_id = boundary_id
-                anvaya.token_id = token_id
-                anvaya.order = order_id
-                anvaya.annotator_id = annotator_id
-                objects_to_update.append(anvaya)
+                _word_order = WordOrder()
+                _word_order.boundary_id = boundary_id
+                _word_order.token_id = token_id
+                _word_order.order = order_id
+                _word_order.annotator_id = annotator_id
+                objects_to_update.append(_word_order)
 
         try:
             if objects_to_update:

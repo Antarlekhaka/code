@@ -2,8 +2,8 @@
 
 $(document).ready(function () {
     // TODO: Set-up placeholders for other tasks as well
-    const task_2_placeholder_content = $task_2_sample_anvaya_container.html();
-    $task_2_anvaya_container.html(task_2_placeholder_content);
+    const task_2_placeholder_content = $task_2_sample_word_order_container.html();
+    $task_2_word_order_container.html(task_2_placeholder_content);
 
     const $task_6_placeholder = $task_6_sample_sentence_classification_input.clone();
     $task_6_placeholder.removeAttr("id");

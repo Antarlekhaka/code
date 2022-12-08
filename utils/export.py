@@ -92,8 +92,8 @@ def simple_format(data):
 
             sentences = {}
             display_text = [
-                ["", "Verse", "Anvaya"],
-                ["", "-----", "------"]
+                ["", "Verse", "Word Order"],
+                ["", "-----", "----------"]
             ]
 
             sent_idx = 0
@@ -101,12 +101,12 @@ def simple_format(data):
             current_verse_id = None
             sentence_tokens = []
 
-            for anvaya in annotation_data["anvaya"]:
+            for word_order in annotation_data["word_order"]:
                 if current_boundary_id is None:
-                    current_boundary_id = anvaya["boundary_id"]
-                    current_verse_id = anvaya["verse_id"]
+                    current_boundary_id = word_order["boundary_id"]
+                    current_verse_id = word_order["verse_id"]
 
-                if current_boundary_id != anvaya["boundary_id"]:
+                if current_boundary_id != word_order["boundary_id"]:
                     sent_idx += 1
                     sentence_text = " ".join(sentence_tokens)
                     sentences[current_boundary_id] = sentence_text
@@ -114,11 +114,11 @@ def simple_format(data):
                         [str(sent_idx), str(current_verse_id), sentence_text]
                     )
 
-                    current_boundary_id = anvaya["boundary_id"]
-                    current_verse_id = anvaya["verse_id"]
+                    current_boundary_id = word_order["boundary_id"]
+                    current_verse_id = word_order["verse_id"]
                     sentence_tokens = []
 
-                token_id = anvaya["token_id"]
+                token_id = word_order["token_id"]
                 token = chapter_data["tokens"][token_id]
                 token_text = get_token_text(token, preference)
                 sentence_tokens.append(token_text)
@@ -130,7 +130,7 @@ def simple_format(data):
                     [str(sent_idx), str(current_verse_id), sentence_text]
                 )
 
-            task_data["anvaya"] = "\n".join(
+            task_data["word_order"] = "\n".join(
                 "\t".join(sentence_row)
                 for sentence_row in display_text
             )

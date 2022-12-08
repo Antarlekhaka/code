@@ -5,7 +5,7 @@ const $refresh_verse_buttons = $(".refresh-verse");
 
 const $tabs = {
     "sentence_boundary": $("#task-1-tab"),
-    "anvaya": $("#task-2-tab"),
+    "word_order": $("#task-2-tab"),
     "named_entity": $("#task-3-tab"),
     "token_graph": $("#task-4-tab"),
     "coreference": $("#task-5-tab"),
@@ -29,8 +29,8 @@ const $task_1_input_before = $("#task-1-input-before");
 const $task_1_input_after = $("#task-1-input-after")
 
 // Task-2
-const $task_2_anvaya_container = $("#anvaya-container");
-const $task_2_sample_anvaya_container = $("#sample-anvaya-container");
+const $task_2_word_order_container = $("#word-order-container");
+const $task_2_sample_word_order_container = $("#sample-word-order-container");
 
 /* *** Add Token *** */
 

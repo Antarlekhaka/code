@@ -17,7 +17,7 @@ from models_sqla import db
 from models_sqla import User, Role
 from models_sqla import Corpus, Chapter, Verse, Line, Token
 from models_sqla import (
-    Task, Boundary, Anvaya,
+    Task, Boundary, WordOrder,
     TokenTextAnnotation, Entity,
     TokenGraph, Coreference,
     SentenceClassification, DiscourseGraph,
@@ -51,7 +51,7 @@ MODELS = {}
 for model in [
     User, Role, Corpus, Chapter, Verse, Line, Token,
     EntityLabel, RelationLabel, SentenceLabel, DiscourseLabel,
-    Task, Boundary, Anvaya,
+    Task, Boundary, WordOrder,
     TokenTextAnnotation, Entity,
     TokenGraph, Coreference,
     SentenceClassification, DiscourseGraph,

@@ -220,7 +220,7 @@ class Boundary(db.Model):
     )
 
 
-class Anvaya(db.Model):
+class WordOrder(db.Model):
     id = Column(Integer, primary_key=True)
     # ----------------------------------------------------------------------- #
     boundary_id = Column(
@@ -234,12 +234,19 @@ class Anvaya(db.Model):
 
     boundary = relationship(
         'Boundary',
-        backref=backref('anvaya', cascade='all,delete-orphan', lazy='dynamic')
+        backref=backref(
+            'word_order', cascade='all,delete-orphan', lazy='dynamic'
+        )
     )
-    token = relationship('Token', backref=backref('token', lazy='dynamic'))
-    annotator = relationship('User', backref=backref('anvaya', lazy='dynamic'))
+    token = relationship(
+        'Token', backref=backref('word_order', lazy='dynamic')
+    )
+    annotator = relationship(
+        'User',
+        backref=backref('word_order', lazy='dynamic')
+    )
     __table_args__ = (
-         Index('anvaya_boundary_id_annotator_id_token_id',
+         Index('word_order_boundary_id_annotator_id_token_id',
                'boundary_id', 'annotator_id', 'token_id', unique=True),
     )
 

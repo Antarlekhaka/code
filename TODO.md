@@ -71,14 +71,14 @@
 - [x] If sentence boundary is marked for a verse in the next chapter, all the nodes in between get counted as sentences
 - [x] Task 4 not recording
 - [x] Task 4 display only displays single relation out of existing ones
-- [x] After marking sentence boundary, transition to anvaya task doesnt take proper sentence as anvaya, need to call `setup_anvaya()` again. Probably async issue.
-- [x] When new boundaries are marked, it may affect next sentence as well, need to do something about that. (e.g. If token 12 was boundary, and token 24 was another, and token 12 gets deleted, now, if token 24 had anvaya, that needs to be re-done)
+- [x] After marking sentence boundary, transition to canonical-word-order task doesn't take proper sentence as canonical-word-order, need to call `setup_word_order()` again. Probably async issue.
+- [x] When new boundaries are marked, it may affect next sentence as well, need to do something about that. (e.g. If token 12 was boundary, and token 24 was another, and token 12 gets deleted, now, if token 24 had word_order, that needs to be re-done)
 
 ## Core
 
 - [x] Front-end
   - [x] Sentence Boundary Interface
-  - [x] Anvaya Interface
+  - [x] Canonical Word Order Interface
     - [x] Reordering Front-end (sortable)
   - [x] Named Entity Interface
   - [x] Token Graph Interface
@@ -92,7 +92,7 @@
   - [x] Sentence Boundary
     - [x] Deleting necessary boundaries if required
     - [x] Delete related objects
-  - [x] Anvaya
+  - [x] Canonical Word Order
   - [x] Named Entity Recognition
   - [x] Token Graph
   - [x] Co-reference Resolution

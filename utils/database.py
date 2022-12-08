@@ -21,7 +21,7 @@ from models_sqla import Corpus, Chapter, Verse, Line, Token
 from models_sqla import (
     Task,
     Boundary,
-    Anvaya,
+    WordOrder,
     TokenTextAnnotation,
     Entity,
     TokenGraph,
@@ -31,7 +31,7 @@ from models_sqla import (
     SubmitLog
 )
 
-from utils.heuristic import get_anvaya
+from utils.heuristic import get_word_order
 
 ###############################################################################
 
@@ -285,20 +285,20 @@ def export_data(
 
             # --------------------------------------------------------------- #
 
-            anvaya_query = Anvaya.query.filter(
-                Anvaya.boundary_id.in_(boundary_ids),
-                Anvaya.annotator_id == annotator.id
-            ).join(Boundary).order_by(Boundary.token_id, Anvaya.order)
+            word_order_query = WordOrder.query.filter(
+                WordOrder.boundary_id.in_(boundary_ids),
+                WordOrder.annotator_id == annotator.id
+            ).join(Boundary).order_by(Boundary.token_id, WordOrder.order)
 
             # TODO: avoid .boundary.verse_id call ?
             # fetch from task_data["sentence_boundary"] ?
-            annotation_data["anvaya"] = [
+            annotation_data["word_order"] = [
                 {
-                    "verse_id": anvaya.boundary.verse_id,
-                    "boundary_id": anvaya.boundary_id,
-                    "token_id": anvaya.token_id
+                    "verse_id": word_order.boundary.verse_id,
+                    "boundary_id": word_order.boundary_id,
+                    "token_id": word_order.token_id
                 }
-                for anvaya in anvaya_query.all()
+                for word_order in word_order_query.all()
             ]
 
             # --------------------------------------------------------------- #
@@ -560,7 +560,7 @@ def get_verse_data(
                 ]],
                 "boundary": {},
                 "sentences": {},
-                "anvaya": {},
+                "word_order": {},
                 "token_text_annotation": [],
                 "entity": [],
                 "relation": [],
@@ -642,21 +642,21 @@ def get_verse_data(
         data[verse_id]["sentences"] = get_sentences(
             verse_id, boundary.annotator_id
         )
-        anvaya_query = Anvaya.query.filter(
-            Anvaya.boundary_id == boundary.id,
-            Anvaya.annotator_id.in_(annotator_ids)
-        ).order_by(Anvaya.order)
-        sentence_anvaya = [
-            a.token_id for a in anvaya_query.all()
+        word_order_query = WordOrder.query.filter(
+            WordOrder.boundary_id == boundary.id,
+            WordOrder.annotator_id.in_(annotator_ids)
+        ).order_by(WordOrder.order)
+        sentence_word_order = [
+            a.token_id for a in word_order_query.all()
         ]
-        # if anvaya doesn"t exist, apply heuristic
-        if not sentence_anvaya:
-            sentence_anvaya = get_anvaya(
+        # if word_order doesn't exist, apply heuristic
+        if not sentence_word_order:
+            sentence_word_order = get_word_order(
                 data[verse_id]["sentences"][boundary.id]
             )
 
-        data[verse_id]["anvaya"][boundary.id] = sentence_anvaya
-        # TODO: consider if we should provide predicted anvaya separately
+        data[verse_id]["word_order"][boundary.id] = sentence_word_order
+        # TODO: consider if we should provide predicted word_order separately
         #       instead of in the same field
 
         # ------------------------------------------------------------------- #

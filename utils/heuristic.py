@@ -14,18 +14,18 @@ from typing import Dict, List
 
 ###############################################################################
 
-ANVAYA_CASE_ORDER = ["Loc", "Nom", "Dat", "Abl", "Ins", "Acc"]
-ANVAYA_XPOS_ORDER = ["CAD", "CX", "CNG", "V"]
+WORD_ORDER_CASE_ORDER = ["Loc", "Nom", "Dat", "Abl", "Ins", "Acc"]
+WORD_ORDER_XPOS_ORDER = ["CAD", "CX", "CNG", "V"]
 
 ###############################################################################
 
 
-def get_anvaya(token_list: Dict[int, Dict]) -> List[int]:
+def get_word_order(token_list: Dict[int, Dict]) -> List[int]:
     case_order = []
     xpos_order = []
     used = set()
     unused = set(token_list)
-    for case in ANVAYA_CASE_ORDER:
+    for case in WORD_ORDER_CASE_ORDER:
         for token_id, token in token_list.items():
             if not isinstance(token["analysis"], dict):
                 continue
@@ -35,7 +35,7 @@ def get_anvaya(token_list: Dict[int, Dict]) -> List[int]:
                 unused.remove(token_id)
                 used.add(token_id)
 
-    for xpos in ANVAYA_XPOS_ORDER:
+    for xpos in WORD_ORDER_XPOS_ORDER:
         for token_id, token in token_list.items():
             if token_id in used:
                 continue
@@ -44,16 +44,16 @@ def get_anvaya(token_list: Dict[int, Dict]) -> List[int]:
                 unused.remove(token_id)
                 used.add(token_id)
 
-    anvaya_order = []
-    anvaya_order.extend(case_order)
+    word_order_order = []
+    word_order_order.extend(case_order)
 
     for token_id, token in token_list.items():
         if token_id in unused:
-            anvaya_order.append(token_id)
+            word_order_order.append(token_id)
             unused.remove(token_id)
             used.add(token_id)
 
-    anvaya_order.extend(xpos_order)
-    assert set(token_list) == set(anvaya_order)
+    word_order_order.extend(xpos_order)
+    assert set(token_list) == set(word_order_order)
 
-    return anvaya_order
+    return word_order_order

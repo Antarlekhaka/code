@@ -8,9 +8,9 @@
     },
     {
         "id": 2,
-        "name": "anvaya",
-        "title": "Anvaya",
-        "short": "Anvaya",
+        "name": "word_order",
+        "title": "Canonical Word Order",
+        "short": "Word Order",
         "help": "Arrange the words in the correct order."
     },
     {

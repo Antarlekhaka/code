@@ -189,7 +189,7 @@ function setup_task(task_id, verse_id) {
             setup_sentence_boundary(verse_id);
             break;
         case "2":
-            setup_anvaya(verse_id);
+            setup_word_order(verse_id);
             break;
         case "3":
             setup_named_entity(verse_id);
@@ -355,7 +355,7 @@ $task_1_submit.click(function () {
 /* *********************************** END Task 1 *********************************** */
 
 /* ********************************** BEGIN Task 2 ********************************** */
-// Task 2: Anvaya
+// Task 2: Canonical Word Order
 
 // Setup-2
 function setup_sortable() {
@@ -381,27 +381,27 @@ function setup_sortable() {
     }).on("sortstop sortreceive", function(e, ui) {
         // ui.item contains the current dragged element.
         // Triggered when the user stopped sorting and the DOM position has changed.
-        var anvaya_order = [];
+        var word_order_order = [];
         $(this).children().each(function (){
-            anvaya_order.push(this.id);
+            word_order_order.push(this.id);
         });
-        $(this).data("anvaya", anvaya_order);
-        console.log("Saved Order: " + anvaya_order);
+        $(this).data("word_order", word_order_order);
+        console.log("Saved Order: " + word_order_order);
     });
 }
 
-function setup_anvaya(verse_id) {
+function setup_word_order(verse_id) {
     console.log(`Called ${arguments.callee.name}(${Object.values(arguments).join(", ")});`);
 
     const row = $corpus_table.bootstrapTable('getRowByUniqueId', verse_id);
 
-    $task_2_anvaya_container.html("");
+    $task_2_word_order_container.html("");
     const $extra = $("<div />", {
         id: `extra-${verse_id}`,
         class: "border px-1 pt-1 m-1 rounded connected-sortable",
         style: "background-color: #eeeeff; border-color: #aaaaff !important;"
     });
-    $task_2_anvaya_container.append($extra);
+    $task_2_word_order_container.append($extra);
     const extra_tokens = row.sentences['extra'];
     var all_tokens = {};
 
@@ -414,7 +414,7 @@ function setup_anvaya(verse_id) {
         // console.log("Boundary ID: " + boundary_id);
         // console.log("Tokens:")
         // console.log(sentence_tokens);
-        for (const token_id of row.anvaya[boundary_id]) {
+        for (const token_id of row.word_order[boundary_id]) {
             if (extra_tokens.hasOwnProperty(token_id)) {
                 used_extra_tokens.push(token_id);
             }
@@ -424,14 +424,14 @@ function setup_anvaya(verse_id) {
         var token_order = [];
         var unused_tokens = [];
         if (boundary_id !== "extra") {
-            token_order = row.anvaya[boundary_id];
+            token_order = row.word_order[boundary_id];
             for (const [_token_id_string, _token] of Object.entries(sentence_tokens)) {
                 if (!token_order.includes(_token.id)) {
                     unused_tokens.push(_token.id);
                 }
             }
-            // ensure in server_sqla.py that row.anvaya isn't empty
-            // either it is annotated anvaya, or it's obtained via heuristic
+            // ensure in server_sqla.py that row.word_order isn't empty
+            // either it is annotated word_order, or it's obtained via heuristic
         } else {
             // order doesn't really matter, just need extra tokens
             token_order = Object.keys(sentence_tokens);
@@ -449,8 +449,8 @@ function setup_anvaya(verse_id) {
             style: "background-color: #ffeeee; border-color: #ffaaaa !important;"
         });
         if (boundary_id != "extra") {
-            $task_2_anvaya_container.append($sentence);
-            $task_2_anvaya_container.append($unused);
+            $task_2_word_order_container.append($sentence);
+            $task_2_word_order_container.append($unused);
         }
 
         for (const token_id of [...token_order, ...unused_tokens]) {
@@ -610,18 +610,18 @@ $task_2_submit.click(function () {
     // Task 2 Actions
 
     const verse_id = $verse_id_containers.html();
-    var anvaya_data = {}
+    var word_order_data = {}
     $('.sortable').each(function(sentence_index, sentence_element) {
         const boundary_id = sentence_element.id;
-        anvaya_data[boundary_id] = $(sentence_element).data("anvaya");
+        word_order_data[boundary_id] = $(sentence_element).data("word_order");
     });
-    // console.log("Anvaya Data: ");
-    // console.log(anvaya_data);
+    // console.log("Word Order Data: ");
+    // console.log(word_order_data);
 
     $.post(API_URL, {
         action: TASK_2_SUBMIT_ACTION,
         verse_id: verse_id,
-        anvaya: JSON.stringify(anvaya_data)
+        word_order: JSON.stringify(word_order_data)
     },
     function (response) {
         $.notify({
@@ -663,8 +663,8 @@ function setup_named_entity(verse_id) {
     for (const [boundary_id, sentence_tokens] of Object.entries(row.sentences)) {
         $.extend(all_tokens, sentence_tokens);
         if (boundary_id !== "extra") {
-            [].push.apply(used_tokens, row.anvaya[boundary_id]);
-            boundary_tokens[boundary_id] = row.anvaya[boundary_id];
+            [].push.apply(used_tokens, row.word_order[boundary_id]);
+            boundary_tokens[boundary_id] = row.word_order[boundary_id];
         }
     }
 
@@ -825,7 +825,7 @@ function setup_token_graph(verse_id) {
     for (const [boundary_id, sentence_tokens] of Object.entries(row.sentences)) {
         $.extend(all_tokens, sentence_tokens);
         if (boundary_id != "extra") {
-            boundary_tokens[boundary_id] = row.anvaya[boundary_id];
+            boundary_tokens[boundary_id] = row.word_order[boundary_id];
         }
     }
 
@@ -1212,10 +1212,10 @@ function setup_coreference(verse_id) {
         for (const [boundary_id, sentence_tokens] of Object.entries(verse_data.sentences)) {
             $.extend(all_tokens, sentence_tokens);
             if (boundary_id != "extra") {
-                boundary_tokens.push([boundary_id, verse_data.anvaya[boundary_id]]);
+                boundary_tokens.push([boundary_id, verse_data.word_order[boundary_id]]);
             }
-            // ensure that every boundary in the previous n verses has anvaya
-            // if one is doing anvaya in order, this won't be an issue
+            // ensure that every boundary in the previous n verses has word_order
+            // if one is doing word_order in order, this won't be an issue
         }
         for (const coreference of verse_data.coreference) {
             if (coreference.is_deleted) {
@@ -1419,7 +1419,7 @@ function setup_sentence_classification(verse_id) {
     for (const [boundary_id, sentence_tokens] of Object.entries(row.sentences)) {
         $.extend(all_tokens, sentence_tokens);
         if (boundary_id != "extra") {
-            boundary_tokens[boundary_id] = row.anvaya[boundary_id];
+            boundary_tokens[boundary_id] = row.word_order[boundary_id];
         }
     }
 
@@ -1545,10 +1545,10 @@ function setup_intersentence_connection(verse_id) {
         for (const [boundary_id, sentence_tokens] of Object.entries(verse_data.sentences)) {
             $.extend(all_tokens, sentence_tokens);
             if (boundary_id != "extra") {
-                boundary_tokens.push([boundary_id, verse_data.anvaya[boundary_id]]);
+                boundary_tokens.push([boundary_id, verse_data.word_order[boundary_id]]);
             }
-            // ensure that every boundary in the previous n verses has anvaya
-            // if one is doing anvaya in order, this won't be an issue
+            // ensure that every boundary in the previous n verses has word_order
+            // if one is doing word_order in order, this won't be an issue
         }
         for (const intersentence_connection of verse_data.intersentence_connection) {
             if (intersentence_connection.is_deleted) {
@@ -1934,8 +1934,8 @@ function setup_token_text_annotation(verse_id) {
     for (const [boundary_id, sentence_tokens] of Object.entries(row.sentences)) {
         $.extend(all_tokens, sentence_tokens);
         if (boundary_id !== "extra") {
-            [].push.apply(used_tokens, row.anvaya[boundary_id]);
-            boundary_tokens[boundary_id] = row.anvaya[boundary_id];
+            [].push.apply(used_tokens, row.word_order[boundary_id]);
+            boundary_tokens[boundary_id] = row.word_order[boundary_id];
         }
     }
 
