@@ -15,10 +15,10 @@
     },
     {
         "id": 3,
-        "name": "named_entity",
-        "title": "Named Entity Recognition",
-        "short": "NER",
-        "help": "Identify named entities and their types."
+        "name": "token_classification",
+        "title": "Token Classification",
+        "short": "TokClass",
+        "help": "Classify tokens."
     },
     {
         "id": 4,

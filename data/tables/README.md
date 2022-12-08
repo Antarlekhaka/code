@@ -18,7 +18,7 @@ File name should be `table_name.json`
  - `short`
  - `help`
 
-* Label Tables (`entity_label.json`, `relation_label.json`, `sentence_label.json`, `discourse_label.json`)
+* Label Tables (`token_label.json`, `relation_label.json`, `sentence_label.json`, `discourse_label.json`)
   - `label`
   - `description`
 

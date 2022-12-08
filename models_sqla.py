@@ -280,14 +280,14 @@ class TokenTextAnnotation(db.Model):
     )
 
 
-class Entity(db.Model):
+class TokenClassification(db.Model):
     id = Column(Integer, primary_key=True)
     # ----------------------------------------------------------------------- #
     boundary_id = Column(
         Integer, ForeignKey('boundary.id', ondelete='CASCADE'), nullable=False
     )
     token_id = Column(Integer, ForeignKey('token.id'), nullable=False)
-    label_id = Column(Integer, ForeignKey('entity_label.id'), nullable=False)
+    label_id = Column(Integer, ForeignKey('token_label.id'), nullable=False)
     # ----------------------------------------------------------------------- #
     annotator_id = Column(Integer, ForeignKey('user.id'), nullable=False)
     is_deleted = Column(Boolean, default=False, nullable=False)
@@ -295,15 +295,15 @@ class Entity(db.Model):
 
     boundary = relationship(
         'Boundary',
-        backref=backref('entities', cascade='all,delete-orphan', lazy='dynamic')
+        backref=backref('tokclf', cascade='all,delete-orphan', lazy='dynamic')
     )
     token = relationship('Token', foreign_keys=[token_id])
-    label = relationship('EntityLabel', backref=backref('entities'))
+    label = relationship('TokenLabel', backref=backref('tokclf'))
     annotator = relationship(
-        'User', backref=backref('entities', lazy='dynamic')
+        'User', backref=backref('tokclf', lazy='dynamic')
     )
     __table_args__ = (
-         Index('entity_token_id_annotator_id',
+         Index('token_classification_token_id_annotator_id',
                'token_id', 'annotator_id', unique=True),
     )
 
@@ -392,15 +392,13 @@ class SentenceClassification(db.Model):
     is_deleted = Column(Boolean, default=False, nullable=False)
     updated_at = Column(DateTime, default=dt.utcnow, onupdate=dt.utcnow)
 
-    label = relationship('SentenceLabel', backref=backref('sentences'))
+    label = relationship('SentenceLabel', backref=backref('sentclf'))
     boundary = relationship(
         'Boundary',
-        backref=backref(
-            'sentences', cascade='all,delete-orphan', lazy='dynamic'
-        )
+        backref=backref('sentclf', cascade='all,delete-orphan', lazy='dynamic')
     )
     annotator = relationship(
-        'User', backref=backref('sentences', lazy='dynamic')
+        'User', backref=backref('sentclf', lazy='dynamic')
     )
 
     __table_args__ = (
@@ -467,7 +465,7 @@ class DiscourseGraph(db.Model):
 # Label Models
 
 
-class EntityLabel(db.Model):
+class TokenLabel(db.Model):
     id = Column(Integer, primary_key=True)
     label = Column(String(255), nullable=False)
     description = Column(String(255))

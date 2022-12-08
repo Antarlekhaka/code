@@ -23,7 +23,7 @@ from models_sqla import (
     Boundary,
     WordOrder,
     TokenTextAnnotation,
-    Entity,
+    TokenClassification,
     TokenGraph,
     Coreference,
     SentenceClassification,
@@ -323,24 +323,24 @@ def export_data(
 
             # --------------------------------------------------------------- #
 
-            entity_query = Entity.query.filter(
-                Entity.boundary_id.in_(boundary_ids),
-                Entity.annotator_id == annotator.id,
-                Entity.is_deleted == False  # noqa
-            ).order_by(Entity.token_id)
+            token_classification_query = TokenClassification.query.filter(
+                TokenClassification.boundary_id.in_(boundary_ids),
+                TokenClassification.annotator_id == annotator.id,
+                TokenClassification.is_deleted == False  # noqa
+            ).order_by(TokenClassification.token_id)
 
             # TODO: avoid .boundary.verse_id call ?
             # fetch from task_data["sentence_boundary"] ?
-            annotation_data["named_entity"] = [
+            annotation_data["token_classification"] = [
                 {
-                    "verse_id": entity.boundary.verse_id,
-                    "boundary_id": entity.boundary_id,
-                    "token_id": entity.token_id,
-                    "label_id": entity.label_id,
-                    "label_label": entity.label.label,
-                    "label_description": entity.label.description,
+                    "verse_id": tokclf.boundary.verse_id,
+                    "boundary_id": tokclf.boundary_id,
+                    "token_id": tokclf.token_id,
+                    "label_id": tokclf.label_id,
+                    "label_label": tokclf.label.label,
+                    "label_description": tokclf.label.description,
                 }
-                for entity in entity_query.all()
+                for tokclf in token_classification_query.all()
             ]
 
             # --------------------------------------------------------------- #
@@ -562,7 +562,7 @@ def get_verse_data(
                 "sentences": {},
                 "word_order": {},
                 "token_text_annotation": [],
-                "entity": [],
+                "token_classification": [],
                 "relation": [],
                 "coreference": [],
                 "sentence_classification": [],
@@ -680,21 +680,21 @@ def get_verse_data(
 
         # ------------------------------------------------------------------- #
 
-        entity_query = Entity.query.filter(
-            Entity.boundary_id == boundary.id,
-            Entity.annotator_id.in_(annotator_ids)
+        token_classification_query = TokenClassification.query.filter(
+            TokenClassification.boundary_id == boundary.id,
+            TokenClassification.annotator_id.in_(annotator_ids)
         )
 
-        data[verse_id]["entity"].extend([
+        data[verse_id]["token_classification"].extend([
             {
-                "id": entity.id,
-                "boundary_id": entity.boundary_id,
-                "token_id": entity.token_id,
-                "label_id": entity.label_id,
-                "annotator_id": entity.annotator_id,
-                "is_deleted": entity.is_deleted
+                "id": tokclf.id,
+                "boundary_id": tokclf.boundary_id,
+                "token_id": tokclf.token_id,
+                "label_id": tokclf.label_id,
+                "annotator_id": tokclf.annotator_id,
+                "is_deleted": tokclf.is_deleted
             }
-            for entity in entity_query.all()
+            for tokclf in token_classification_query.all()
         ])
 
         # ------------------------------------------------------------------- #

@@ -30,7 +30,7 @@ $(document).ready(function () {
     });
 });
 
-// Exapand Row on Select
+// Expand Row on Select
 $corpus_table.on('check.bs.table', function (e, row, $element) {
     $corpus_table.bootstrapTable('collapseAllRows');
     $corpus_table.bootstrapTable('expandRow', $element.data('index'));

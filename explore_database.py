@@ -18,13 +18,13 @@ from models_sqla import User, Role
 from models_sqla import Corpus, Chapter, Verse, Line, Token
 from models_sqla import (
     Task, Boundary, WordOrder,
-    TokenTextAnnotation, Entity,
+    TokenTextAnnotation, TokenClassification,
     TokenGraph, Coreference,
     SentenceClassification, DiscourseGraph,
     SubmitLog
 )
 from models_sqla import (
-    EntityLabel, RelationLabel, SentenceLabel, DiscourseLabel
+    TokenLabel, RelationLabel, SentenceLabel, DiscourseLabel
 )
 
 from settings import app
@@ -50,9 +50,9 @@ MODELS = {}
 
 for model in [
     User, Role, Corpus, Chapter, Verse, Line, Token,
-    EntityLabel, RelationLabel, SentenceLabel, DiscourseLabel,
+    TokenLabel, RelationLabel, SentenceLabel, DiscourseLabel,
     Task, Boundary, WordOrder,
-    TokenTextAnnotation, Entity,
+    TokenTextAnnotation, TokenClassification,
     TokenGraph, Coreference,
     SentenceClassification, DiscourseGraph,
     SubmitLog

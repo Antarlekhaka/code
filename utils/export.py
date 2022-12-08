@@ -169,21 +169,21 @@ def simple_format(data):
                 ["-----", "-----", "-----", "-----------"]
             ]
 
-            for entity in annotation_data["named_entity"]:
-                entity_token_id = entity["token_id"]
-                entity_token = chapter_data["tokens"][entity_token_id]
-                token_text = get_token_text(entity_token, preference)
+            for tokclf in annotation_data["token_classification"]:
+                tokclf_token_id = tokclf["token_id"]
+                tokclf_token = chapter_data["tokens"][tokclf_token_id]
+                token_text = get_token_text(tokclf_token, preference)
 
                 display_text.append([
-                    str(entity["verse_id"]),
+                    str(tokclf["verse_id"]),
                     token_text,
-                    entity["label_label"],
-                    entity["label_description"]
+                    tokclf["label_label"],
+                    tokclf["label_description"]
                 ])
 
-            task_data["named_entity"] = "\n".join(
-                "\t".join(entity_row)
-                for entity_row in display_text
+            task_data["token_classification"] = "\n".join(
+                "\t".join(tokclf_row)
+                for tokclf_row in display_text
             )
 
             # --------------------------------------------------------------- #

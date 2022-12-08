@@ -192,7 +192,7 @@ function setup_task(task_id, verse_id) {
             setup_word_order(verse_id);
             break;
         case "3":
-            setup_named_entity(verse_id);
+            setup_token_classification(verse_id);
             break;
         case "4":
             setup_token_graph(verse_id);
@@ -645,16 +645,16 @@ $task_2_submit.click(function () {
 /* *********************************** END Task 2 *********************************** */
 
 /* ********************************** BEGIN Task 3 ********************************** */
-// Task 3: Named Entity
+// Task 3: Token Classification
 
 // Setup-3
-function setup_named_entity(verse_id) {
+function setup_token_classification(verse_id) {
     console.log(`Called ${arguments.callee.name}(${Object.values(arguments).join(", ")});`);
 
     const row = $corpus_table.bootstrapTable('getRowByUniqueId', verse_id);
 
-    $task_3_entity_table.html("");
-    $task_3_non_entity_table.html("");
+    $task_3_token_classification_table.html("");
+    $task_3_token_null_class_table.html("");
 
     var all_tokens = {};
     var used_tokens = [];
@@ -669,93 +669,93 @@ function setup_named_entity(verse_id) {
     }
 
     // record existing labels
-    // existing_entities array could be avoided perhaps
+    // existing_token_classification array could be avoided perhaps
     // in that case, .includes() can be replaced with .hasOwnProperty() check
-    var existing_entities = [];
+    var existing_token_classification = [];
     var existing_labels = {};
-    for (const entity of row.entity) {
-        if (entity.is_deleted) {
+    for (const tokclf of row.token_classification) {
+        if (tokclf.is_deleted) {
             continue;
         }
-        existing_entities.push(entity.token_id);
-        existing_labels[entity.token_id] = entity.label_id;
+        existing_token_classification.push(tokclf.token_id);
+        existing_labels[tokclf.token_id] = tokclf.label_id;
     }
 
     for (const [boundary_id, used_token_ids] of Object.entries(boundary_tokens)) {
         for (const token_id of used_token_ids) {
             const token = all_tokens[token_id];
-            var is_entity = false;
-            var entity_label_id = null;
-            const $entity_row = $("<tr />", {});
-            if (existing_entities.includes(token.id)) {
-                $task_3_entity_table.append($entity_row);
-                is_entity = true;
-                entity_label_id = existing_labels[token.id];
+            var has_token_class = false;
+            var tokclf_label_id = null;
+            const $tokclf_row = $("<tr />", {});
+            if (existing_token_classification.includes(token.id)) {
+                $task_3_token_classification_table.append($tokclf_row);
+                has_token_class = true;
+                tokclf_label_id = existing_labels[token.id];
             } else {
-                $task_3_non_entity_table.append($entity_row);
+                $task_3_token_null_class_table.append($tokclf_row);
             }
 
-            const $entity_cell = $("<td />", {});
-            $entity_row.append($entity_cell);
+            const $tokclf_cell = $("<td />", {});
+            $tokclf_row.append($tokclf_cell);
 
-            const $entity = generate_token_button({
+            const $tokclf = generate_token_button({
                 token: token,
-                id_prefix: "entity"
+                id_prefix: "tokclf"
             });
-            $entity_cell.append($entity);
+            $tokclf_cell.append($tokclf);
 
-            const $entity_type_cell = $("<td />");
-            $entity_row.append($entity_type_cell);
+            const $token_type_cell = $("<td />");
+            $tokclf_row.append($token_type_cell);
 
-            const $entity_selector_element = task_3_sample_entity_type.clone();
-            $entity_selector_element.data("boundary-id", boundary_id);
-            $entity_type_cell.append($entity_selector_element);
+            const $token_class_selector_element = task_3_sample_token_type.clone();
+            $token_class_selector_element.data("boundary-id", boundary_id);
+            $token_type_cell.append($token_class_selector_element);
 
-            const entity_selector_id = `entity-selector-${token.id}`;
-            $entity_selector_element.attr("id", entity_selector_id);
+            const token_class_selector_id = `token-class-selector-${token.id}`;
+            $token_class_selector_element.attr("id", token_class_selector_id);
 
-            if (is_entity) {
-                $entity_selector_element.selectpicker('val', entity_label_id);
+            if (has_token_class) {
+                $token_class_selector_element.selectpicker('val', tokclf_label_id);
             } else {
-                $entity_selector_element.selectpicker('hide');
+                $token_class_selector_element.selectpicker('hide');
             }
 
-            const $entity_toggle_cell = $("<td />", {
+            const $tokclf_toggle_cell = $("<td />", {
                 class: "col-sm-1",
             });
-            $entity_row.append($entity_toggle_cell);
+            $tokclf_row.append($tokclf_toggle_cell);
 
-            const entity_class = (is_entity) ? "btn btn-secondary" : "btn btn-info include-entity";
-            const entity_html = (is_entity) ? '<i class="fa fa-times"></i>' : '<i class="fa fa-plus"></i>';
+            const tokclf_class = (has_token_class) ? "btn btn-secondary" : "btn btn-info include-tokclf";
+            const tokclf_html = (has_token_class) ? '<i class="fa fa-times"></i>' : '<i class="fa fa-plus"></i>';
 
-            const $entity_toggle = $("<span />", {
-                id: `entity-toggle-${token.id}`,
-                name: "entity-toggle",
-                class: entity_class,
-                html: entity_html,
+            const $tokclf_toggle = $("<span />", {
+                id: `tokclf-toggle-${token.id}`,
+                name: "tokclf-toggle",
+                class: tokclf_class,
+                html: tokclf_html,
                 on: {
                     click: function() {
-                        const select_selector = `#${entity_selector_id}`;
+                        const select_selector = `#${token_class_selector_id}`;
 
-                        if ($(this).hasClass("include-entity")) {
-                            $(this).removeClass("include-entity");
+                        if ($(this).hasClass("include-tokclf")) {
+                            $(this).removeClass("include-tokclf");
                             $(this).removeClass("btn-info");
                             $(this).addClass("btn-secondary");
                             $(this).html('<i class="fa fa-times"></i>');
                             $(select_selector).selectpicker('show');
-                            $task_3_entity_table.append($(this).parents('tr'));
+                            $task_3_token_classification_table.append($(this).parents('tr'));
                         } else {
                             $(this).removeClass("btn-secondary");
                             $(this).addClass("btn-info");
-                            $(this).addClass("include-entity");
+                            $(this).addClass("include-tokclf");
                             $(this).html('<i class="fa fa-plus"></i>');
                             $(select_selector).selectpicker('hide');
-                            $task_3_non_entity_table.append($(this).parents('tr'));
+                            $task_3_token_null_class_table.append($(this).parents('tr'));
                         }
                     }
                 }
             });
-            $entity_toggle_cell.append($entity_toggle);
+            $tokclf_toggle_cell.append($tokclf_toggle);
         }
     }
 }
@@ -771,21 +771,21 @@ $task_3_submit.click(function () {
         return;
     }
     const verse_id = $verse_id_containers.html();
-    var named_entity_data = {}
-    $task_3_entity_table.find("select").each(function(select_index, select_element) {
+    var token_classification_data = {}
+    $task_3_token_classification_table.find("select").each(function(select_index, select_element) {
         const token_id = select_element.id;
         const boundary_id = $(select_element).data("boundary-id");
-        const entity_label_id = $(select_element).selectpicker('val');
-        named_entity_data[token_id] = {
+        const token_label_id = $(select_element).selectpicker('val');
+        token_classification_data[token_id] = {
             'boundary_id': boundary_id,
-            'label_id': entity_label_id
+            'label_id': token_label_id
         }
     });
 
     $.post(API_URL, {
         action: TASK_3_SUBMIT_ACTION,
         verse_id: verse_id,
-        entity_data: JSON.stringify(named_entity_data)
+        token_classification_data: JSON.stringify(token_classification_data)
     },
     function (response) {
         $.notify({

@@ -63,7 +63,7 @@ from models_sqla import (db, user_datastore,
                          CustomLoginForm, CustomRegisterForm,
                          Corpus, Chapter, Verse, Line, Token,
                          Task, SubmitLog, WordOrder, Boundary,
-                         TokenTextAnnotation, EntityLabel, Entity,
+                         TokenTextAnnotation, TokenLabel, TokenClassification,
                          RelationLabel, TokenGraph,
                          Coreference,
                          SentenceLabel, SentenceClassification,
@@ -260,7 +260,7 @@ def init_database():
         webapp.logger.info(f"Loaded {idx} tasks.")
 
     # Labels
-    label_models = [EntityLabel, RelationLabel, SentenceLabel, DiscourseLabel]
+    label_models = [TokenLabel, RelationLabel, SentenceLabel, DiscourseLabel]
     for label_model in label_models:
         if not label_model.query.first():
             table_name = label_model.__tablename__
@@ -318,12 +318,12 @@ def inject_global_constants():
                         for theme in theme_js_files])
 
     CONSTANTS = {
-        'entity_labels': EntityLabel.query.filter(
-            EntityLabel.is_deleted == False  # noqa # '== False' is required
+        'token_labels': TokenLabel.query.filter(
+            TokenLabel.is_deleted == False  # noqa # '== False' is required
         ).with_entities(
-            EntityLabel.id, EntityLabel.label, EntityLabel.description
-        ).order_by(EntityLabel.label).all(),
-        # 'entity_labels': [
+            TokenLabel.id, TokenLabel.label, TokenLabel.description
+        ).order_by(TokenLabel.label).all(),
+        # 'token_labels': [
         #     ("CHAR", "Character"),
         #     ("ORG", "Organization"),
         #     ("LOC", "Location"),
@@ -367,10 +367,10 @@ def inject_global_constants():
         ).order_by(DiscourseLabel.label).all(),
         'admin_labels': [
             {
-                "name": "entity",
-                "title": "Entity",
+                "name": "token",
+                "title": "Token",
                 "is_active": True,
-                "object_name": "entity_labels"
+                "object_name": "token_labels"
             },
             {
                 "name": "relation",
@@ -684,7 +684,7 @@ def api():
             "add_token",
             "update_word_order",
             "update_token_text_annotation",
-            "update_named_entity",
+            "update_token_classification",
             "update_token_graph",
             "update_coreference",
             "update_sentence_classification",
@@ -757,7 +757,7 @@ def api():
         # If there's any change between existing tokens and marked tokens,
         # delete  all existing boundary tokens from this verse
         # WordOrder also gets deleted as (CASCADE)
-        # Entity also gets deleted as (CASCADE)
+        # TokenClassification also gets deleted as (CASCADE)
         # TokenGraph also gets deleted as (CASCADE)
         # Coreference also gets deleted as (CASCADE)
         # SentenceClassification also gets deleted as (CASCADE)
@@ -1050,23 +1050,25 @@ def api():
 
     # ----------------------------------------------------------------------- #
 
-    if action == "update_named_entity":
+    if action == "update_token_classification":
         task_name = action.replace("update_", "")
         task_id = Task.query.filter(Task.name == task_name).first().id
 
         verse_id = int(request.form["verse_id"])
         annotator_id = current_user.id
-        entity_data = json.loads(request.form["entity_data"])
+        token_classification_data = json.loads(
+            request.form["token_classification_data"]
+        )
 
         objects_to_update = []
         try:
-            entity_data = {
+            token_classification_data = {
                 int(k.split('-')[-1]): {
                     "boundary_id": int(v["boundary_id"]),
                     "label_id": int(v["label_id"])
                 }
-                for k, v in entity_data.items()
-                if re.match(r'entity-selector-([0-9]+)$', k)
+                for k, v in token_classification_data.items()
+                if re.match(r'token-class-selector-([0-9]+)$', k)
             }
         except Exception:
             api_response["success"] = False
@@ -1074,52 +1076,52 @@ def api():
             api_response["style"] = "danger"
             return jsonify(api_response)
 
-        existing_entities = Entity.query.filter(
-            Entity.boundary.has(Boundary.verse_id == verse_id),
-            Entity.annotator_id == annotator_id,
+        existing_token_classification = TokenClassification.query.filter(
+            TokenClassification.boundary.has(Boundary.verse_id == verse_id),
+            TokenClassification.annotator_id == annotator_id,
         ).all()
-        existing_entity_token_ids = [
-            entity.token_id
-            for entity in existing_entities
+        existing_token_classification_token_ids = [
+            tokclf.token_id
+            for tokclf in existing_token_classification
         ]
-        for entity in existing_entities:
-            if entity.token_id not in entity_data:
-                # entity exists but was not submitted (i.e. removed)
+        for tokclf in existing_token_classification:
+            if tokclf.token_id not in token_classification_data:
+                # tokclf exists but was not submitted (i.e. removed)
                 # TODO: This triggers on the deleted entities always
                 # Perhaps we need to add a check
                 # That should avoid "Successfully updated" message even when
                 # there are no updates
-                entity.is_deleted = True
-                objects_to_update.append(entity)
+                tokclf.is_deleted = True
+                objects_to_update.append(tokclf)
             else:
-                # entity exists and is submitted (i.e. retained)
-                # check if there are any changes to the entity
-                token_id = entity.token_id
+                # tokclf exists and is submitted (i.e. retained)
+                # check if there are any changes to the tokclf
+                token_id = tokclf.token_id
                 if any([
-                    entity.label_id != entity_data[token_id]["label_id"],
-                    entity.boundary_id != entity_data[token_id]["boundary_id"],
-                    entity.is_deleted is True
+                    tokclf.label_id != token_classification_data[token_id]["label_id"],
+                    tokclf.boundary_id != token_classification_data[token_id]["boundary_id"],
+                    tokclf.is_deleted is True
                 ]):
-                    entity.label_id = entity_data[token_id]["label_id"]
-                    entity.boundary_id = entity_data[token_id]["boundary_id"]
-                    entity.is_deleted = False
-                    objects_to_update.append(entity)
+                    tokclf.label_id = token_classification_data[token_id]["label_id"]
+                    tokclf.boundary_id = token_classification_data[token_id]["boundary_id"]
+                    tokclf.is_deleted = False
+                    objects_to_update.append(tokclf)
 
-        for token_id, _entity_data in entity_data.items():
-            if token_id in existing_entity_token_ids:
-                # submitted entity already exists
+        for token_id, _tokclf_data in token_classification_data.items():
+            if token_id in existing_token_classification_token_ids:
+                # submitted tokclf already exists
                 # "else" part of the previous condition block handles this
                 # so we can skip here
                 continue
 
-            # submitted entity doesn't exist, create
-            entity = Entity()
-            entity.boundary_id = _entity_data["boundary_id"]
-            entity.token_id = token_id
-            entity.label_id = _entity_data["label_id"]
-            entity.annotator_id = annotator_id
-            entity.is_deleted = False
-            objects_to_update.append(entity)
+            # submitted tokclf doesn't exist, create
+            tokclf = TokenClassification()
+            tokclf.boundary_id = _tokclf_data["boundary_id"]
+            tokclf.token_id = token_id
+            tokclf.label_id = _tokclf_data["label_id"]
+            tokclf.annotator_id = annotator_id
+            tokclf.is_deleted = False
+            objects_to_update.append(tokclf)
 
         try:
             if objects_to_update:
@@ -1672,8 +1674,8 @@ def perform_action():
 
             # Add/Remove Labels
 
-            # - Named Entity Type
-            'entity_type_add', 'entity_type_remove',
+            # - Token Type
+            'token_type_add', 'token_type_remove',
 
             # - Token Graph Relation Type
             'relation_type_add', 'relation_type_remove',
@@ -1819,7 +1821,7 @@ def perform_action():
     # Ontology
 
     if action in [
-        'entity_type_add', 'entity_type_remove',
+        'token_type_add', 'token_type_remove',
         'relation_type_add', 'relation_type_remove',
         'sentence_type_add', 'sentence_type_remove',
         'discourse_type_add', 'discourse_type_remove',
@@ -1833,7 +1835,7 @@ def perform_action():
         object_label_desc = request.form.get(f'{object_name}_label_desc')
 
         MODELS = {
-            'entity': (EntityLabel, Entity, 'label_id'),
+            'token': (TokenLabel, TokenClassification, 'label_id'),
             'relation': (RelationLabel, TokenGraph, 'label_id'),
             'sentence': (SentenceLabel, SentenceClassification, 'label_id'),
             'discourse': (DiscourseLabel, DiscourseGraph, 'label_id'),

@@ -17,7 +17,7 @@
 
 - [ ] Admin
   - [ ] Download Data
-  - [ ] Task Reorder/Enable/Disable
+  - [x] Task Reorder/Enable/Disable
   - [ ] View as another user
 
 - [ ] Improvements to "Add Token" Interface
@@ -80,7 +80,8 @@
   - [x] Sentence Boundary Interface
   - [x] Canonical Word Order Interface
     - [x] Reordering Front-end (sortable)
-  - [x] Named Entity Interface
+  - [x] Token Text Annotation Interface
+  - [x] Token Classification Interface (e.g. Named Entity)
   - [x] Token Graph Interface
     - [x] Triplet based addition
     - [x] Show Live Graph (on button click)
@@ -93,7 +94,8 @@
     - [x] Deleting necessary boundaries if required
     - [x] Delete related objects
   - [x] Canonical Word Order
-  - [x] Named Entity Recognition
+  - [x] Token Text Annotation
+  - [x] Token Classification
   - [x] Token Graph
   - [x] Co-reference Resolution
   - [x] Sentence Classification

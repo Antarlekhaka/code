@@ -1,0 +1,19 @@
+{% extends "task_base.html" %}
+{% block body %}
+<div id="token-classification-container">
+    <form id="token-classification-form" class="scroll-small">
+    <table id="token-classification-table" class="table"></table>
+    </form>
+    <hr class="border-secondary m-1">
+    <div class="scroll-small">
+    <table id="token-null-class-table" class="table bg-light"></table>
+    </div>
+</div>
+<div class="sample-input" hidden="true">
+    <select id="sample-token-type" title="Select Token Type" class="form-control selectpicker" data-show-subtext="true" data-live-search="true" data-container="body" required>
+        {% for _id, _label, _description in constants.token_labels %}
+        <option value="{{_id}}" data-subtext="{{_description}}">{{_label}}</option>
+        {% endfor %}
+    </select>
+</div>
+{% endblock %}

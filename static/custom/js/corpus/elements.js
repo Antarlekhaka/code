@@ -6,7 +6,7 @@ const $refresh_verse_buttons = $(".refresh-verse");
 const $tabs = {
     "sentence_boundary": $("#task-1-tab"),
     "word_order": $("#task-2-tab"),
-    "named_entity": $("#task-3-tab"),
+    "token_classification": $("#task-3-tab"),
     "token_graph": $("#task-4-tab"),
     "coreference": $("#task-5-tab"),
     "sentence_classification": $("#task-6-tab"),
@@ -62,10 +62,10 @@ const $task_8_token_non_annotation_table = $("#token-non-annotation-table");
 const task_8_sample_token_text_annotation_text = $("#sample-token-text-annotation-text");
 
 // Task-3
-const $task_3_form = $("#entity-form");
-const $task_3_entity_table = $("#entity-table");
-const $task_3_non_entity_table = $("#non-entity-table");
-const task_3_sample_entity_type = $("#sample-entity-type");
+const $task_3_form = $("#token-classification-form");
+const $task_3_token_classification_table = $("#token-classification-table");
+const $task_3_token_null_class_table = $("#token-null-class-table");
+const task_3_sample_token_type = $("#sample-token-type");
 
 // Task-4
 const $task_4_form = $("#token-graph-form");
