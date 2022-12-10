@@ -31,10 +31,7 @@ CORPUS_DIR = os.path.join(DATA_DIR, "corpus")
 # --------------------------------------------------------------------------- #
 
 APPLICATION_CONFIG = {
-    "schemes": [
-        "devanagari", "iast", "itrans", "hk", "velthuis",
-        "wx", "slp1", "optitrans", "kolkata"
-    ],
+    "schemes": [],
     "unnamed_prefix": "X",
     "row_detail_formatter": "generic",
 
@@ -56,6 +53,7 @@ APPLICATION_CONFIG = {
         {"id": "verb-form", "title": "VerbForm"},
         {"id": "voice", "title": "Voice"}
     ],
+    "token_misc_items": []
 }
 
 # --------------------------------------------------------------------------- #
