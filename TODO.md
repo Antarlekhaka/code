@@ -1,5 +1,13 @@
 ## TODO
 
+- [ ] Task Category System (allow multiple tasks from same category)
+  - [ ] Global `TASK_CATEGORY` Constants
+  - [ ] Update models
+    - [ ] Task model to have `category` (`Enum()` of all valid task categories)
+    - [ ] All task models to have `task_id`
+  - [ ] Render templates, perform JS actions based on `Task.category`
+  - [ ] Admin interface to add/edit tasks, `category` to be chosen
+
 - [ ] Export Data
   - [ ] Every task in 2 formats
     - [x] suitable for annotators
