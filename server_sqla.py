@@ -74,7 +74,7 @@ from utils.reverseproxied import ReverseProxied
 from utils.database import export_data, get_verse_data, get_chapter_data
 from utils.database import add_chapter
 from utils.export import simple_format, standard_format
-from utils.conllu import DigitalCorpusSanskrit
+from utils.conllu import Corpus
 
 ###############################################################################
 
@@ -171,9 +171,17 @@ limiter = Limiter(
 )
 
 ###############################################################################
-# DCS CoNLL-U Utility
+# CoNLL-U Utility
 
-DCS = DigitalCorpusSanskrit()
+CONLLU_CONFIG = app.config["conllu"]
+CORPUS = Corpus(
+    input_scheme=CONLLU_CONFIG["input_scheme"],
+    store_scheme=CONLLU_CONFIG["store_scheme"],
+    input_fields=CONLLU_CONFIG["input_fields"],
+    relevant_fields=CONLLU_CONFIG["relevant_fields"],
+    transliterate_metadata_keys=CONLLU_CONFIG["transliterate_metadata_keys"],
+    transliterate_token_keys=CONLLU_CONFIG["transliterate_token_keys"]
+)
 
 ###############################################################################
 # Database Utlity Functions
@@ -1949,10 +1957,10 @@ def perform_action():
             # in particular,
             # "id", "form", "lemma", "upos", "xpos", "feats", "misc"
             # function should take file and produce such output
-            # `DCS.read_conllu_data` formats it in this format
+            # `CORPUS.read_conllu_data` formats it in this format
 
             try:
-                chapter_data = DCS.read_conllu_data(
+                chapter_data = CORPUS.read_conllu_data(
                     chapter_file.read().decode()
                 )
             except Exception as e:

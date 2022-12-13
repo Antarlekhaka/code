@@ -31,9 +31,39 @@ CORPUS_DIR = os.path.join(DATA_DIR, "corpus")
 # --------------------------------------------------------------------------- #
 
 APPLICATION_CONFIG = {
-    "schemes": [],
-    "unnamed_prefix": "X",
     "row_detail_formatter": "generic",
+
+    # CoNLL-U Corpus Settigns
+    "conllu": {
+        "input_sheme": "iast",
+        "store_scheme": "devanagari",
+        "input_fields": [
+            "id",      # 01
+            "form",    # 02 word form or punctuation symbol
+            # if it contains multiple words, the annotation
+            # follows the proposals for multiword annotation
+            # (URL: format.html#words-tokens-and-empty-nodes)
+            "lemma",   # 03 lemma or stem
+            "upos",    # 04 universal POS tags
+            "xpos",    # 05 language specific POS tags
+            "feats",   # 06 key-value
+            "head",    # 07
+            "deprel",  # 08
+            "deps",    # 09
+            "misc"     # 10 key-value
+        ],
+        "relevant_fields": {
+            "id": "",
+            "form": "",
+            "lemma": "",
+            "upos": "",
+            "xpos": "",
+            "feats": {},
+            "misc": {}
+        },
+        "transliterate_metadata_keys": ["text"],
+        "transliterate_token_keys": ["form", "lemma", "misc.Unsandhied"],
+    },
 
     # TODO: handle corpus speific things through config?
     # corpus agnostic treatment will require changes to JS too
@@ -54,6 +84,7 @@ APPLICATION_CONFIG = {
         {"id": "voice", "title": "Voice"}
     ],
     "token_misc_items": []
+
 }
 
 # --------------------------------------------------------------------------- #

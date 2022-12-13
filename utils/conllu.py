@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-DCS CoNLL-U Parsing Utility
+CoNLL-U Parsing Utility
 
 @author: Hrishikesh Terdalkar
 """
 
 from pathlib import Path
+from typing import List, Dict
 
 import conllu
 
@@ -26,15 +27,14 @@ def parse_int(text: str) -> int or None:
 ###############################################################################
 
 
-class DigitalCorpusSanskrit:
-    INTERNAL_SCHEME = sanscript.IAST
+class Corpus:
     FIELDS = [
         "id",      # 01
         "form",    # 02 word form or punctuation symbol
         # if it contains multiple words, the annotation
         # follows the proposals for multiword annotation
         # (URL: format.html#words-tokens-and-empty-nodes)
-        "lemma",   # 03 lemma or stem, lexical id of lemma is in column 11
+        "lemma",   # 03 lemma or stem, lexical id of lemma is in column 10
         "upos",    # 04 universal POS tags
         "xpos",    # 05 language specific POS tags, described in `pos.csv`
         "feats",   # 06
@@ -43,6 +43,8 @@ class DigitalCorpusSanskrit:
         "deps",    # 09
         "misc"     # 10
         # Misc Fields
+
+        # Digital Corpus of Sanskrit Specific Fields
         # LemmaId: matches first column of `dictionary.csv`
         # OccId: id of this occurence of the word
         # Unsandhied: Unsandhied word form (padapāṭha version)
@@ -53,20 +55,74 @@ class DigitalCorpusSanskrit:
         # IsMantra: true if this word forms a part of a mantra as recorded in
         #           Bloomfield's Vedic Concordance
     ]
+    TRANSLITERATE_METADATA_KEYS = ["text"]
+    TRANSLITERATE_TOKEN_KEYS = ["form", "lemma"]
+    RELEVANT_FIELDS = {
+        "id": "",
+        "form": "",
+        "lemma": "",
+        "upos": "",
+        "xpos": "",
+        "feats": {},
+        "misc": {}
+    }
 
-    def __init__(self, scheme=sanscript.DEVANAGARI):
-        self.scheme = scheme
-
-    # ----------------------------------------------------------------------- #
-
-    def parse_conllu(self, dcs_conllu_content: str):
-        """
-        Parse a DCS CoNLL-U String
+    def __init__(
+        self,
+        input_scheme: str = sanscript.IAST,
+        store_scheme: str = sanscript.DEVANAGARI,
+        input_fields: List[str] = None,
+        relevant_fields: Dict[str, str] = None,
+        transliterate_metadata_keys: List[str] = None,
+        transliterate_token_keys: List[str] = None
+    ):
+        """Corpus of CoNLL-U Files
 
         Parameters
         ----------
-        dcs_conllu_content : str
-            Valid string of DCS CoNLL-U Data
+        input_scheme : str, optional
+            Input transliteration scheme
+            The default is `sanscript.IAST`
+        store_scheme : str, optional
+            Transliteration scheme used to store the corpus in the database
+            The default is `sanscript.DEVANAGARI`
+        fields : List[str], optional
+            List of CoNLL-U Fields, if not standard
+        relevant_fields : Dict[str, str], optional
+            List of relevant CoNLL-U Fields to retain and their default  values
+            in case they are missing
+        transliterate_metadata_keys : List[str], optional
+            List of metadata keys to transliterate
+        transliterate_token_keys : List[str], optional
+            List of token keys to transliterate
+        """
+        self.input_scheme = input_scheme
+        self.target_scheme = store_scheme
+
+        self.fields = self.FIELDS
+        self.relevant_fields = self.RELEVANT_FIELDS
+        self.transliterate_metadata_keys = self.TRANSLITERATE_METADATA_KEYS
+        self.transliterate_token_keys = self.TRANSLITERATE_TOKEN_KEYS
+
+        if input_fields is not None:
+            self.fields = input_fields
+        if relevant_fields is not None:
+            self.relevant_fields = relevant_fields
+        if transliterate_metadata_keys is not None:
+            self.transliterate_metadata_keys = transliterate_metadata_keys
+        if transliterate_token_keys is not None:
+            self.transliterate_token_keys = transliterate_token_keys
+
+    # ----------------------------------------------------------------------- #
+
+    def parse_conllu(self, conllu_content: str):
+        """
+        Parse a CoNLL-U String
+
+        Parameters
+        ----------
+        conllu_content : str
+            Valid string of CoNLL-U Data
 
         Returns
         -------
@@ -75,10 +131,7 @@ class DigitalCorpusSanskrit:
         """
         conllu_lines = [
             line
-            for line in conllu.parse(
-                dcs_conllu_content,
-                fields=self.FIELDS
-            )
+            for line in conllu.parse(conllu_content, fields=self.fields)
             if line
         ]
 
@@ -86,14 +139,14 @@ class DigitalCorpusSanskrit:
 
         return self.transliterate_lines(conllu_lines)
 
-    def parse_conllu_file(self, dcs_conllu_file: str or Path):
+    def parse_conllu_file(self, conllu_file: str or Path):
         """
-        Parse a DCS CoNLL-U File
+        Parse a CoNLL-U File
 
         Parameters
         ----------
-        dcs_conllu_file : str or Path
-            Path to the DCS CoNLL-U File
+        conllu_file : str or Path
+            Path to the CoNLL-U File
 
         Returns
         -------
@@ -101,7 +154,7 @@ class DigitalCorpusSanskrit:
             List of lines
         """
 
-        with open(dcs_conllu_file, encoding="utf-8") as f:
+        with open(conllu_file, encoding="utf-8") as f:
             content = f.read()
 
         return self.parse_conllu(content)
@@ -110,7 +163,7 @@ class DigitalCorpusSanskrit:
 
     def transliterate_lines(self, conllu_lines):
         """Transliterate CoNLL-U Data"""
-        if self.scheme != self.INTERNAL_SCHEME:
+        if self.target_scheme != self.input_scheme:
             for textline in conllu_lines:
                 textline.metadata = self.transliterate_metadata(
                     textline.metadata
@@ -121,24 +174,22 @@ class DigitalCorpusSanskrit:
 
     def transliterate_metadata(self, metadata):
         """Transliterate Metadata"""
-        if self.scheme == self.INTERNAL_SCHEME:
+        if self.target_scheme == self.input_scheme:
             return metadata
-        transliterate_keys = ["text"]
-        for key in transliterate_keys:
+        for key in self.transliterate_metadata_keys:
             if key not in metadata:
                 continue
             metadata[key] = transliterate(
-                metadata[key], self.INTERNAL_SCHEME, self.scheme
+                metadata[key], self.input_scheme, self.target_scheme
             )
         return metadata
 
     def transliterate_token(self, token):
         """Transliterate Token"""
-        if self.scheme == self.INTERNAL_SCHEME:
+        if self.target_scheme == self.input_scheme:
             return token
 
-        transliterate_keys = ["form", "lemma", "misc.Unsandhied"]
-        for key in transliterate_keys:
+        for key in self.transliterate_metadata_keys:
             if "." in key:
                 _key, _subkey = key.split(".", 1)
             else:
@@ -153,30 +204,38 @@ class DigitalCorpusSanskrit:
 
             if _subkey is None:
                 token[_key] = transliterate(
-                    token[_key], self.INTERNAL_SCHEME, self.scheme
+                    token[_key], self.input_scheme, self.target_scheme
                 )
             else:
                 if token[_key][_subkey] is None:
                     continue
                 token[_key][_subkey] = transliterate(
-                    token[_key][_subkey], self.INTERNAL_SCHEME, self.scheme
+                    token[_key][_subkey], self.input_scheme, self.target_scheme
                 )
         return token
 
     # ----------------------------------------------------------------------- #
 
-    def read_conllu_data(self, dcs_conllu_data: str):
+    # TODO:
+    # * Can we remove dependence on sent_id, sent_counter ?
+    # * Do we want to?
+
+    def read_conllu_data(self, conllu_data: str):
         """
-        Parse a DCS CoNLL-U File
+        Parse a CoNLL-U File
         Prepare it for Data Input (Group Verses etc)
+
+        WARNING: The following metadata fields are required.
+        * sent_id : Unique (global), Integer
+        * sent_counter : Unique (local), Integer
 
         Parameters
         ----------
-        dcs_conllu_data : str
-            DCS CoNLL-U Content
+        conllu_data : object
+            CoNLL-U Content
         """
 
-        data = self.parse_conllu(dcs_conllu_data)
+        data = self.parse_conllu(conllu_data)
         chapter_lines = []
 
         for line in data:
@@ -187,13 +246,8 @@ class DigitalCorpusSanskrit:
                     "text": line.metadata["text"],
                     "tokens": [
                         {
-                            "id": token.get("id") or "",
-                            "form": token.get("form") or "",
-                            "lemma": token.get("lemma") or "",
-                            "upos": token.get("upos") or "",
-                            "xpos": token.get("xpos") or "",
-                            "feats": token.get("feats") or {},
-                            "misc": token.get("misc") or {}
+                            _name: token.get(_name) or _default
+                            for _name, _default in self.relevant_fields
                         }
                         for token in line
                     ]

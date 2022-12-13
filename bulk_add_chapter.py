@@ -18,7 +18,7 @@ from settings import app
 from models_sqla import db
 
 from utils.database import add_chapter
-from utils.conllu import DigitalCorpusSanskrit
+from utils.conllu import Corpus
 
 ###############################################################################
 
@@ -33,7 +33,15 @@ webapp.app_context().push()
 
 ###############################################################################
 
-DCS = DigitalCorpusSanskrit()
+CONLLU_CONFIG = app.config["conllu"]
+CORPUS = Corpus(
+    input_scheme=CONLLU_CONFIG["input_scheme"],
+    store_scheme=CONLLU_CONFIG["store_scheme"],
+    input_fields=CONLLU_CONFIG["input_fields"],
+    relevant_fields=CONLLU_CONFIG["relevant_fields"],
+    transliterate_metadata_keys=CONLLU_CONFIG["transliterate_metadata_keys"],
+    transliterate_token_keys=CONLLU_CONFIG["transliterate_token_keys"]
+)
 
 ###############################################################################
 
@@ -63,7 +71,7 @@ def bulk_add_chapters(chapters_file):
 
         with open(chapter_file, encoding="utf-8") as f:
             chapter_content = f.read()
-        chapter_data = DCS.read_conllu_data(chapter_content)
+        chapter_data = CORPUS.read_conllu_data(chapter_content)
         result = add_chapter(
             corpus_id=corpus_id,
             chapter_name=chapter_name,
