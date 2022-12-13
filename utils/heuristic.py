@@ -20,7 +20,13 @@ WORD_ORDER_XPOS_ORDER = ["CAD", "CX", "CNG", "V"]
 ###############################################################################
 
 
+def get_sentence_boundary(text: str, boundary_marker: str) -> str:
+    """Heuristic to identify sentence boundary"""
+    return f"{text} {boundary_marker}"
+
+
 def get_word_order(token_list: Dict[int, Dict]) -> List[int]:
+    """Heuristic to get Canonical Word Order"""
     case_order = []
     xpos_order = []
     used = set()
@@ -44,16 +50,21 @@ def get_word_order(token_list: Dict[int, Dict]) -> List[int]:
                 unused.remove(token_id)
                 used.add(token_id)
 
-    word_order_order = []
-    word_order_order.extend(case_order)
+    word_order = []
+    word_order.extend(case_order)
 
     for token_id, token in token_list.items():
         if token_id in unused:
-            word_order_order.append(token_id)
+            word_order.append(token_id)
             unused.remove(token_id)
             used.add(token_id)
 
-    word_order_order.extend(xpos_order)
-    assert set(token_list) == set(word_order_order)
+    word_order.extend(xpos_order)
+    assert set(token_list) == set(word_order)
 
-    return word_order_order
+    return word_order
+
+
+def get_lemma(text: str) -> str:
+    """Heuristic to identify lemma"""
+    return text
