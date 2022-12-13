@@ -267,6 +267,10 @@ def init_database():
             table_data_file = os.path.join(
                 app.tables_dir, f"{table_name}.json"
             )
+
+            if not os.path.isfile(table_data_file):
+                continue
+
             with open(table_data_file, encoding="utf-8") as f:
                 table_data = json.load(f)
 
