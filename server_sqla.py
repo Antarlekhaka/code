@@ -74,7 +74,7 @@ from utils.reverseproxied import ReverseProxied
 from utils.database import export_data, get_verse_data, get_chapter_data
 from utils.database import add_chapter
 from utils.export import simple_format, standard_format
-from utils.conllu import Corpus
+from utils.conllu import CoNLLUParser
 
 ###############################################################################
 
@@ -174,7 +174,7 @@ limiter = Limiter(
 # CoNLL-U Utility
 
 CONLLU_CONFIG = app.config["conllu"]
-CORPUS = Corpus(
+CONLLU_PARSER = CoNLLUParser(
     input_scheme=CONLLU_CONFIG["input_scheme"],
     store_scheme=CONLLU_CONFIG["store_scheme"],
     input_fields=CONLLU_CONFIG["input_fields"],
@@ -1960,7 +1960,7 @@ def perform_action():
             # `CORPUS.read_conllu_data` formats it in this format
 
             try:
-                chapter_data = CORPUS.read_conllu_data(
+                chapter_data = CONLLU_PARSER.read_conllu_data(
                     chapter_file.read().decode()
                 )
             except Exception as e:

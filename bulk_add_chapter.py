@@ -18,7 +18,7 @@ from settings import app
 from models_sqla import db
 
 from utils.database import add_chapter
-from utils.conllu import Corpus
+from utils.conllu import CoNLLUParser
 
 ###############################################################################
 
@@ -34,7 +34,7 @@ webapp.app_context().push()
 ###############################################################################
 
 CONLLU_CONFIG = app.config["conllu"]
-CORPUS = Corpus(
+CONLLU_PARSER = CoNLLUParser(
     input_scheme=CONLLU_CONFIG["input_scheme"],
     store_scheme=CONLLU_CONFIG["store_scheme"],
     input_fields=CONLLU_CONFIG["input_fields"],
@@ -71,7 +71,7 @@ def bulk_add_chapters(chapters_file):
 
         with open(chapter_file, encoding="utf-8") as f:
             chapter_content = f.read()
-        chapter_data = CORPUS.read_conllu_data(chapter_content)
+        chapter_data = CONLLU_PARSER.read_conllu_data(chapter_content)
         result = add_chapter(
             corpus_id=corpus_id,
             chapter_name=chapter_name,

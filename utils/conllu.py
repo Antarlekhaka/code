@@ -27,7 +27,7 @@ def parse_int(text: str) -> int or None:
 ###############################################################################
 
 
-class Corpus:
+class CoNLLUParser:
     FIELDS = [
         "id",      # 01
         "form",    # 02 word form or punctuation symbol
