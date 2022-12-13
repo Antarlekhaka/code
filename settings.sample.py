@@ -33,9 +33,16 @@ CORPUS_DIR = os.path.join(DATA_DIR, "corpus")
 APPLICATION_CONFIG = {
     "row_detail_formatter": "generic",
 
+    # # Heuristic Settings
+    # "use_heuristic": {
+    #     "sentence_boundary": True,
+    #     "word_order": True,
+    #     "token_classification": True
+    # },
+
     # CoNLL-U Corpus Settigns
     "conllu": {
-        "input_sheme": "iast",
+        "input_scheme": "iast",
         "store_scheme": "devanagari",
         "input_fields": [
             "id",      # 01
