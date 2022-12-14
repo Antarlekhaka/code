@@ -68,14 +68,14 @@ def simple_format(data):
                             if token["annotator_id"] is None:
                                 line_text.append(token["text"])
 
-                            if next_boundary and next_boundary == token_id:
-                                line_text.append("##")
-                                boundary_tokens.pop(0)
-                                next_boundary = (
-                                    boundary_tokens[0]
-                                    if boundary_tokens
-                                    else None
-                                )
+                        if next_boundary and next_boundary == token_id:
+                            line_text.append("##")
+                            boundary_tokens.pop(0)
+                            next_boundary = (
+                                boundary_tokens[0]
+                                if boundary_tokens
+                                else None
+                            )
 
                     display_text.append(line_text)
                 display_text[-1].extend(["//", str(verse_id)])

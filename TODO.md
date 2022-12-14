@@ -72,7 +72,8 @@
 
 ## Bugs
 
-- [ ] Export - boundary not shown for other users
+- [x] Export - boundary not shown in some cases 
+  - (details: bug was when boundary token does not have text (or equals `_`))
 
 - [ ] If there are deleted items, it triggers a "Successfully updated" message even if there are no changes. Refer to `server_sqla.py` for further details.
 
