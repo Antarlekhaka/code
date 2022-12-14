@@ -43,16 +43,16 @@
     },
     {
         "id": 7,
-        "name": "intersentence_connection",
-        "title": "Discourse Graph",
-        "short": "Discourse",
-        "help": "Identify intersentence connections to create the discourse graph."
+        "name": "sentence_graph",
+        "title": "Sentence Graph",
+        "short": "SentGraph",
+        "help": "Identify intersentence connections to create the sentence graph."
     },
     {
         "id": 8,
         "name": "token_text_annotation",
-        "title": "Lemmatization",
-        "short": "Lemma",
-        "help": "Identify lemmata of the tokens."
+        "title": "Token Text Annotation",
+        "short": "Text",
+        "help": "Mark general text annotations to tokens."
     }
 ]

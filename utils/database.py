@@ -27,7 +27,7 @@ from models_sqla import (
     TokenGraph,
     TokenConnection,
     SentenceClassification,
-    DiscourseGraph,
+    SentenceGraph,
     SubmitLog
 )
 
@@ -410,31 +410,31 @@ def export_data(
             # --------------------------------------------------------------- #
 
             # NOTE: We show connections that at the src_boundary_id
-            intersentence_connection_query = DiscourseGraph.query.filter(
-                DiscourseGraph.src_boundary_id.in_(boundary_ids),
-                DiscourseGraph.annotator_id == annotator.id,
-                DiscourseGraph.is_deleted == False  # noqa
-            ).order_by(DiscourseGraph.src_token_id)
+            sentence_graph_query = SentenceGraph.query.filter(
+                SentenceGraph.src_boundary_id.in_(boundary_ids),
+                SentenceGraph.annotator_id == annotator.id,
+                SentenceGraph.is_deleted == False  # noqa
+            ).order_by(SentenceGraph.src_token_id)
 
             # TODO: avoid .src_boundary.verse_id call ?
             # TODO: avoid .dst_boundary.verse_id call ?
             # fetch from task_data["sentence_boundary"] ?
             # any guarantee that .dst_boundary. will be present?
 
-            annotation_data["intersentence_connection"] = [
+            annotation_data["sentence_graph"] = [
                 {
-                    "src_verse_id": isc.src_boundary.verse_id,
-                    "src_boundary_id": isc.src_boundary_id,
-                    "src_token_id": isc.src_token_id,
-                    "dst_verse_id": isc.dst_boundary.verse_id,
-                    "dst_boundary_id": isc.dst_boundary_id,
-                    "dst_token_id": isc.dst_token_id,
-                    "label_id": isc.label_id,
-                    "label_label": isc.label.label,
-                    "label_description": isc.label.description,
-                    "relation_type": isc.relation_type,
+                    "src_verse_id": sentrel.src_boundary.verse_id,
+                    "src_boundary_id": sentrel.src_boundary_id,
+                    "src_token_id": sentrel.src_token_id,
+                    "dst_verse_id": sentrel.dst_boundary.verse_id,
+                    "dst_boundary_id": sentrel.dst_boundary_id,
+                    "dst_token_id": sentrel.dst_token_id,
+                    "label_id": sentrel.label_id,
+                    "label_label": sentrel.label.label,
+                    "label_description": sentrel.label.description,
+                    "relation_type": sentrel.relation_type,
                 }
-                for isc in intersentence_connection_query.all()
+                for sentrel in sentence_graph_query.all()
             ]
 
             # --------------------------------------------------------------- #
@@ -566,7 +566,7 @@ def get_verse_data(
                 "relation": [],
                 "token_connection": [],
                 "sentence_classification": [],
-                "intersentence_connection": [],
+                "sentence_graph": [],
                 "progress": [
                     {
                         "task_id": p.task_id,
@@ -757,24 +757,24 @@ def get_verse_data(
         # ------------------------------------------------------------------- #
 
         # NOTE: We show connections that at the src_boundary_id
-        intersentence_connection_query = DiscourseGraph.query.filter(
-            DiscourseGraph.src_boundary_id == boundary.id,
-            DiscourseGraph.annotator_id.in_(annotator_ids)
+        sentence_graph_query = SentenceGraph.query.filter(
+            SentenceGraph.src_boundary_id == boundary.id,
+            SentenceGraph.annotator_id.in_(annotator_ids)
         )
 
-        data[verse_id]["intersentence_connection"].extend([
+        data[verse_id]["sentence_graph"].extend([
             {
-                "id": isc.id,
-                "src_boundary_id": isc.src_boundary_id,
-                "src_token_id": isc.src_token_id,
-                "dst_boundary_id": isc.dst_boundary_id,
-                "dst_token_id": isc.dst_token_id,
-                "label_id": isc.label_id,
-                "relation_type": isc.relation_type,
-                "annotator_id": isc.annotator_id,
-                "is_deleted": isc.is_deleted
+                "id": sentrel.id,
+                "src_boundary_id": sentrel.src_boundary_id,
+                "src_token_id": sentrel.src_token_id,
+                "dst_boundary_id": sentrel.dst_boundary_id,
+                "dst_token_id": sentrel.dst_token_id,
+                "label_id": sentrel.label_id,
+                "relation_type": sentrel.relation_type,
+                "annotator_id": sentrel.annotator_id,
+                "is_deleted": sentrel.is_deleted
             }
-            for isc in intersentence_connection_query.all()
+            for sentrel in sentence_graph_query.all()
         ])
 
         # ------------------------------------------------------------------- #

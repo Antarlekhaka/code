@@ -315,7 +315,7 @@ class TokenGraph(db.Model):
         Integer, ForeignKey('boundary.id', ondelete='CASCADE'), nullable=False
     )
     src_id = Column(Integer, ForeignKey('token.id'), nullable=False)
-    label_id = Column(Integer, ForeignKey('relation_label.id'), nullable=False)
+    label_id = Column(Integer, ForeignKey('token_relation_label.id'), nullable=False)
     dst_id = Column(Integer, ForeignKey('token.id'), nullable=False)
     # ----------------------------------------------------------------------- #
     annotator_id = Column(Integer, ForeignKey('user.id'), nullable=False)
@@ -324,19 +324,19 @@ class TokenGraph(db.Model):
 
     src_token = relationship('Token', foreign_keys=[src_id])
     dst_token = relationship('Token', foreign_keys=[dst_id])
-    label = relationship('RelationLabel', foreign_keys=[label_id])
+    label = relationship('TokenRelationLabel', foreign_keys=[label_id])
     boundary = relationship(
         'Boundary',
         backref=backref(
-            'tokengraph', cascade='all,delete-orphan', lazy='dynamic'
+            'token_graphs', cascade='all,delete-orphan', lazy='dynamic'
         )
     )
     annotator = relationship(
-        'User', backref=backref('tokengraph', lazy='dynamic')
+        'User', backref=backref('token_graphs', lazy='dynamic')
     )
 
     __table_args__ = (
-         Index('tokengraph_annotator_id_src_id_dst_id',
+         Index('token_graph_annotator_id_src_id_dst_id',
                'annotator_id', 'src_id', 'dst_id', unique=True),
     )
     # the above will not allow multiple edges between same two token ids
@@ -344,7 +344,7 @@ class TokenGraph(db.Model):
     # (which is pretty much same as not having a unique index)
 
     # __table_args__ = (
-    #      Index('tokengraph_annotator_id_src_id_label_id_dst_id',
+    #      Index('token_graph_annotator_id_src_id_label_id_dst_id',
     #            'annotator_id', 'src_id', 'label_id', 'dst_id', unique=True),
     # )
 
@@ -367,11 +367,11 @@ class TokenConnection(db.Model):
     boundary = relationship(
         'Boundary',
         backref=backref(
-            'token_connection', cascade='all,delete-orphan', lazy='dynamic'
+            'token_connections', cascade='all,delete-orphan', lazy='dynamic'
         )
     )
     annotator = relationship(
-        'User', backref=backref('token_connection', lazy='dynamic')
+        'User', backref=backref('token_connections', lazy='dynamic')
     )
 
     __table_args__ = (
@@ -407,7 +407,7 @@ class SentenceClassification(db.Model):
     )
 
 
-class DiscourseGraph(db.Model):
+class SentenceGraph(db.Model):
     id = Column(Integer, primary_key=True)
     # ----------------------------------------------------------------------- #
     src_boundary_id = Column(
@@ -419,7 +419,7 @@ class DiscourseGraph(db.Model):
     src_token_id = Column(Integer, ForeignKey('token.id'), nullable=False)
     dst_token_id = Column(Integer, ForeignKey('token.id'), nullable=False)
     label_id = Column(
-        Integer, ForeignKey('discourse_label.id'), nullable=False
+        Integer, ForeignKey('sentence_relation_label.id'), nullable=False
     )
     relation_type = Column(Integer, nullable=False)
     # type == 0: token-token connection
@@ -431,32 +431,32 @@ class DiscourseGraph(db.Model):
     is_deleted = Column(Boolean, default=False, nullable=False)
     updated_at = Column(DateTime, default=dt.utcnow, onupdate=dt.utcnow)
 
-    label = relationship('DiscourseLabel', backref=backref('discourse'))
+    label = relationship('SentenceRelationLabel', foreign_keys=[label_id])
     src_boundary = relationship(
         'Boundary',
         backref=backref(
-            'discourse_src', cascade='all,delete-orphan', lazy='dynamic'
+            'sentence_graphs_src', cascade='all,delete-orphan', lazy='dynamic'
         ),
         foreign_keys=[src_boundary_id]
     )
     dst_boundary = relationship(
         'Boundary',
         backref=backref(
-            'discourse_dst', cascade='all,delete-orphan', lazy='dynamic'
+            'sentence_graphs_dst', cascade='all,delete-orphan', lazy='dynamic'
         ),
         foreign_keys=[dst_boundary_id]
     )
     annotator = relationship(
-        'User', backref=backref('discourse', lazy='dynamic')
+        'User', backref=backref('sentence_graphs', lazy='dynamic')
     )
 
     __table_args__ = (
          Index(
-            ('discourse_graph_annotator_id_src_boundary_id_dst_boundary_id'
-             'src_token_id_dst_token_Id'),
+            ('sentence_graph_annotator_id_src_boundary_id_dst_boundary_id_'
+             'src_token_id_dst_token_id_relation_type'),
             'annotator_id',
             'src_boundary_id', 'dst_boundary_id',
-            'src_token_id', 'dst_token_id',
+            'src_token_id', 'dst_token_id', 'relation_type'
             unique=True),
     )
 
@@ -472,7 +472,7 @@ class TokenLabel(db.Model):
     is_deleted = Column(Boolean, default=False, nullable=False)
 
 
-class RelationLabel(db.Model):
+class TokenRelationLabel(db.Model):
     id = Column(Integer, primary_key=True)
     label = Column(String(255), nullable=False)
     description = Column(String(255))
@@ -486,7 +486,7 @@ class SentenceLabel(db.Model):
     is_deleted = Column(Boolean, default=False, nullable=False)
 
 
-class DiscourseLabel(db.Model):
+class SentenceRelationLabel(db.Model):
     id = Column(Integer, primary_key=True)
     label = Column(String(255), nullable=False)
     description = Column(String(255))

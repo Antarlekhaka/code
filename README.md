@@ -16,8 +16,8 @@ A web-based distributed multi-task annotation framework following sequential ann
 * Task 1: Sentence Boundary
 * Task 2: Canonical Word Order (a.k.a. Anvaya)
 * Task 3: Token Classification (e.g. Named Entity Recognition)
-* Task 4: Token Graph
-* Task 5: Co-reference Resolution (special case of Token Graph)
+* Task 4: Token Graph (e.g. Dependency Graph, Action Graph)
+* Task 5: Token Connection (e.g. Co-reference Resolution)
 * Task 6: Sentence Classification
-* Task 7: Inter-sentence Connection (e.g. Discourse Graph)
+* Task 7: Sentence Graph (e.g. Discourse Graph)
 * Task 8: Token Text Annotation (e.g. Lemmatization)

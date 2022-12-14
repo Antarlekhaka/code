@@ -112,8 +112,8 @@ ABOUT = """
 "Antarlekhaka" is a framework for annotation towards numerous classes of
 linguistic tasks such as sentence boundary, word order, token text annotation,
 token classification (e.g. named entity recognition), token graph (e.g. action
-graph, coreference resolution), sentence classification, intersentence
-connection (e.g discourse graph).
+graph, coreference resolution), sentence classification, sentence graph (e.g
+discourse graph).
 """
 
 # --------------------------------------------------------------------------- #

@@ -20,11 +20,11 @@ from models_sqla import (
     Task, Boundary, WordOrder,
     TokenTextAnnotation, TokenClassification,
     TokenGraph, TokenConnection,
-    SentenceClassification, DiscourseGraph,
+    SentenceClassification, SentenceGraph,
     SubmitLog
 )
 from models_sqla import (
-    TokenLabel, RelationLabel, SentenceLabel, DiscourseLabel
+    TokenLabel, TokenRelationLabel, SentenceLabel, SentenceRelationLabel
 )
 
 from settings import app
@@ -50,11 +50,11 @@ MODELS = {}
 
 for model in [
     User, Role, Corpus, Chapter, Verse, Line, Token,
-    TokenLabel, RelationLabel, SentenceLabel, DiscourseLabel,
+    TokenLabel, TokenRelationLabel, SentenceLabel, SentenceRelationLabel,
     Task, Boundary, WordOrder,
     TokenTextAnnotation, TokenClassification,
     TokenGraph, TokenConnection,
-    SentenceClassification, DiscourseGraph,
+    SentenceClassification, SentenceGraph,
     SubmitLog
 ]:
     name = re.sub(r'(?<!^)(?=[A-Z])', '_', model.__name__).lower()

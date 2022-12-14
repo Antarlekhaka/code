@@ -56,7 +56,7 @@
 ---
 
 - [x] Log all Submits instead of just latest per task per annotator?
-- [x] DiscourseGraph show graph
+- [x] SentenceGraph show graph
 - [x] Add triplets for token graph
 - [x] Show sentence with Token Graph
 - [x] Do task setup on the event of tab change (so we can avoid calling it from every submit and it'll be more consistent)
@@ -96,7 +96,7 @@
   - [x] Co-reference Resolution Interface
     - [x] Button click (for token selection) based interface
   - [x] Sentence Classification Interface
-  - [x] Inter-sentence Connection (Discourse Graph)
+  - [x] Sentence Graph
 - [x] Back-end
   - [x] Sentence Boundary
     - [x] Deleting necessary boundaries if required
@@ -105,9 +105,9 @@
   - [x] Token Text Annotation
   - [x] Token Classification
   - [x] Token Graph
-  - [x] Co-reference Resolution
+  - [x] Token Connection
   - [x] Sentence Classification
-  - [x] Inter-sentence Connection
+  - [x] Sentence Graph
 
 ## Future
 

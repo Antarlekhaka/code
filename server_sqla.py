@@ -64,10 +64,10 @@ from models_sqla import (db, user_datastore,
                          Corpus, Chapter, Verse, Line, Token,
                          Task, SubmitLog, WordOrder, Boundary,
                          TokenTextAnnotation, TokenLabel, TokenClassification,
-                         RelationLabel, TokenGraph,
+                         TokenRelationLabel, TokenGraph,
                          TokenConnection,
                          SentenceLabel, SentenceClassification,
-                         DiscourseLabel, DiscourseGraph)
+                         SentenceRelationLabel, SentenceGraph)
 from settings import app
 
 from utils.reverseproxied import ReverseProxied
@@ -268,7 +268,7 @@ def init_database():
         webapp.logger.info(f"Loaded {idx} tasks.")
 
     # Labels
-    label_models = [TokenLabel, RelationLabel, SentenceLabel, DiscourseLabel]
+    label_models = [TokenLabel, TokenRelationLabel, SentenceLabel, SentenceRelationLabel]
     for label_model in label_models:
         if not label_model.query.first():
             table_name = label_model.__tablename__
@@ -330,25 +330,6 @@ def inject_global_constants():
                         for theme in theme_js_files])
 
     CONSTANTS = {
-        'token_labels': TokenLabel.query.filter(
-            TokenLabel.is_deleted == False  # noqa # '== False' is required
-        ).with_entities(
-            TokenLabel.id, TokenLabel.label, TokenLabel.description
-        ).order_by(TokenLabel.label).all(),
-        # 'token_labels': [
-        #     ("CHAR", "Character"),
-        #     ("ORG", "Organization"),
-        #     ("LOC", "Location"),
-        #     ("GPE", "Geo-Political Entity"),
-        #     ("TIME", "Time"),
-        #     ("NUM", "Numeric"),
-        #     ("CURR", "Currency"),
-        # ]
-        'relation_labels': RelationLabel.query.filter(
-            RelationLabel.is_deleted == False  # noqa # '== False' is required
-        ).with_entities(
-            RelationLabel.id, RelationLabel.label, RelationLabel.description
-        ).order_by(RelationLabel.label).all(),
         # 'task_labels': Label.query.filter(
         #     ActionLabel.is_deleted == False  # noqa # '== False' is required
         # ).with_entities(
@@ -367,16 +348,30 @@ def inject_global_constants():
                 Task.is_deleted == False  # noqa # '== False' is required
             ).order_by(Task.order).all()
         ],
+        'token_labels': TokenLabel.query.filter(
+            TokenLabel.is_deleted == False  # noqa # '== False' is required
+        ).with_entities(
+            TokenLabel.id, TokenLabel.label, TokenLabel.description
+        ).order_by(TokenLabel.label).all(),
+        'token_relation_labels': TokenRelationLabel.query.filter(
+            TokenRelationLabel.is_deleted == False  # noqa # '== False' is required
+        ).with_entities(
+            TokenRelationLabel.id,
+            TokenRelationLabel.label,
+            TokenRelationLabel.description
+        ).order_by(TokenRelationLabel.label).all(),
         'sentence_labels': SentenceLabel.query.filter(
             SentenceLabel.is_deleted == False  # noqa # '== False' is required
         ).with_entities(
             SentenceLabel.id, SentenceLabel.label, SentenceLabel.description
         ).order_by(SentenceLabel.label).all(),
-        'discourse_labels': DiscourseLabel.query.filter(
-            DiscourseLabel.is_deleted == False  # noqa # '== False' is required
+        'sentence_relation_labels': SentenceRelationLabel.query.filter(
+            SentenceRelationLabel.is_deleted == False  # noqa # '== False' is required
         ).with_entities(
-            DiscourseLabel.id, DiscourseLabel.label, DiscourseLabel.description
-        ).order_by(DiscourseLabel.label).all(),
+            SentenceRelationLabel.id,
+            SentenceRelationLabel.label,
+            SentenceRelationLabel.description
+        ).order_by(SentenceRelationLabel.label).all(),
         'admin_labels': [
             {
                 "name": "token",
@@ -385,10 +380,10 @@ def inject_global_constants():
                 "object_name": "token_labels"
             },
             {
-                "name": "relation",
-                "title": "Relation",
+                "name": "token_relation",
+                "title": "Token Relation",
                 "is_active": False,
-                "object_name": "relation_labels"
+                "object_name": "token_relation_labels"
             },
             {
                 "name": "sentence",
@@ -397,10 +392,10 @@ def inject_global_constants():
                 "object_name": "sentence_labels"
             },
             {
-                "name": "discourse",
-                "title": "Discourse",
+                "name": "sentence_relation",
+                "title": "Sentence Relation",
                 "is_active": False,
-                "object_name": "discourse_labels"
+                "object_name": "sentence_relation_labels"
             },
         ]
     }
@@ -700,7 +695,7 @@ def api():
             "update_token_graph",
             "update_token_connection",
             "update_sentence_classification",
-            "update_intersentence_connection",
+            "update_sentence_graph",
         ],
         "curator": [],
         "querier": []
@@ -773,7 +768,7 @@ def api():
         # TokenGraph also gets deleted as (CASCADE)
         # TokenConnection also gets deleted as (CASCADE)
         # SentenceClassification also gets deleted as (CASCADE)
-        # DiscourseGraph also gets deleted as (CASCADE)
+        # SentenceGraph also gets deleted as (CASCADE)
 
         existing_boundary_query = Boundary.query.filter(
             Boundary.verse_id == verse_id,
@@ -1196,50 +1191,50 @@ def api():
             api_response["style"] = "danger"
             return jsonify(api_response)
 
-        existing_relations_query = TokenGraph.query.filter(
+        existing_tokrels_query = TokenGraph.query.filter(
             TokenGraph.boundary.has(Boundary.verse_id == verse_id),
             TokenGraph.annotator_id == annotator_id,
         )
 
-        existing_relations = existing_relations_query.all()
-        existing_relation_tuples = [
-            (relation.src_id, relation.label_id, relation.dst_id)
-            for relation in existing_relations_query.all()
+        existing_tokrels = existing_tokrels_query.all()
+        existing_tokrel_tuples = [
+            (tokrel.src_id, tokrel.label_id, tokrel.dst_id)
+            for tokrel in existing_tokrels_query.all()
         ]
 
-        for relation in existing_relations:
-            rel_tuple = (relation.src_id, relation.label_id, relation.dst_id)
+        for tokrel in existing_tokrels:
+            rel_tuple = (tokrel.src_id, tokrel.label_id, tokrel.dst_id)
             if rel_tuple not in graph_data:
-                # relation exists but was not submitted (i.e. removed)
-                relation.is_deleted = True
-                objects_to_update.append(relation)
+                # tokrel exists but was not submitted (i.e. removed)
+                tokrel.is_deleted = True
+                objects_to_update.append(tokrel)
             else:
-                # relation exists and is submitted (i.e. retained)
-                # check if there are any changes to the relation
+                # tokrel exists and is submitted (i.e. retained)
+                # check if there are any changes to the tokrel
                 if any([
-                    relation.boundary_id != graph_data[rel_tuple]["boundary_id"],
-                    relation.is_deleted is True
+                    tokrel.boundary_id != graph_data[rel_tuple]["boundary_id"],
+                    tokrel.is_deleted is True
                 ]):
-                    relation.boundary_id = graph_data[rel_tuple]["boundary_id"]
-                    relation.is_deleted = False
-                    objects_to_update.append(relation)
+                    tokrel.boundary_id = graph_data[rel_tuple]["boundary_id"]
+                    tokrel.is_deleted = False
+                    objects_to_update.append(tokrel)
 
-        for rel_tuple, _relation_data in graph_data.items():
-            if rel_tuple in existing_relation_tuples:
-                # submitted relation already exists
+        for rel_tuple, _tokrel_data in graph_data.items():
+            if rel_tuple in existing_tokrel_tuples:
+                # submitted tokrel already exists
                 # "else" part of the previous condition block handles this
                 # so we can skip here
                 continue
 
-            # submitted relation doesn't exist, create
-            relation = TokenGraph()
-            relation.boundary_id = _relation_data["boundary_id"]
-            relation.src_id = _relation_data["src_id"]
-            relation.label_id = _relation_data["label_id"]
-            relation.dst_id = _relation_data["dst_id"]
-            relation.annotator_id = annotator_id
-            relation.is_deleted = False
-            objects_to_update.append(relation)
+            # submitted tokrel doesn't exist, create
+            tokrel = TokenGraph()
+            tokrel.boundary_id = _tokrel_data["boundary_id"]
+            tokrel.src_id = _tokrel_data["src_id"]
+            tokrel.label_id = _tokrel_data["label_id"]
+            tokrel.dst_id = _tokrel_data["dst_id"]
+            tokrel.annotator_id = annotator_id
+            tokrel.is_deleted = False
+            objects_to_update.append(tokrel)
 
         try:
             if objects_to_update:
@@ -1478,38 +1473,38 @@ def api():
 
     # ----------------------------------------------------------------------- #
 
-    if action == "update_intersentence_connection":
+    if action == "update_sentence_graph":
         task_name = action.replace("update_", "")
         task_id = Task.query.filter(Task.name == task_name).first().id
 
         verse_id = int(request.form["verse_id"])
         annotator_id = current_user.id
-        intersentence_connection_data = json.loads(
-            request.form.get("intersentence_connection_data", "[]")
+        sentence_graph_data = json.loads(
+            request.form.get("sentence_graph_data", "[]")
         )
         context_data = json.loads(
             request.form.get("context_data", "[]")
         )
         objects_to_update = []
         try:
-            # validate intersentence_connection_data: List[Dict]
+            # validate sentence_graph_data: List[Dict]
             # keys:
             # src_boundary_id, src_token_id,
             # dst_boundary_id, dst_token_id
             # label_id, relation_type (0, 1, 2, 3)
             # values: strings? cast int()
-            intersentence_connection_data = {
+            sentence_graph_data = {
                 (
-                    int(isc["src_boundary_id"]),
-                    int(isc["src_token_id"]),
-                    int(isc["dst_boundary_id"]),
-                    int(isc["dst_token_id"]),
-                    int(isc["relation_type"])
+                    int(sentrel["src_boundary_id"]),
+                    int(sentrel["src_token_id"]),
+                    int(sentrel["dst_boundary_id"]),
+                    int(sentrel["dst_token_id"]),
+                    int(sentrel["relation_type"])
                 ): {
                     k: int(v)
-                    for k, v in isc.items()
+                    for k, v in sentrel.items()
                 }
-                for isc in intersentence_connection_data
+                for sentrel in sentence_graph_data
             }
             context_data = [int(boundary_id) for boundary_id in context_data]
         except Exception:
@@ -1519,68 +1514,68 @@ def api():
             return jsonify(api_response)
 
         # TODO: Re-examine if the conditions are proper
-        existing_iscs_query = DiscourseGraph.query.filter(
-            DiscourseGraph.src_boundary_id.in_(context_data),
-            DiscourseGraph.dst_boundary_id.in_(context_data),
-            DiscourseGraph.annotator_id == annotator_id,
+        existing_sentrels_query = SentenceGraph.query.filter(
+            SentenceGraph.src_boundary_id.in_(context_data),
+            SentenceGraph.dst_boundary_id.in_(context_data),
+            SentenceGraph.annotator_id == annotator_id,
         )
 
-        existing_iscs = existing_iscs_query.all()
-        existing_isc_tuples = [
+        existing_sentrels = existing_sentrels_query.all()
+        existing_sentrel_tuples = [
             (
-                isc.src_boundary_id,
-                isc.src_token_id,
-                isc.dst_boundary_id,
-                isc.dst_token_id,
-                isc.relation_type
+                sentrel.src_boundary_id,
+                sentrel.src_token_id,
+                sentrel.dst_boundary_id,
+                sentrel.dst_token_id,
+                sentrel.relation_type
             )
-            for isc in existing_iscs
+            for sentrel in existing_sentrels
         ]
 
-        for isc in existing_iscs:
-            isc_tuple = (
-                isc.src_boundary_id,
-                isc.src_token_id,
-                isc.dst_boundary_id,
-                isc.dst_token_id,
-                isc.relation_type
+        for sentrel in existing_sentrels:
+            sentrel_tuple = (
+                sentrel.src_boundary_id,
+                sentrel.src_token_id,
+                sentrel.dst_boundary_id,
+                sentrel.dst_token_id,
+                sentrel.relation_type
             )
-            if isc_tuple not in intersentence_connection_data:
-                # isc exists but was not submitted (i.e. removed)
-                isc.is_deleted = True
-                objects_to_update.append(isc)
+            if sentrel_tuple not in sentence_graph_data:
+                # sentrel exists but was not submitted (i.e. removed)
+                sentrel.is_deleted = True
+                objects_to_update.append(sentrel)
             else:
                 # TODO: Re-examine conditions in any()
-                # i.e. conditions to decide whether isc should be updated
+                # i.e. conditions to decide whether sentrel should be updated
 
-                # isc exists and is submitted (i.e. retained)
-                # check if there are any changes to the isc
+                # sentrel exists and is submitted (i.e. retained)
+                # check if there are any changes to the sentrel
                 if any([
-                    isc.label_id != intersentence_connection_data[isc_tuple]["label_id"],
-                    isc.is_deleted is True
+                    sentrel.label_id != sentence_graph_data[sentrel_tuple]["label_id"],
+                    sentrel.is_deleted is True
                 ]):
-                    isc.label_id = intersentence_connection_data[isc_tuple]["label_id"]
-                    isc.is_deleted = False
-                    objects_to_update.append(isc)
+                    sentrel.label_id = sentence_graph_data[sentrel_tuple]["label_id"]
+                    sentrel.is_deleted = False
+                    objects_to_update.append(sentrel)
 
-        for isc_tuple, _isc_data in intersentence_connection_data.items():
-            if isc_tuple in existing_isc_tuples:
-                # submitted isc already exists
+        for sentrel_tuple, _sentrel_data in sentence_graph_data.items():
+            if sentrel_tuple in existing_sentrel_tuples:
+                # submitted sentrel already exists
                 # "else" part of the previous condition block handles this
                 # so we can skip here
                 continue
 
-            # submitted isc doesn't exist, create
-            isc = DiscourseGraph()
-            isc.src_boundary_id = _isc_data["src_boundary_id"]
-            isc.src_token_id = _isc_data["src_token_id"]
-            isc.dst_boundary_id = _isc_data["dst_boundary_id"]
-            isc.dst_token_id = _isc_data["dst_token_id"]
-            isc.label_id = _isc_data["label_id"]
-            isc.relation_type = _isc_data["relation_type"]
-            isc.annotator_id = annotator_id
-            isc.is_deleted = False
-            objects_to_update.append(isc)
+            # submitted sentrel doesn't exist, create
+            sentrel = SentenceGraph()
+            sentrel.src_boundary_id = _sentrel_data["src_boundary_id"]
+            sentrel.src_token_id = _sentrel_data["src_token_id"]
+            sentrel.dst_boundary_id = _sentrel_data["dst_boundary_id"]
+            sentrel.dst_token_id = _sentrel_data["dst_token_id"]
+            sentrel.label_id = _sentrel_data["label_id"]
+            sentrel.relation_type = _sentrel_data["relation_type"]
+            sentrel.annotator_id = annotator_id
+            sentrel.is_deleted = False
+            objects_to_update.append(sentrel)
 
         try:
             if objects_to_update:
@@ -1688,17 +1683,17 @@ def perform_action():
 
             # Add/Remove Labels
 
-            # - Token Type
-            'token_type_add', 'token_type_remove',
+            # - Token Label
+            'token_label_add', 'token_label_remove',
 
-            # - Token Graph Relation Type
-            'relation_type_add', 'relation_type_remove',
+            # - Token Graph Relation Label
+            'token_relation_label_add', 'token_relation_label_remove',
 
-            # - Sentence Type
-            'sentence_type_add', 'sentence_type_remove',
+            # - Sentence Label
+            'sentence_label_add', 'sentence_label_remove',
 
-            # - Discourse Relation Type
-            'discourse_type_add', 'discourse_type_remove',
+            # - Sentence Graph Relation Label
+            'sentence_relation_label_add', 'sentence_relation_label_remove',
 
             # Data
             'corpus_add', 'chapter_add',
@@ -1835,10 +1830,10 @@ def perform_action():
     # Ontology
 
     if action in [
-        'token_type_add', 'token_type_remove',
-        'relation_type_add', 'relation_type_remove',
-        'sentence_type_add', 'sentence_type_remove',
-        'discourse_type_add', 'discourse_type_remove',
+        'token_label_add', 'token_label_remove',
+        'token_relation_label_add', 'token_relation_label_remove',
+        'sentence_label_add', 'sentence_label_remove',
+        'sentence_relation_label_add', 'sentence_relation_label_remove',
     ]:
         action_parts = action.split('_')
 
@@ -1850,9 +1845,11 @@ def perform_action():
 
         MODELS = {
             'token': (TokenLabel, TokenClassification, 'label_id'),
-            'relation': (RelationLabel, TokenGraph, 'label_id'),
+            'token_relation': (TokenRelationLabel, TokenGraph, 'label_id'),
             'sentence': (SentenceLabel, SentenceClassification, 'label_id'),
-            'discourse': (DiscourseLabel, DiscourseGraph, 'label_id'),
+            'sentence_relation': (
+                SentenceRelationLabel, SentenceGraph, 'label_id'
+            ),
         }
         (
             _object_model, _annotation, _annotation_attribute

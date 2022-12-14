@@ -10,7 +10,7 @@ const $tabs = {
     "token_graph": $("#task-4-tab"),
     "token_connection": $("#task-5-tab"),
     "sentence_classification": $("#task-6-tab"),
-    "intersentence_connection": $("#task-7-tab"),
+    "sentence_graph": $("#task-7-tab"),
     "token_text_annotation": $("#task-8-tab"),
 }
 
@@ -110,19 +110,19 @@ const $task_6_sample_sentence_classification_input_container = $("#sample-senten
 const $task_6_sample_sentence_classification_input = $("#sample-sentence-classification-input");
 
 // Task-7
-const $task_7_form = $("#intersentence-connection-form");
-const $task_7_intersentence_connection_context_container = $("#intersentence-connection-context-container");
+const $task_7_form = $("#sentence-graph-form");
+const $task_7_sentence_graph_context_container = $("#sentence-graph-context-container");
 
-const $task_7_intersentence_connection_intermediate_row_container = $("#intersentence-connection-intermediate-row-container");
-const $task_7_intersentence_connection_source_container = $("#intersentence-connection-source-token-container");
-const $task_7_intersentence_connection_relation_selector = $("#intersentence-connection-relation-selector");
-const $task_7_intersentence_connection_target_container = $("#intersentence-connection-target-token-container");
-const $task_7_intersentence_connection_reset_button = $("#intersentence-connection-reset-button");
-const $task_7_intersentence_connection_confirm_button = $("#intersentence-connection-confirm-button");
+const $task_7_sentence_graph_intermediate_row_container = $("#sentence-graph-intermediate-row-container");
+const $task_7_sentence_graph_source_container = $("#sentence-graph-source-token-container");
+const $task_7_sentence_graph_relation_selector = $("#sentence-graph-relation-selector");
+const $task_7_sentence_graph_target_container = $("#sentence-graph-target-token-container");
+const $task_7_sentence_graph_reset_button = $("#sentence-graph-reset-button");
+const $task_7_sentence_graph_confirm_button = $("#sentence-graph-confirm-button");
 
-const $task_7_intersentence_connection_annotation_container = $("#intersentence-connection-annotation-container");
+const $task_7_sentence_graph_annotation_container = $("#sentence-graph-annotation-container");
 
-const $show_graph_button_intersentence_connection = $("#show-graph-intersentence-connection");
+const $show_graph_button_sentence_graph = $("#show-graph-sentence-graph");
 
 // Globals
 var storage = window.localStorage;

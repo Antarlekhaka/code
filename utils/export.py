@@ -40,7 +40,7 @@ def get_token_text(token: dict, key_preference: List[str]):
 
 def simple_format(data):
     token_graph_node_ids = {}
-    discourse_graph_node_ids = {}
+    sentence_graph_node_ids = {}
     simple_data = {}
 
     for chpater_id, chapter_data in data["chapter"].items():
@@ -294,12 +294,12 @@ def simple_format(data):
 
             preference = ["lemma", "misc.Unsandhied", "form"]
 
-            discourse_graph_data = {
+            sentence_graph_data = {
                 "nodes": [],
                 "edges": []
             }
 
-            for relation in annotation_data["intersentence_connection"]:
+            for relation in annotation_data["sentence_graph"]:
                 from_id = None
                 to_id = None
 
@@ -324,31 +324,31 @@ def simple_format(data):
                     dst_token_text = get_token_text(dst_token, preference)
                     dst_group = 0
 
-                if src_token_text not in discourse_graph_node_ids:
-                    discourse_graph_node_ids[src_token_text] = get_unique_id()
+                if src_token_text not in sentence_graph_node_ids:
+                    sentence_graph_node_ids[src_token_text] = get_unique_id()
 
-                    discourse_graph_data["nodes"].append({
-                        "id": discourse_graph_node_ids[src_token_text],
+                    sentence_graph_data["nodes"].append({
+                        "id": sentence_graph_node_ids[src_token_text],
                         "label": src_token_text,
                         "title": src_title,
                         "value": 3,
                         "group": src_group
                     })
 
-                if dst_token_text not in discourse_graph_node_ids:
-                    discourse_graph_node_ids[dst_token_text] = get_unique_id()
+                if dst_token_text not in sentence_graph_node_ids:
+                    sentence_graph_node_ids[dst_token_text] = get_unique_id()
 
-                    discourse_graph_data["nodes"].append({
-                        "id": discourse_graph_node_ids[dst_token_text],
+                    sentence_graph_data["nodes"].append({
+                        "id": sentence_graph_node_ids[dst_token_text],
                         "label": dst_token_text,
                         "title": dst_title,
                         "value": 3,
                         "group": dst_group
                     })
 
-                discourse_graph_data["edges"].append({
-                    "from": discourse_graph_node_ids[src_token_text],
-                    "to": discourse_graph_node_ids[dst_token_text],
+                sentence_graph_data["edges"].append({
+                    "from": sentence_graph_node_ids[src_token_text],
+                    "to": sentence_graph_node_ids[dst_token_text],
                     "label": relation["label_label"],
                     "title": relation["label_description"],
                     "arrows": {
@@ -359,8 +359,8 @@ def simple_format(data):
                     "value": 3,
                 })
 
-            print(discourse_graph_data)
-            task_data["intersentence_connection"] = discourse_graph_data
+            print(sentence_graph_data)
+            task_data["sentence_graph"] = sentence_graph_data
 
             # --------------------------------------------------------------- #
 

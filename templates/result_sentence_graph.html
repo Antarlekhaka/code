@@ -77,7 +77,7 @@
         const chapter_id = $snapshot_button.data('chapter');
         const download_anchor = document.createElement('a');
         download_anchor.href = $snapshot_button.data('src');
-        download_anchor.download = `discourse_graph_${chapter_id}.png`;
+        download_anchor.download = `sentence_graph_${chapter_id}.png`;
         document.body.appendChild(download_anchor);
         download_anchor.click();
         document.body.removeChild(download_anchor);
@@ -104,7 +104,7 @@
         const active_tab = event.target;
         const task_id = active_tab.id.replace(/task-([0-9]+)-tab/, "$1");
         const task_name = active_tab.dataset.task;
-        if (task_name == "intersentence_connection") {
+        if (task_name == "sentence_graph") {
             for (const chapter_id of Object.keys(SENTENCE_GRAPH_DATA)) {
                 SENTENCE_GRAPH_NETWORK[chapter_id].fit();
             }
