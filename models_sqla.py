@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
+SQLAlchemy Models
+
 Created on Sun Mar 07 13:08:36 2021
 
 @author: Hrishikesh Terdalkar
@@ -187,7 +189,8 @@ class SubmitLog(db.Model):
         'User', backref=backref('submits', lazy='dynamic')
     )
     task = relationship(
-        'Task', backref=backref('submits', lazy='dynamic')
+        'Task',
+        backref=backref('submits', cascade='all,delete-orphan', lazy='dynamic')
     )
 
 
@@ -210,7 +213,9 @@ class Boundary(db.Model):
             'boundaries', cascade='all,delete-orphan', lazy='dynamic'
         )
     )
-    token = relationship('Token', foreign_keys=[token_id])
+    token = relationship(
+        'Token', backref=backref('boundaries', lazy='dynamic')
+    )
     annotator = relationship(
         'User', backref=backref('boundaries', lazy='dynamic')
     )
@@ -270,7 +275,9 @@ class TokenTextAnnotation(db.Model):
             'annotations', cascade='all,delete-orphan', lazy='dynamic'
         )
     )
-    token = relationship('Token', foreign_keys=[token_id])
+    token = relationship(
+        'Token', backref=backref('annotations', lazy='dynamic')
+    )
     annotator = relationship(
         'User', backref=backref('annotations', lazy='dynamic')
     )
@@ -297,8 +304,11 @@ class TokenClassification(db.Model):
         'Boundary',
         backref=backref('tokclf', cascade='all,delete-orphan', lazy='dynamic')
     )
-    token = relationship('Token', foreign_keys=[token_id])
-    label = relationship('TokenLabel', backref=backref('tokclf'))
+    token = relationship('Token', backref=backref('tokclf', lazy='dynamic'))
+    label = relationship(
+        'TokenLabel',
+        backref=backref('tokclf', lazy='dynamic')
+    )
     annotator = relationship(
         'User', backref=backref('tokclf', lazy='dynamic')
     )
@@ -315,7 +325,9 @@ class TokenGraph(db.Model):
         Integer, ForeignKey('boundary.id', ondelete='CASCADE'), nullable=False
     )
     src_id = Column(Integer, ForeignKey('token.id'), nullable=False)
-    label_id = Column(Integer, ForeignKey('token_relation_label.id'), nullable=False)
+    label_id = Column(
+        Integer, ForeignKey('token_relation_label.id'), nullable=False
+    )
     dst_id = Column(Integer, ForeignKey('token.id'), nullable=False)
     # ----------------------------------------------------------------------- #
     annotator_id = Column(Integer, ForeignKey('user.id'), nullable=False)
@@ -324,7 +336,9 @@ class TokenGraph(db.Model):
 
     src_token = relationship('Token', foreign_keys=[src_id])
     dst_token = relationship('Token', foreign_keys=[dst_id])
-    label = relationship('TokenRelationLabel', foreign_keys=[label_id])
+    label = relationship(
+        'TokenRelationLabel', backref=backref('token_graphs', lazy='dynamic')
+    )
     boundary = relationship(
         'Boundary',
         backref=backref(
@@ -392,7 +406,9 @@ class SentenceClassification(db.Model):
     is_deleted = Column(Boolean, default=False, nullable=False)
     updated_at = Column(DateTime, default=dt.utcnow, onupdate=dt.utcnow)
 
-    label = relationship('SentenceLabel', backref=backref('sentclf'))
+    label = relationship(
+        'SentenceLabel', backref=backref('sentclf', lazy='dynamic')
+    )
     boundary = relationship(
         'Boundary',
         backref=backref('sentclf', cascade='all,delete-orphan', lazy='dynamic')
@@ -431,7 +447,10 @@ class SentenceGraph(db.Model):
     is_deleted = Column(Boolean, default=False, nullable=False)
     updated_at = Column(DateTime, default=dt.utcnow, onupdate=dt.utcnow)
 
-    label = relationship('SentenceRelationLabel', foreign_keys=[label_id])
+    label = relationship(
+        'SentenceRelationLabel',
+        backref=backref('sentence_graphs', lazy='dynamic')
+    )
     src_boundary = relationship(
         'Boundary',
         backref=backref(
@@ -493,20 +512,23 @@ class SentenceRelationLabel(db.Model):
     is_deleted = Column(Boolean, default=False, nullable=False)
 
 
+###############################################################################
 # NOTE:
 # * we can add a generic Task table and a generic Label table later
 # * task can later be replaced by task_id
 # Task "type" can be generic
 
-# class GenericLabel(db.Model):
-#     __tablename__ = 'generic_label'
+# class TaskLabel(db.Model):
 #     id = Column(Integer, primary_key=True)
 #     task_id = Column(Integer, ForeignKey('task.id'), nullable=False)
 #     label = Column(String(255), nullable=False)
 #     description = Column(String(255))
 #     is_deleted = Column(Boolean, default=False, nullable=False)
 
-#     task = relationship('Task', backref=backref('labels'))
+#     task = relationship(
+#         'Task',
+#         backref=backref('labels', cascade='all,delete-orphan', lazy='dynamic')
+#     )
 
 
 ###############################################################################
