@@ -182,32 +182,31 @@ $refresh_verse_buttons.click(function() {
 
 /* ****************************** Generic Task Setup ****************************** */
 
-function setup_task(task_id, verse_id) {
-    // TODO: Use task_name instead of task_id
-    switch (task_id) {
-        case "1":
+function setup_task(task_name, verse_id) {
+    switch (task_name) {
+        case "sentence_boundary":
             setup_sentence_boundary(verse_id);
             break;
-        case "2":
+        case "word_order":
             setup_word_order(verse_id);
             break;
-        case "3":
+        case "token_text_annotation":
+            setup_token_text_annotation(verse_id);
+            break;
+        case "token_classification":
             setup_token_classification(verse_id);
             break;
-        case "4":
+        case "token_graph":
             setup_token_graph(verse_id);
             break;
-        case "5":
+        case "token_connection":
             setup_token_connection(verse_id);
             break;
-        case "6":
+        case "sentence_classification":
             setup_sentence_classification(verse_id);
             break;
-        case "7":
+        case "sentence_graph":
             setup_sentence_graph(verse_id);
-            break;
-        case "8":
-            setup_token_text_annotation(verse_id);
             break;
 
         default:
@@ -1080,9 +1079,9 @@ function prepare_token_graph_data($data_location) {
 }
 
 // Show Graph Modal
-$show_graph_modal.on('shown.bs.modal', function(e) {
-    const $trigger_button = $(e.relatedTarget);
-    const source_task = $trigger_button.data("task");
+$show_graph_modal.on('shown.bs.modal', function(event) {
+    const $trigger_button = $(event.relatedTarget);
+    const source_task = $trigger_button.data("task-name");
 
     if (source_task == "token_graph") {
         // triggered from token_graph task

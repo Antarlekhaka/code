@@ -51,19 +51,13 @@ $corpus_table.on('expand-row.bs.table', function (e, index, row, $detail) {
     storage.setItem("current_index", parseInt(index));
     storage.setItem("next_index", parseInt(index) + 1);
 
-    // // Setup All Tasks
-    // for (const task_id of ["1", "2", "3", "4", "5", "6", "7", "8"]) {
-    //     setup_task(task_id, verse_id);
-    // }
+    // Don't need to setup all the tasks, since we initiate them on tab change
+    // individually anyway.
+    // Instead, simply locate the active tab and setup the corresponding task
 
-    // Do we need to initiate all the tasks ?
-    // Since we do them on tab change individually anyway.
-    // Instead, just find the active tab and setup that one.
-    // Alternatively, force focus on Task-1
     const $active_tab = $('a[aria-selected="true"]');
-    const active_task_id = $active_tab.attr('id').replace(/task-([0-9]+)-tab/, "$1");
-    setup_task(active_task_id, verse_id);
-
+    const active_task_name = $active_tab.data('task-name');
+    setup_task(active_task_name, verse_id);
 });
 
 
@@ -79,10 +73,9 @@ $('a[data-toggle="pill"]').on('shown.bs.tab', function (event) {
         return;
     }
 
-    const active_tab = event.target;
-    const task_id = active_tab.id.replace(/task-([0-9]+)-tab/, "$1");
-
-    setup_task(task_id, verse_id);
+    const $active_tab = $(event.target);
+    const task_name = $active_tab.data("task-name");
+    setup_task(task_name, verse_id);
 });
 
 // Page Change

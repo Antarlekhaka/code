@@ -59,7 +59,7 @@
                     {% set aria_selected = "false" %}
                 {% endif %}
                 <li class="nav-item" title="{{task.title}}">
-                  <a class="nav-link {{active_class}}" id="task-{{task.id}}-tab" data-task="{{task.name}}" data-toggle="pill" href="#task-{{task.id}}-tab-content" role="tab" aria-controls="task-{{task.id}}-tab-content" aria-selected="{{aria_selected}}">{{task.short}}</a>
+                  <a class="nav-link {{active_class}}" id="task-{{task.id}}-tab" data-task-name="{{task.name}}" data-toggle="pill" href="#task-{{task.id}}-tab-content" role="tab" aria-controls="task-{{task.id}}-tab-content" aria-selected="{{aria_selected}}">{{task.short}}</a>
                 </li>
                 {% endfor %}
             </ul>

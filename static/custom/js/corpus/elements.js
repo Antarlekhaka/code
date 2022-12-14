@@ -95,7 +95,7 @@ const $task_5_token_connection_context_container = $("#tokcon-context-container"
 const $task_5_token_connection_intermediate_row_container = $("#tokcon-intermediate-row-container");
 const $task_5_token_connection_source_container = $("#tokcon-source-token-container");
 const $task_5_token_connection_target_container = $("#tokcon-target-token-container");
-const $task_5_token_connection_nnection_reset_button = $("#tokcon-reset-button");
+const $task_5_token_connection_reset_button = $("#tokcon-reset-button");
 const $task_5_token_connection_confirm_button = $("#tokcon-confirm-button");
 
 const $task_5_token_connection_annotation_container = $("#tokcon-annotation-container");
