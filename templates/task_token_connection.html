@@ -1,6 +1,6 @@
 {% extends "task_base.html" %}
 {% block body %}
-<div id="coref-context-container" class="scroll">
+<div id="tokcon-context-container" class="scroll">
     <br>
     <br>
     Clickable list of tokens from sentences from the last 3 verses goes here.
@@ -9,26 +9,26 @@
     <br>
     <br>
 </div>
-<div class="mark border border-warning rounded px-1 pt-1 pb-0 m-1" id="coref-intermediate-row-container">
-    <div id="coref-row" class="row">
-        <div id="coref-source-token-container" class="col-sm"></div>
+<div class="mark border border-warning rounded px-1 pt-1 pb-0 m-1" id="tokcon-intermediate-row-container">
+    <div id="tokcon-row" class="row">
+        <div id="tokcon-source-token-container" class="col-sm"></div>
         <div class="col-sm-2">
             <span class="btn btn-secondary mb-1 mr-1">
                 <i class="fas fa-arrows-left-right"></i>
             </span>
         </div>
-        <div id="coref-target-token-container" class="col-sm"></div>
+        <div id="tokcon-target-token-container" class="col-sm"></div>
         <div class="col-sm-2">
-            <button id="coref-confirm-button" type="button" title="Confirm" class="btn btn-success float-right mx-1" disabled>
+            <button id="tokcon-confirm-button" type="button" title="Confirm" class="btn btn-success float-right mx-1" disabled>
                 <i class="fas fa-check"></i>
             </button>
-            <button id="coref-reset-button" type="button" title="Reset" class="btn btn-warning float-right">
+            <button id="tokcon-reset-button" type="button" title="Reset" class="btn btn-warning float-right">
                 <i class="fas fa-rotate-right"></i>
             </button>
         </div>
     </div>
 </div>
-<div class="border border-success rounded px-1 pt-1 pb-0 m-1" id="coref-annotation-container">
+<div class="border border-success rounded px-1 pt-1 pb-0 m-1" id="tokcon-annotation-container">
     <!-- Temporary Content -->
     <!-- Content will be overwritten by JS. -->
 

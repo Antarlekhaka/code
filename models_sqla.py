@@ -349,7 +349,7 @@ class TokenGraph(db.Model):
     # )
 
 
-class Coreference(db.Model):
+class TokenConnection(db.Model):
     id = Column(Integer, primary_key=True)
     # ----------------------------------------------------------------------- #
     boundary_id = Column(
@@ -367,15 +367,15 @@ class Coreference(db.Model):
     boundary = relationship(
         'Boundary',
         backref=backref(
-            'coreference', cascade='all,delete-orphan', lazy='dynamic'
+            'token_connection', cascade='all,delete-orphan', lazy='dynamic'
         )
     )
     annotator = relationship(
-        'User', backref=backref('coreference', lazy='dynamic')
+        'User', backref=backref('token_connection', lazy='dynamic')
     )
 
     __table_args__ = (
-         Index('coreference_annotator_id_src_id_dst_id',
+         Index('token_connection_annotator_id_src_id_dst_id',
                'annotator_id', 'src_id', 'dst_id', unique=True),
     )
 

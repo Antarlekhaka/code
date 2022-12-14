@@ -198,7 +198,7 @@ function setup_task(task_id, verse_id) {
             setup_token_graph(verse_id);
             break;
         case "5":
-            setup_coreference(verse_id);
+            setup_token_connection(verse_id);
             break;
         case "6":
             setup_sentence_classification(verse_id);
@@ -1188,7 +1188,7 @@ $task_4_submit.click(function () {
 // Setup-5
 
 
-function setup_coreference(verse_id) {
+function setup_token_connection(verse_id) {
     console.log(`Called ${arguments.callee.name}(${Object.values(arguments).join(", ")});`);
 
     const row = $corpus_table.bootstrapTable('getRowByUniqueId', verse_id);
@@ -1205,7 +1205,7 @@ function setup_coreference(verse_id) {
     var all_tokens = {};
     var boundary_tokens = [];
 
-    var existing_coreferences = [];
+    var existing_token_connections = [];
 
     for (const verse_data of context) {
         // verse_data
@@ -1217,25 +1217,25 @@ function setup_coreference(verse_id) {
             // ensure that every boundary in the previous n verses has word_order
             // if one is doing word_order in order, this won't be an issue
         }
-        for (const coreference of verse_data.coreference) {
-            if (coreference.is_deleted) {
+        for (const token_connection of verse_data.token_connection) {
+            if (token_connection.is_deleted) {
                 continue;
             }
-            existing_coreferences.push(coreference);
+            existing_token_connections.push(token_connection);
         }
     };
-    console.log(existing_coreferences);
+    console.log(existing_token_connections);
 
-    $task_5_coref_context_container.html("");
-    $task_5_coref_reset_button.click();
-    $task_5_coref_annotation_container.html("");
+    $task_5_token_connection_context_container.html("");
+    $task_5_token_connection_reset_button.click();
+    $task_5_token_connection_annotation_container.html("");
 
     for (const [boundary_id, used_tokens] of boundary_tokens) {
         const $boundary_container = $("<div />", {
-            id: `coref-boundary-container-${boundary_id}`,
+            id: `tokcon-boundary-container-${boundary_id}`,
             class: "border border-secondary rounded px-1 pt-1 pb-0 ml-1 mt-1 mb-0 boundary-container"
         });
-        $boundary_container.appendTo($task_5_coref_context_container);
+        $boundary_container.appendTo($task_5_token_connection_context_container);
         $boundary_container.data("boundary-id", boundary_id);
 
         for (const token_id of used_tokens) {
@@ -1243,7 +1243,7 @@ function setup_coreference(verse_id) {
             const $token = generate_token_button({
                 token: token,
                 token_element: "<button />",
-                id_prefix: "coref-token",
+                id_prefix: "tokcon-token",
                 token_data: {token_id: token_id, boundary_id: boundary_id},
                 onclick: function($element) {
                     const $annotation_token = $element.clone();
@@ -1251,24 +1251,24 @@ function setup_coreference(verse_id) {
                     $annotation_token.data("token-id", token_id);
                     $annotation_token.data("boundary-id", boundary_id);
 
-                    if (!$task_5_coref_source_container.html().trim()) {
-                        $annotation_token.addClass("coref-source-token");
-                        $annotation_token.appendTo($task_5_coref_source_container);
+                    if (!$task_5_token_connection_source_container.html().trim()) {
+                        $annotation_token.addClass("tokcon-source-token");
+                        $annotation_token.appendTo($task_5_token_connection_source_container);
                         $element.prop("disabled", true);
                     } else {
-                        if (!$task_5_coref_target_container.html().trim()) {
-                            $annotation_token.addClass("coref-target-token");
-                            $annotation_token.appendTo($task_5_coref_target_container);
-                            $task_5_coref_confirm_button.prop("disabled", false);
+                        if (!$task_5_token_connection_target_container.html().trim()) {
+                            $annotation_token.addClass("tokcon-target-token");
+                            $annotation_token.appendTo($task_5_token_connection_target_container);
+                            $task_5_token_connection_confirm_button.prop("disabled", false);
                             $element.prop("disabled", true);
                         } else {
                             $.notify({
-                                message: "Please confirm or reset the current coreference first."
+                                message: "Please confirm or reset the current token_connection first."
                             }, {
                                 type: "danger"
                             });
                         }
-                        $task_5_coref_confirm_button.focus();
+                        $task_5_token_connection_confirm_button.focus();
                     }
                 }
             });
@@ -1278,29 +1278,29 @@ function setup_coreference(verse_id) {
     }
 
     // add existing references
-    for (const coreference of existing_coreferences) {
-        const $source_token = $(`#coref-token-${coreference.src_id}`).clone();
+    for (const token_connection of existing_token_connections) {
+        const $source_token = $(`#tokcon-token-${token_connection.src_id}`).clone();
         $source_token.removeAttr("id");
-        $source_token.data("token-id", coreference.src_id);
-        $source_token.data("boundary-id", coreference.boundary_id);
-        $source_token.addClass("coref-source-token");
+        $source_token.data("token-id", token_connection.src_id);
+        $source_token.data("boundary-id", token_connection.boundary_id);
+        $source_token.addClass("tokcon-source-token");
 
-        const $target_token = $(`#coref-token-${coreference.dst_id}`).clone();
-        const target_token_boundary_id = $(`#coref-token-${coreference.dst_id}`).data("boundary-id");
+        const $target_token = $(`#tokcon-token-${token_connection.dst_id}`).clone();
+        const target_token_boundary_id = $(`#tokcon-token-${token_connection.dst_id}`).data("boundary-id");
         $target_token.removeAttr("id");
-        $target_token.data("token-id", coreference.dst_id);
+        $target_token.data("token-id", token_connection.dst_id);
         $target_token.data("boundary-id", target_token_boundary_id);
-        $target_token.addClass("coref-target-token");
+        $target_token.addClass("tokcon-target-token");
 
-        add_coref_row($source_token, $target_token);
+        add_token_connection_row($source_token, $target_token);
     }
 
 }
 
 
-function add_coref_row($source_token, $target_token) {
-    const $row = $('<div />').addClass("row").prependTo($task_5_coref_annotation_container);
-    $row.addClass('coref-annotation-row');
+function add_token_connection_row($source_token, $target_token) {
+    const $row = $('<div />').addClass("row").prependTo($task_5_token_connection_annotation_container);
+    $row.addClass('tokcon-annotation-row');
 
     // add source token
     var $column = $("<div />", {
@@ -1321,34 +1321,34 @@ function add_coref_row($source_token, $target_token) {
     $target_token.appendTo($column);
 
     // add remove button
-    const $remove_coref_button = $('<button />').addClass(`btn btn-danger float-right mx-1`);
-    $remove_coref_button.attr("title", "Remove Coreference");
+    const $remove_tokcon_button = $('<button />').addClass(`btn btn-danger float-right mx-1`);
+    $remove_tokcon_button.attr("title", "Remove Token Connection");
     const $remove_icon = $('<i />').addClass(`fas fa-minus`);
     var $column = $('<div />').addClass("col-sm-2").appendTo($row);
-    $remove_icon.appendTo($remove_coref_button);
-    $remove_coref_button.appendTo($column);
-    $remove_coref_button.click(function () {
+    $remove_icon.appendTo($remove_tokcon_button);
+    $remove_tokcon_button.appendTo($column);
+    $remove_tokcon_button.click(function () {
         $(this).parent().parent().remove();
     });
 }
 
-$task_5_coref_confirm_button.click(function () {
-    const $source_token = $task_5_coref_source_container.children(".coref-source-token");
-    const $target_token = $task_5_coref_target_container.children(".coref-target-token");
+$task_5_token_connection_confirm_button.click(function () {
+    const $source_token = $task_5_token_connection_source_container.children(".tokcon-source-token");
+    const $target_token = $task_5_token_connection_target_container.children(".tokcon-target-token");
 
-    add_coref_row($source_token, $target_token);
+    add_token_connection_row($source_token, $target_token);
 
     // reset
-    $task_5_coref_reset_button.click();
-    $task_5_coref_confirm_button.prop("disabled", true);
+    $task_5_token_connection_reset_button.click();
+    $task_5_token_connection_confirm_button.prop("disabled", true);
 });
 
-$task_5_coref_reset_button.click(function () {
+$task_5_token_connection_reset_button.click(function () {
     // enable all buttons
-    $task_5_coref_context_container.find("button").prop("disabled", false);
+    $task_5_token_connection_context_container.find("button").prop("disabled", false);
 
-    $task_5_coref_source_container.html("");
-    $task_5_coref_target_container.html("");
+    $task_5_token_connection_source_container.html("");
+    $task_5_token_connection_target_container.html("");
 });
 
 /* Task-5 Actions */
@@ -1358,18 +1358,18 @@ $task_5_submit.click(function() {
     const verse_id = $verse_id_containers.html();
 
     var context_data = [];
-    var coreference_data = [];
-    $task_5_coref_context_container.find(".boundary-container").each(function (_index, _boundary_container) {
+    var token_connection_data = [];
+    $task_5_token_connection_context_container.find(".boundary-container").each(function (_index, _boundary_container) {
         context_data.push($(_boundary_container).data("boundary-id"));
     });
 
-    const $coref_annotation_rows = $task_5_coref_annotation_container.find('.coref-annotation-row');
-    $coref_annotation_rows.each(function(coref_index, coref_row) {
-        const $coref_row = $(coref_row);
-        const $source_token = $coref_row.find(".coref-source-token");
-        const $target_token = $coref_row.find(".coref-target-token");
+    const $tokcon_annotation_rows = $task_5_token_connection_annotation_container.find('.tokcon-annotation-row');
+    $tokcon_annotation_rows.each(function(tokcon_index, tokcon_row) {
+        const $tokcon_row = $(tokcon_row);
+        const $source_token = $tokcon_row.find(".tokcon-source-token");
+        const $target_token = $tokcon_row.find(".tokcon-target-token");
 
-        coreference_data.push({
+        token_connection_data.push({
             "boundary_id": $source_token.data("boundary-id"),
             "src_id": $source_token.data("token-id"),
             "dst_id": $target_token.data("token-id")
@@ -1379,7 +1379,7 @@ $task_5_submit.click(function() {
         action: TASK_5_SUBMIT_ACTION,
         verse_id: verse_id,
         context_data: JSON.stringify(context_data),
-        coreference_data: JSON.stringify(coreference_data)
+        token_connection_data: JSON.stringify(token_connection_data)
     },
     function (response) {
         $.notify({

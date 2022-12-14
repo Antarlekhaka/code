@@ -8,7 +8,7 @@ const $tabs = {
     "word_order": $("#task-2-tab"),
     "token_classification": $("#task-3-tab"),
     "token_graph": $("#task-4-tab"),
-    "coreference": $("#task-5-tab"),
+    "token_connection": $("#task-5-tab"),
     "sentence_classification": $("#task-6-tab"),
     "intersentence_connection": $("#task-7-tab"),
     "token_text_annotation": $("#task-8-tab"),
@@ -90,15 +90,15 @@ const $task_4_sample_target_entity = $("#sample-target-entity");
 const $task_4_sample_relation_label = $("#sample-relation-label");
 
 // Task-5
-const $task_5_coref_context_container = $("#coref-context-container");
+const $task_5_token_connection_context_container = $("#tokcon-context-container");
 
-const $task_5_coref_intermediate_row_container = $("#coref-intermediate-row-container");
-const $task_5_coref_source_container = $("#coref-source-token-container");
-const $task_5_coref_target_container = $("#coref-target-token-container");
-const $task_5_coref_reset_button = $("#coref-reset-button");
-const $task_5_coref_confirm_button = $("#coref-confirm-button");
+const $task_5_token_connection_intermediate_row_container = $("#tokcon-intermediate-row-container");
+const $task_5_token_connection_source_container = $("#tokcon-source-token-container");
+const $task_5_token_connection_target_container = $("#tokcon-target-token-container");
+const $task_5_token_connection_nnection_reset_button = $("#tokcon-reset-button");
+const $task_5_token_connection_confirm_button = $("#tokcon-confirm-button");
 
-const $task_5_coref_annotation_container = $("#coref-annotation-container");
+const $task_5_token_connection_annotation_container = $("#tokcon-annotation-container");
 
 // Task-6
 const $task_6_form = $("#sentence-classification-form");

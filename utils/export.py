@@ -237,15 +237,15 @@ def simple_format(data):
 
             preference = ["misc.Unsandhied", "form", "lemma"]
 
-            coreference_graph = nx.DiGraph()
-            coreference_graph.add_edges_from([
-                (coref["src_id"], coref["dst_id"])
-                for coref in annotation_data["coreference"]
+            token_connection_graph = nx.DiGraph()
+            token_connection_graph.add_edges_from([
+                (tokcon["src_id"], tokcon["dst_id"])
+                for tokcon in annotation_data["token_connection"]
             ])
 
             display_text = []
 
-            clusters = nx.weakly_connected_components(coreference_graph)
+            clusters = nx.weakly_connected_components(token_connection_graph)
             for cluster_idx, cluster in enumerate(clusters):
                 cluster_text = []
                 for token_id in cluster:
@@ -262,7 +262,7 @@ def simple_format(data):
 
                 display_text.append(cluster_text)
 
-            task_data["coreference"] = "\n".join(
+            task_data["token_connection"] = "\n".join(
                 ", ".join(cluster_text)
                 for cluster_text in display_text
             )

@@ -25,7 +25,7 @@ from models_sqla import (
     TokenTextAnnotation,
     TokenClassification,
     TokenGraph,
-    Coreference,
+    TokenConnection,
     SentenceClassification,
     DiscourseGraph,
     SubmitLog
@@ -368,22 +368,22 @@ def export_data(
 
             # --------------------------------------------------------------- #
 
-            coreference_query = Coreference.query.filter(
-                Coreference.boundary_id.in_(boundary_ids),
-                Coreference.annotator_id == annotator.id,
-                Coreference.is_deleted == False  # noqa
-            ).order_by(Coreference.src_id)
+            token_connection_query = TokenConnection.query.filter(
+                TokenConnection.boundary_id.in_(boundary_ids),
+                TokenConnection.annotator_id == annotator.id,
+                TokenConnection.is_deleted == False  # noqa
+            ).order_by(TokenConnection.src_id)
 
             # TODO: avoid .boundary.verse_id call ?
             # fetch from task_data["sentence_boundary"] ?
-            annotation_data["coreference"] = [
+            annotation_data["token_connection"] = [
                 {
-                    "verse_id": coreference.boundary.verse_id,
-                    "boundary_id": coreference.boundary_id,
-                    "src_id": coreference.src_id,
-                    "dst_id": coreference.dst_id,
+                    "verse_id": token_connection.boundary.verse_id,
+                    "boundary_id": token_connection.boundary_id,
+                    "src_id": token_connection.src_id,
+                    "dst_id": token_connection.dst_id,
                 }
-                for coreference in coreference_query.all()
+                for token_connection in token_connection_query.all()
             ]
 
             # --------------------------------------------------------------- #
@@ -564,7 +564,7 @@ def get_verse_data(
                 "token_text_annotation": [],
                 "token_classification": [],
                 "relation": [],
-                "coreference": [],
+                "token_connection": [],
                 "sentence_classification": [],
                 "intersentence_connection": [],
                 "progress": [
@@ -719,21 +719,21 @@ def get_verse_data(
 
         # ------------------------------------------------------------------- #
 
-        coreference_query = Coreference.query.filter(
-            Coreference.boundary_id == boundary.id,
-            Coreference.annotator_id.in_(annotator_ids)
+        token_connection_query = TokenConnection.query.filter(
+            TokenConnection.boundary_id == boundary.id,
+            TokenConnection.annotator_id.in_(annotator_ids)
         )
 
-        data[verse_id]["coreference"].extend([
+        data[verse_id]["token_connection"].extend([
             {
-                "id": coreference.id,
-                "boundary_id": coreference.boundary_id,
-                "src_id": coreference.src_id,
-                "dst_id": coreference.dst_id,
-                "annotator_id": coreference.annotator_id,
-                "is_deleted": coreference.is_deleted
+                "id": token_connection.id,
+                "boundary_id": token_connection.boundary_id,
+                "src_id": token_connection.src_id,
+                "dst_id": token_connection.dst_id,
+                "annotator_id": token_connection.annotator_id,
+                "is_deleted": token_connection.is_deleted
             }
-            for coreference in coreference_query.all()
+            for token_connection in token_connection_query.all()
         ])
 
         # ------------------------------------------------------------------- #

@@ -23,16 +23,16 @@
     {
         "id": 4,
         "name": "token_graph",
-        "title": "Action Graph",
-        "short": "Action",
-        "help": "Create action graph in the form of triplets."
+        "title": "Token Graph",
+        "short": "TokGraph",
+        "help": "Create a token graph in the form of triplets."
     },
     {
         "id": 5,
-        "name": "coreference",
-        "title": "Co-reference Resolution",
-        "short": "Coref",
-        "help": "Idenitfy coreferences."
+        "name": "token_connection",
+        "title": "Token Connection",
+        "short": "TokCon",
+        "help": "Idenitfy token connections."
     },
     {
         "id": 6,

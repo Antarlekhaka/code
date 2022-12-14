@@ -19,7 +19,7 @@ from models_sqla import Corpus, Chapter, Verse, Line, Token
 from models_sqla import (
     Task, Boundary, WordOrder,
     TokenTextAnnotation, TokenClassification,
-    TokenGraph, Coreference,
+    TokenGraph, TokenConnection,
     SentenceClassification, DiscourseGraph,
     SubmitLog
 )
@@ -53,7 +53,7 @@ for model in [
     TokenLabel, RelationLabel, SentenceLabel, DiscourseLabel,
     Task, Boundary, WordOrder,
     TokenTextAnnotation, TokenClassification,
-    TokenGraph, Coreference,
+    TokenGraph, TokenConnection,
     SentenceClassification, DiscourseGraph,
     SubmitLog
 ]:

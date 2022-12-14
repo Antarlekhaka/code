@@ -65,7 +65,7 @@ from models_sqla import (db, user_datastore,
                          Task, SubmitLog, WordOrder, Boundary,
                          TokenTextAnnotation, TokenLabel, TokenClassification,
                          RelationLabel, TokenGraph,
-                         Coreference,
+                         TokenConnection,
                          SentenceLabel, SentenceClassification,
                          DiscourseLabel, DiscourseGraph)
 from settings import app
@@ -698,7 +698,7 @@ def api():
             "update_token_text_annotation",
             "update_token_classification",
             "update_token_graph",
-            "update_coreference",
+            "update_token_connection",
             "update_sentence_classification",
             "update_intersentence_connection",
         ],
@@ -771,7 +771,7 @@ def api():
         # WordOrder also gets deleted as (CASCADE)
         # TokenClassification also gets deleted as (CASCADE)
         # TokenGraph also gets deleted as (CASCADE)
-        # Coreference also gets deleted as (CASCADE)
+        # TokenConnection also gets deleted as (CASCADE)
         # SentenceClassification also gets deleted as (CASCADE)
         # DiscourseGraph also gets deleted as (CASCADE)
 
@@ -806,7 +806,9 @@ def api():
                     WordOrder.boundary_id == next_boundary.id,
                     WordOrder.annotator_id == annotator_id
                 )
-                word_order_of_next_boundary_query.delete(synchronize_session=False)
+                word_order_of_next_boundary_query.delete(
+                    synchronize_session=False
+                )
 
             # add new boundary markers
             for boundary_token in boundary_tokens:
@@ -1268,14 +1270,14 @@ def api():
 
     # ----------------------------------------------------------------------- #
 
-    if action == "update_coreference":
+    if action == "update_token_connection":
         task_name = action.replace("update_", "")
         task_id = Task.query.filter(Task.name == task_name).first().id
 
         verse_id = int(request.form["verse_id"])
         annotator_id = current_user.id
-        coref_data = json.loads(
-            request.form.get("coreference_data", "[]")
+        token_connection_data = json.loads(
+            request.form.get("token_connection_data", "[]")
         )
         context_data = json.loads(
             request.form.get("context_data", "[]")
@@ -1283,18 +1285,18 @@ def api():
 
         objects_to_update = []
         try:
-            # validate coreference_data: List[Dict]
+            # validate token_connection_data: List[Dict]
             # keys: boundary_id, src_id, dst_id
             # values: strings? cast int()
-            coref_data = {
+            token_connection_data = {
                 (
-                    int(coref["src_id"]),
-                    int(coref["dst_id"])
+                    int(tokcon["src_id"]),
+                    int(tokcon["dst_id"])
                 ): {
                     k: int(v)
-                    for k, v in coref.items()
+                    for k, v in tokcon.items()
                 }
-                for coref in coref_data
+                for tokcon in token_connection_data
             }
             context_data = [int(boundary_id) for boundary_id in context_data]
         except Exception:
@@ -1303,53 +1305,53 @@ def api():
             api_response["style"] = "danger"
             return jsonify(api_response)
 
-        existing_corefs_query = Coreference.query.filter(
-            Coreference.boundary_id.in_(context_data),
-            Coreference.annotator_id == annotator_id,
+        existing_tokcons_query = TokenConnection.query.filter(
+            TokenConnection.boundary_id.in_(context_data),
+            TokenConnection.annotator_id == annotator_id,
         )
 
-        existing_corefs = existing_corefs_query.all()
-        existing_coref_tuples = [
-            (coref.src_id, coref.dst_id)
-            for coref in existing_corefs
+        existing_tokcons = existing_tokcons_query.all()
+        existing_tokcon_tuples = [
+            (tokcon.src_id, tokcon.dst_id)
+            for tokcon in existing_tokcons
         ]
 
-        for coref in existing_corefs:
-            coref_tuple = (coref.src_id, coref.dst_id)
-            if coref_tuple not in coref_data:
-                # coref exists but was not submitted (i.e. removed)
-                coref.is_deleted = True
-                objects_to_update.append(coref)
+        for tokcon in existing_tokcons:
+            tokcon_tuple = (tokcon.src_id, tokcon.dst_id)
+            if tokcon_tuple not in token_connection_data:
+                # tokcon exists but was not submitted (i.e. removed)
+                tokcon.is_deleted = True
+                objects_to_update.append(tokcon)
             else:
                 # TODO: do we really need to check boundary_id?
                 # when would it be different when src_id and dst_id are same?
                 # only if we change convention?
 
-                # coref exists and is submitted (i.e. retained)
-                # check if there are any changes to the coref
+                # tokcon exists and is submitted (i.e. retained)
+                # check if there are any changes to the tokcon
                 if any([
-                    coref.boundary_id != coref_data[coref_tuple]["boundary_id"],
-                    coref.is_deleted is True
+                    tokcon.boundary_id != token_connection_data[tokcon_tuple]["boundary_id"],
+                    tokcon.is_deleted is True
                 ]):
-                    coref.boundary_id = coref_data[coref_tuple]["boundary_id"]
-                    coref.is_deleted = False
-                    objects_to_update.append(coref)
+                    tokcon.boundary_id = token_connection_data[tokcon_tuple]["boundary_id"]
+                    tokcon.is_deleted = False
+                    objects_to_update.append(tokcon)
 
-        for coref_tuple, _coref_data in coref_data.items():
-            if coref_tuple in existing_coref_tuples:
-                # submitted coref already exists
+        for tokcon_tuple, _tokcon_data in token_connection_data.items():
+            if tokcon_tuple in existing_tokcon_tuples:
+                # submitted tokcon already exists
                 # "else" part of the previous condition block handles this
                 # so we can skip here
                 continue
 
-            # submitted coref doesn't exist, create
-            coref = Coreference()
-            coref.boundary_id = _coref_data["boundary_id"]
-            coref.src_id = _coref_data["src_id"]
-            coref.dst_id = _coref_data["dst_id"]
-            coref.annotator_id = annotator_id
-            coref.is_deleted = False
-            objects_to_update.append(coref)
+            # submitted tokcon doesn't exist, create
+            tokcon = TokenConnection()
+            tokcon.boundary_id = _tokcon_data["boundary_id"]
+            tokcon.src_id = _tokcon_data["src_id"]
+            tokcon.dst_id = _tokcon_data["dst_id"]
+            tokcon.annotator_id = annotator_id
+            tokcon.is_deleted = False
+            objects_to_update.append(tokcon)
 
         try:
             if objects_to_update:
