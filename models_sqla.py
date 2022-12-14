@@ -456,7 +456,7 @@ class SentenceGraph(db.Model):
              'src_token_id_dst_token_id_relation_type'),
             'annotator_id',
             'src_boundary_id', 'dst_boundary_id',
-            'src_token_id', 'dst_token_id', 'relation_type'
+            'src_token_id', 'dst_token_id', 'relation_type',
             unique=True),
     )
 
