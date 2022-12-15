@@ -11,7 +11,7 @@
 </div>
 <div class="sample-input" hidden="true">
     <select id="sample-token-type" title="Select Token Type" class="form-control selectpicker" data-show-subtext="true" data-live-search="true" data-container="body" required>
-        {% for _id, _label, _description in constants.token_labels %}
+        {% for _id, _label, _description in context_labels.token_labels %}
         <option value="{{_id}}" data-subtext="{{_description}}">{{_label}}</option>
         {% endfor %}
     </select>

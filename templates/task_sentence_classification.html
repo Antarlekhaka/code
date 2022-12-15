@@ -14,7 +14,7 @@
             </div>
             <div class="col-sm-4">
                 <select title="Select Sentence Label" class="form-control sentence-label" data-show-subtext="true" data-live-search="true" required>
-                    {% for _id, _label, _description in constants.sentence_labels %}
+                    {% for _id, _label, _description in context_labels.sentence_labels %}
                     <option value="{{_id}}" data-subtext="{{_description}}">{{_label}}</option>
                     {% endfor %}
                 </select>

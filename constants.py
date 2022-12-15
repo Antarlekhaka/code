@@ -52,7 +52,7 @@ TASK_UPDATE_ACTIONS = {
 
 ###############################################################################
 
-TASK_DETAILS = {
+TASK_DEFAULT_INFORMATION = {
     TASK_SENTENCE_BOUNDARY: {
         "name": "sentence_boundary",
         "title": "Sentence Boundary Detection",

@@ -70,7 +70,7 @@ from constants import (
     TASK_SENTENCE_CLASSIFICATION,
     TASK_SENTENCE_GRAPH,
 
-    TASK_DETAILS,
+    TASK_DEFAULT_INFORMATION,
     TASK_UPDATE_ACTIONS,
     TASK_ANNOTATION_TEMPLATES, TASK_EXPORT_TEMPLATES
 )
@@ -333,38 +333,79 @@ def _after_authentication_hook(sender, user, **extra):
 
 
 @webapp.context_processor
-def inject_global_constants():
-    theme_files = glob.glob(
+def inject_global_context():
+    theme_css_files = glob.glob(
         os.path.join(app.dir, 'static', 'themes', 'css', 'bootstrap.*.min.css')
     )
     theme_js_files = glob.glob(
         os.path.join(app.dir, 'static', 'themes', 'js', 'bootstrap.*.min.js')
     )
-    themes = ['default'] + sorted([os.path.basename(theme).split('.')[1]
-                                   for theme in theme_files])
-    themes_js = sorted([os.path.basename(theme).split('.')[1]
-                        for theme in theme_js_files])
+    THEMES = {
+        "with_css": ['default'] + sorted([
+            os.path.basename(theme).split('.')[1]
+            for theme in theme_css_files
+        ]),
+        "with_js": sorted([
+            os.path.basename(theme).split('.')[1]
+            for theme in theme_js_files
+        ])
+    }
 
-    CONSTANTS = {
+    active_tasks = {
+        task.id: {
+            "id": task.id,
+            "name": task.name,
+            "title": task.title,
+            "short": task.short,
+            "help": task.help,
+            "order": task.order
+        }
+        for task in Task.query.filter(
+            Task.is_deleted == False  # noqa # '== False' is required
+        ).order_by(Task.order).all()
+    }
+    active_task_ids = list(active_tasks)
+    if active_task_ids:
+        first_task = active_task_ids[0]
+        next_task = dict(
+            zip(
+                active_task_ids,
+                active_task_ids[1:] + [active_task_ids[0]]
+            )
+        )
+    else:
+        first_task = None
+        next_task = {}
+
+    TASKS = {
+        'active_ids': active_task_ids,
+        'active_tasks': active_tasks,
+        'first_task': first_task,
+        'next_task': next_task,
+
+        # task default information
+        'default': TASK_DEFAULT_INFORMATION,
+
+        # task names
+        'task_sentence_boundary': TASK_SENTENCE_BOUNDARY,
+        'task_word_order': TASK_WORD_ORDER,
+        'task_token_text_annotation': TASK_TOKEN_TEXT_ANNOTATION,
+        'task_token_classification': TASK_TOKEN_CLASSIFICATION,
+        'task_token_graph': TASK_TOKEN_GRAPH,
+        'task_token_connection': TASK_TOKEN_CONNECTION,
+        'task_sentence_classification': TASK_SENTENCE_CLASSIFICATION,
+        'task_sentence_graph': TASK_SENTENCE_GRAPH,
+
+        # update actions
+        'update_actions': TASK_UPDATE_ACTIONS,
+    }
+
+    LABELS = {
         # 'task_labels': Label.query.filter(
         #     ActionLabel.is_deleted == False  # noqa # '== False' is required
         # ).with_entities(
         #     Label.id, Label.task_id, Label.label, Label.description
         # ).order_by(Label.task_id, Label.label).all(),
-        'tasks': [
-            {
-                "id": task.id,
-                "name": task.name,
-                "title": task.title,
-                "short": task.short,
-                "help": task.help,
-                "order": task.order
-            }
-            for task in Task.query.filter(
-                Task.is_deleted == False  # noqa # '== False' is required
-            ).order_by(Task.order).all()
-        ],
-        'task_update_actions': TASK_UPDATE_ACTIONS,
         'token_labels': TokenLabel.query.filter(
             TokenLabel.is_deleted == False  # noqa # '== False' is required
         ).with_entities(
@@ -419,9 +460,9 @@ def inject_global_constants():
     return {
         'title': app.title,
         'now': datetime.datetime.utcnow(),
-        'constants': CONSTANTS,
-        'themes': themes,
-        'themes_js': themes_js,
+        'context_tasks': TASKS,
+        'context_labels': LABELS,
+        'context_themes': THEMES,
         'config': app.config
     }
 
@@ -726,26 +767,25 @@ def api():
     # ----------------------------------------------------------------------- #
     # Populate next_task
 
-    next_task = {}
     task_query = Task.query.filter(
         Task.is_deleted == False  # noqa # '== False' is required
     ).order_by(Task.order)
+    active_task_ids = [task.id for task in task_query.all()]
 
-    _first_task = None
-    _task = None
-
-    for task in task_query.all():
-        if _first_task is None:
-            _task = task.name
-            _first_task = _task
-        else:
-            next_task[_task] = task.name
-            _task = task.name
-
-    next_task[_task] = _first_task
+    if active_task_ids:
+        first_task = active_task_ids[0]
+        next_task = dict(
+            zip(
+                active_task_ids,
+                active_task_ids[1:] + [active_task_ids[0]]
+            )
+        )
+    else:
+        first_task = None
+        next_task = {}
 
     if action in task_update_actions:
-        api_response["first_task"] = _first_task
+        api_response["first_task"] = first_task
 
     # ----------------------------------------------------------------------- #
 
@@ -756,11 +796,9 @@ def api():
     # ----------------------------------------------------------------------- #
 
     if action == TASK_UPDATE_ACTIONS[TASK_SENTENCE_BOUNDARY]:
-        task_name = TASK_SENTENCE_BOUNDARY
-        task_id = Task.query.filter(Task.name == task_name).first().id
-
-        verse_id = int(request.form["verse_id"])
         annotator_id = current_user.id
+        task_id = int(request.form["task_id"])
+        verse_id = int(request.form["verse_id"])
         boundary_tokens = [
             int(b.strip())
             for b in request.form["boundaries"].split(",")
@@ -839,7 +877,7 @@ def api():
                 task_id=task_id
             )
             api_response["success"] = True
-            api_response["next_task"] = next_task[task_name]
+            api_response["next_task"] = next_task[task_id]
         except Exception as e:
             webapp.logger.exception(e)
             webapp.logger.info(request.form)
@@ -853,8 +891,8 @@ def api():
     # ----------------------------------------------------------------------- #
 
     if action == "add_token":
-        verse_id = int(request.form["verse_id"])
         annotator_id = current_user.id
+        verse_id = int(request.form["verse_id"])
         token_data = json.loads(request.form["token_data"])
 
         # NOTE: associate added tokens with the first line of the verse
@@ -894,11 +932,9 @@ def api():
     # ----------------------------------------------------------------------- #
 
     if action == TASK_UPDATE_ACTIONS[TASK_WORD_ORDER]:
-        task_name = TASK_WORD_ORDER
-        task_id = Task.query.filter(Task.name == task_name).first().id
-
-        verse_id = int(request.form["verse_id"])
         annotator_id = current_user.id
+        task_id = int(request.form["task_id"])
+        verse_id = int(request.form["verse_id"])
         word_order = json.loads(request.form["word_order"])
 
         word_order_order = {}
@@ -954,7 +990,7 @@ def api():
                 task_id=task_id
             )
             api_response["success"] = True
-            api_response["next_task"] = next_task[task_name]
+            api_response["next_task"] = next_task[task_id]
         except Exception as e:
             webapp.logger.exception(e)
             webapp.logger.info(request.form)
@@ -968,11 +1004,9 @@ def api():
     # ----------------------------------------------------------------------- #
 
     if action == TASK_UPDATE_ACTIONS[TASK_TOKEN_TEXT_ANNOTATION]:
-        task_name = TASK_TOKEN_TEXT_ANNOTATION
-        task_id = Task.query.filter(Task.name == task_name).first().id
-
-        verse_id = int(request.form["verse_id"])
         annotator_id = current_user.id
+        task_id = int(request.form["task_id"])
+        verse_id = int(request.form["verse_id"])
         text_annotation_data = json.loads(request.form["text_annotation_data"])
 
         objects_to_update = []
@@ -1054,7 +1088,7 @@ def api():
                 task_id=task_id
             )
             api_response["success"] = True
-            api_response["next_task"] = next_task[task_name]
+            api_response["next_task"] = next_task[task_id]
         except Exception as e:
             webapp.logger.exception(e)
             webapp.logger.info(request.form)
@@ -1068,11 +1102,9 @@ def api():
     # ----------------------------------------------------------------------- #
 
     if action == TASK_UPDATE_ACTIONS[TASK_TOKEN_CLASSIFICATION]:
-        task_name = TASK_TOKEN_CLASSIFICATION
-        task_id = Task.query.filter(Task.name == task_name).first().id
-
-        verse_id = int(request.form["verse_id"])
         annotator_id = current_user.id
+        task_id = int(request.form["task_id"])
+        verse_id = int(request.form["verse_id"])
         token_classification_data = json.loads(
             request.form["token_classification_data"]
         )
@@ -1156,7 +1188,7 @@ def api():
                 task_id=task_id
             )
             api_response["success"] = True
-            api_response["next_task"] = next_task[task_name]
+            api_response["next_task"] = next_task[task_id]
         except Exception as e:
             webapp.logger.exception(e)
             webapp.logger.info(request.form)
@@ -1170,11 +1202,9 @@ def api():
     # ----------------------------------------------------------------------- #
 
     if action == TASK_UPDATE_ACTIONS[TASK_TOKEN_GRAPH]:
-        task_name = TASK_TOKEN_GRAPH
-        task_id = Task.query.filter(Task.name == task_name).first().id
-
-        verse_id = int(request.form["verse_id"])
         annotator_id = current_user.id
+        task_id = int(request.form["task_id"])
+        verse_id = int(request.form["verse_id"])
         graph_data = json.loads(request.form.get("graph_data", "[]"))
 
         objects_to_update = []
@@ -1260,7 +1290,7 @@ def api():
                 task_id=task_id
             )
             api_response["success"] = True
-            api_response["next_task"] = next_task[task_name]
+            api_response["next_task"] = next_task[task_id]
         except Exception as e:
             webapp.logger.exception(e)
             webapp.logger.info(request.form)
@@ -1274,11 +1304,9 @@ def api():
     # ----------------------------------------------------------------------- #
 
     if action == TASK_UPDATE_ACTIONS[TASK_TOKEN_CONNECTION]:
-        task_name = TASK_TOKEN_CONNECTION
-        task_id = Task.query.filter(Task.name == task_name).first().id
-
-        verse_id = int(request.form["verse_id"])
         annotator_id = current_user.id
+        task_id = int(request.form["task_id"])
+        verse_id = int(request.form["verse_id"])
         token_connection_data = json.loads(
             request.form.get("token_connection_data", "[]")
         )
@@ -1372,7 +1400,7 @@ def api():
                 task_id=task_id
             )
             api_response["success"] = True
-            api_response["next_task"] = next_task[task_name]
+            api_response["next_task"] = next_task[task_id]
         except Exception as e:
             webapp.logger.exception(e)
             webapp.logger.info(request.form)
@@ -1386,11 +1414,9 @@ def api():
     # ----------------------------------------------------------------------- #
 
     if action == TASK_UPDATE_ACTIONS[TASK_SENTENCE_CLASSIFICATION]:
-        task_name = TASK_SENTENCE_CLASSIFICATION
-        task_id = Task.query.filter(Task.name == task_name).first().id
-
-        verse_id = int(request.form["verse_id"])
         annotator_id = current_user.id
+        task_id = int(request.form["task_id"])
+        verse_id = int(request.form["verse_id"])
         sentence_classification_data = json.loads(
             request.form.get("sentence_classification_data", "[]")
         )
@@ -1465,7 +1491,7 @@ def api():
                 task_id=task_id
             )
             api_response["success"] = True
-            api_response["next_task"] = next_task[task_name]
+            api_response["next_task"] = next_task[task_id]
         except Exception as e:
             webapp.logger.exception(e)
             webapp.logger.info(request.form)
@@ -1480,17 +1506,16 @@ def api():
     # ----------------------------------------------------------------------- #
 
     if action == TASK_UPDATE_ACTIONS[TASK_SENTENCE_GRAPH]:
-        task_name = TASK_SENTENCE_GRAPH
-        task_id = Task.query.filter(Task.name == task_name).first().id
-
-        verse_id = int(request.form["verse_id"])
         annotator_id = current_user.id
+        task_id = int(request.form["task_id"])
+        verse_id = int(request.form["verse_id"])
         sentence_graph_data = json.loads(
             request.form.get("sentence_graph_data", "[]")
         )
         context_data = json.loads(
             request.form.get("context_data", "[]")
         )
+
         objects_to_update = []
         try:
             # validate sentence_graph_data: List[Dict]
@@ -1599,7 +1624,7 @@ def api():
                 task_id=task_id
             )
             api_response["success"] = True
-            api_response["next_task"] = next_task[task_name]
+            api_response["next_task"] = next_task[task_id]
         except Exception as e:
             webapp.logger.exception(e)
             webapp.logger.info(request.form)

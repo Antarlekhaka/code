@@ -26,7 +26,7 @@
     </div>
     <select id="sample-source-entity" title="Action {}" class="form-control" data-width="false" data-live-search="true" required></select>
     <select id="sample-relation-label" title="Relation Label {}" class="form-control" data-width="false" data-live-search="true" required>
-        {% for _id, _label, _description in constants.relation_labels %}
+        {% for _id, _label, _description in context_labels.relation_labels %}
         <option value="{{_id}}" data-subtext="{{_description}}" data-content='<span class="btn-sm">{{_description}}</span>'></option>
         {% endfor %}
     </select>

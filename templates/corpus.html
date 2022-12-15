@@ -50,7 +50,7 @@
             <!-- <div class="scroll-large"> -->
             {% if current_user.has_permission("annotate") %}
             <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
-                {% for task in constants.tasks %}
+                {% for task_id, task in context_tasks.active_tasks.items() %}
                 {% if loop.index == 1 %}
                     {% set active_class = "active" %}
                     {% set aria_selected = "true" %}
@@ -59,13 +59,13 @@
                     {% set aria_selected = "false" %}
                 {% endif %}
                 <li class="nav-item" title="{{task.title}}">
-                  <a class="nav-link {{active_class}}" id="task-{{task.id}}-tab" data-task-name="{{task.name}}" data-toggle="pill" href="#task-{{task.id}}-tab-content" role="tab" aria-controls="task-{{task.id}}-tab-content" aria-selected="{{aria_selected}}">{{task.short}}</a>
+                  <a class="nav-link {{active_class}} task-tab" id="task-{{task.id}}-tab" data-task-id="{{task.id}}" data-task-name="{{task.name}}" data-toggle="pill" href="#task-{{task.id}}-tab-content" role="tab" aria-controls="task-{{task.id}}-tab-content" aria-selected="{{aria_selected}}">{{task.short}}</a>
                 </li>
                 {% endfor %}
             </ul>
 
             <div class="tab-content" id="pills-tab-content">
-                {% for task in constants.tasks %}
+                {% for task_id, task in context_tasks.active_tasks.items() %}
                 {% if loop.index == 1 %}
                     {% set active_class = "active" %}
                 {% else %}
@@ -172,7 +172,23 @@
     const API_URL = "{{url_for('api')}}";
     const SAMPLE_VERSE_DATA_URL = "{{url_for('api_verse', verse_id=0)}}";
     const CURRENT_USERNAME = "{{current_user.username}}";
-    const TASK_UPDATE_ACTIONS = JSON.parse("{{constants.task_update_actions | tojson() }}");
+
+    const TASK_SENTENCE_BOUNDARY = "{{context_tasks.task_sentence_boundary}}";
+    const TASK_WORD_ORDER = "{{context_tasks.task_word_order}}";
+    const TASK_TOKEN_TEXT_ANNOTATION = "{{context_tasks.task_token_text_annotation}}";
+    const TASK_TOKEN_CLASSIFICATION = "{{context_tasks.task_token_classification}}";
+    const TASK_TOKEN_GRAPH = "{{context_tasks.task_token_graph}}";
+    const TASK_TOKEN_CONNECTION = "{{context_tasks.task_token_connection}}";
+    const TASK_SENTENCE_CLASSIFICATION = "{{context_tasks.task_sentence_classification}}";
+    const TASK_SENTENCE_GRAPH = "{{context_tasks.task_sentence_graph}}";
+
+    // CAUTION:
+    // JSON generated from tojson() filter would have double quotes ("),
+    // so must use single quotes (') in JSON.parse()
+
+    const TASK_ACTIVE_TASKS = JSON.parse('{{context_tasks.active_tasks | tojson() }}');
+    const TASK_UPDATE_ACTIONS = JSON.parse('{{context_tasks.update_actions | tojson() }}');
+    const TASK_NEXT = JSON.parse('{{context_tasks.next_task | tojson() }}');
 </script>
 <script src="{{url_for('static', filename='custom/js/corpus/elements.js')}}"></script>
 <script src="{{url_for('static', filename='custom/js/corpus/functions.js')}}"></script>

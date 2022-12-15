@@ -2,16 +2,12 @@ const $corpus_table = $("#corpus_viewer");
 
 const $verse_id_containers = $(".verse-id-container");
 const $refresh_verse_buttons = $(".refresh-verse");
+const $task_submit_buttons = $(".task-submit-button");
+const $task_tabs = $(".task-tab");
 
-const $tabs = {
-    "sentence_boundary": $("#task-1-tab"),
-    "word_order": $("#task-2-tab"),
-    "token_classification": $("#task-3-tab"),
-    "token_graph": $("#task-4-tab"),
-    "token_connection": $("#task-5-tab"),
-    "sentence_classification": $("#task-6-tab"),
-    "sentence_graph": $("#task-7-tab"),
-    "token_text_annotation": $("#task-8-tab"),
+const $tabs = {};
+for (const [task_id, task] of Object.entries(TASK_ACTIVE_TASKS)) {
+    $tabs[task_id] = $(`#task-${task_id}-tab`);
 }
 
 const $task_1_submit = $("#task-1-submit");
