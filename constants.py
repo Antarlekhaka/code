@@ -31,13 +31,22 @@ TASK_CATEGORY_LIST = [
 
 ###############################################################################
 
-TASK_TEMPLATES = {
-    category: f"task_{category}.html"
+TASK_TEMPLATE_PREFIX = "task"
+RESULT_TEMPLATE_PREFIX = "result"
+TASK_UPDATE_ACTION_PREFIX = "update"
+
+TASK_ANNOTATION_TEMPLATES = {
+    category: f"{TASK_TEMPLATE_PREFIX}_{category}.html"
     for category in TASK_CATEGORY_LIST
 }
 
-RESULT_TEMPLATES = {
-    category: f"result_{category}.html"
+TASK_EXPORT_TEMPLATES = {
+    category: f"{RESULT_TEMPLATE_PREFIX}_{category}.html"
+    for category in TASK_CATEGORY_LIST
+}
+
+TASK_UPDATE_ACTIONS = {
+    category: f"{TASK_UPDATE_ACTION_PREFIX}_{category}"
     for category in TASK_CATEGORY_LIST
 }
 

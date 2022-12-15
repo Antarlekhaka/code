@@ -327,7 +327,7 @@ $task_1_submit.click(function () {
     }
 
     $.post(API_URL, {
-        action: TASK_1_SUBMIT_ACTION,
+        action: TASK_UPDATE_ACTIONS[task_name],
         task_id: task_id,
         verse_id: verse_id,
         boundaries: line_break_tokens.join(","),
@@ -622,7 +622,7 @@ $task_2_submit.click(function () {
     // console.log(word_order_data);
 
     $.post(API_URL, {
-        action: TASK_2_SUBMIT_ACTION,
+        action: TASK_UPDATE_ACTIONS[task_name],
         task_id: task_id,
         verse_id: verse_id,
         word_order: JSON.stringify(word_order_data)
@@ -789,7 +789,7 @@ $task_3_submit.click(function () {
     });
 
     $.post(API_URL, {
-        action: TASK_3_SUBMIT_ACTION,
+        action: TASK_UPDATE_ACTIONS[task_name],
         task_id: task_id,
         verse_id: verse_id,
         token_classification_data: JSON.stringify(token_classification_data)
@@ -1166,7 +1166,7 @@ $task_4_submit.click(function () {
     console.log(token_graph_data);
 
     $.post(API_URL, {
-        action: TASK_4_SUBMIT_ACTION,
+        action: TASK_UPDATE_ACTIONS[task_name],
         task_id: task_id,
         verse_id: verse_id,
         token_graph_data: JSON.stringify(token_graph_data)
@@ -1388,7 +1388,7 @@ $task_5_submit.click(function() {
         });
     });
     $.post(API_URL, {
-        action: TASK_5_SUBMIT_ACTION,
+        action: TASK_UPDATE_ACTIONS[task_name],
         task_id: task_id,
         verse_id: verse_id,
         context_data: JSON.stringify(context_data),
@@ -1504,7 +1504,7 @@ $task_6_submit.click(function() {
     });
 
     $.post(API_URL, {
-        action: TASK_6_SUBMIT_ACTION,
+        action: TASK_UPDATE_ACTIONS[task_name],
         task_id: task_id,
         verse_id: verse_id,
         classification_data: JSON.stringify(sentence_classification_data)
@@ -1906,7 +1906,7 @@ $task_7_submit.click(function () {
         });
     });
     $.post(API_URL, {
-        action: TASK_7_SUBMIT_ACTION,
+        action: TASK_UPDATE_ACTIONS[task_name],
         task_id: task_id,
         verse_id: verse_id,
         context_data: JSON.stringify(context_data),
@@ -2075,7 +2075,7 @@ $task_8_submit.click(function () {
     });
 
     $.post(API_URL, {
-        action: TASK_8_SUBMIT_ACTION,
+        action: TASK_UPDATE_ACTIONS[task_name],
         task_id: task_id,
         verse_id: verse_id,
         text_annotation_data: JSON.stringify(token_text_annotation_data)

@@ -59,6 +59,22 @@ from flask_migrate import Migrate
 
 # from indic_transliteration.sanscript import transliterate
 
+from constants import (
+    # Task Category Names
+    TASK_SENTENCE_BOUNDARY,
+    TASK_WORD_ORDER,
+    TASK_TOKEN_TEXT_ANNOTATION,
+    TASK_TOKEN_CLASSIFICATION,
+    TASK_TOKEN_GRAPH,
+    TASK_TOKEN_CONNECTION,
+    TASK_SENTENCE_CLASSIFICATION,
+    TASK_SENTENCE_GRAPH,
+
+    TASK_DETAILS,
+    TASK_UPDATE_ACTIONS,
+    TASK_ANNOTATION_TEMPLATES, TASK_EXPORT_TEMPLATES
+)
+
 from models_sqla import (db, user_datastore,
                          CustomLoginForm, CustomRegisterForm,
                          Corpus, Chapter, Verse, Line, Token,
@@ -348,6 +364,7 @@ def inject_global_constants():
                 Task.is_deleted == False  # noqa # '== False' is required
             ).order_by(Task.order).all()
         ],
+        'task_update_actions': TASK_UPDATE_ACTIONS,
         'token_labels': TokenLabel.query.filter(
             TokenLabel.is_deleted == False  # noqa # '== False' is required
         ).with_entities(
@@ -684,19 +701,12 @@ def api():
     # ----------------------------------------------------------------------- #
     # Action Authorization
 
+    task_update_actions = list(TASK_UPDATE_ACTIONS.values())
+    annotator_actions = task_update_actions + ["add_token"]
+
     role_actions = {
         "admin": [],
-        "annotator": [
-            "update_sentence_boundary",
-            "add_token",
-            "update_word_order",
-            "update_token_text_annotation",
-            "update_token_classification",
-            "update_token_graph",
-            "update_token_connection",
-            "update_sentence_classification",
-            "update_sentence_graph",
-        ],
+        "annotator": annotator_actions,
         "curator": [],
         "querier": []
     }
@@ -716,7 +726,6 @@ def api():
     # ----------------------------------------------------------------------- #
     # Populate next_task
 
-    task_actions = []
     next_task = {}
     task_query = Task.query.filter(
         Task.is_deleted == False  # noqa # '== False' is required
@@ -726,7 +735,6 @@ def api():
     _task = None
 
     for task in task_query.all():
-        task_actions.append(f"update_{task.name}")
         if _first_task is None:
             _task = task.name
             _first_task = _task
@@ -736,7 +744,7 @@ def api():
 
     next_task[_task] = _first_task
 
-    if action in task_actions:
+    if action in task_update_actions:
         api_response["first_task"] = _first_task
 
     # ----------------------------------------------------------------------- #
@@ -747,8 +755,8 @@ def api():
 
     # ----------------------------------------------------------------------- #
 
-    if action == "update_sentence_boundary":
-        task_name = action.replace("update_", "")
+    if action == TASK_UPDATE_ACTIONS[TASK_SENTENCE_BOUNDARY]:
+        task_name = TASK_SENTENCE_BOUNDARY
         task_id = Task.query.filter(Task.name == task_name).first().id
 
         verse_id = int(request.form["verse_id"])
@@ -885,8 +893,8 @@ def api():
 
     # ----------------------------------------------------------------------- #
 
-    if action == "update_word_order":
-        task_name = action.replace("update_", "")
+    if action == TASK_UPDATE_ACTIONS[TASK_WORD_ORDER]:
+        task_name = TASK_WORD_ORDER
         task_id = Task.query.filter(Task.name == task_name).first().id
 
         verse_id = int(request.form["verse_id"])
@@ -959,8 +967,8 @@ def api():
 
     # ----------------------------------------------------------------------- #
 
-    if action == "update_token_text_annotation":
-        task_name = action.replace("update_", "")
+    if action == TASK_UPDATE_ACTIONS[TASK_TOKEN_TEXT_ANNOTATION]:
+        task_name = TASK_TOKEN_TEXT_ANNOTATION
         task_id = Task.query.filter(Task.name == task_name).first().id
 
         verse_id = int(request.form["verse_id"])
@@ -1059,8 +1067,8 @@ def api():
 
     # ----------------------------------------------------------------------- #
 
-    if action == "update_token_classification":
-        task_name = action.replace("update_", "")
+    if action == TASK_UPDATE_ACTIONS[TASK_TOKEN_CLASSIFICATION]:
+        task_name = TASK_TOKEN_CLASSIFICATION
         task_id = Task.query.filter(Task.name == task_name).first().id
 
         verse_id = int(request.form["verse_id"])
@@ -1161,8 +1169,8 @@ def api():
 
     # ----------------------------------------------------------------------- #
 
-    if action == "update_token_graph":
-        task_name = action.replace("update_", "")
+    if action == TASK_UPDATE_ACTIONS[TASK_TOKEN_GRAPH]:
+        task_name = TASK_TOKEN_GRAPH
         task_id = Task.query.filter(Task.name == task_name).first().id
 
         verse_id = int(request.form["verse_id"])
@@ -1265,8 +1273,8 @@ def api():
 
     # ----------------------------------------------------------------------- #
 
-    if action == "update_token_connection":
-        task_name = action.replace("update_", "")
+    if action == TASK_UPDATE_ACTIONS[TASK_TOKEN_CONNECTION]:
+        task_name = TASK_TOKEN_CONNECTION
         task_id = Task.query.filter(Task.name == task_name).first().id
 
         verse_id = int(request.form["verse_id"])
@@ -1377,8 +1385,8 @@ def api():
 
     # ----------------------------------------------------------------------- #
 
-    if action == "update_sentence_classification":
-        task_name = action.replace("update_", "")
+    if action == TASK_UPDATE_ACTIONS[TASK_SENTENCE_CLASSIFICATION]:
+        task_name = TASK_SENTENCE_CLASSIFICATION
         task_id = Task.query.filter(Task.name == task_name).first().id
 
         verse_id = int(request.form["verse_id"])
@@ -1473,8 +1481,8 @@ def api():
 
     # ----------------------------------------------------------------------- #
 
-    if action == "update_sentence_graph":
-        task_name = action.replace("update_", "")
+    if action == TASK_UPDATE_ACTIONS[TASK_SENTENCE_GRAPH]:
+        task_name = TASK_SENTENCE_GRAPH
         task_id = Task.query.filter(Task.name == task_name).first().id
 
         verse_id = int(request.form["verse_id"])
