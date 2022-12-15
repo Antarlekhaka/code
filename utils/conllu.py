@@ -97,7 +97,7 @@ class CoNLLUParser:
             List of token keys to transliterate
         """
         self.input_scheme = input_scheme
-        self.target_scheme = store_scheme
+        self.store_scheme = store_scheme
 
         self.fields = self.FIELDS
         self.relevant_fields = self.RELEVANT_FIELDS
@@ -163,7 +163,7 @@ class CoNLLUParser:
 
     def transliterate_lines(self, conllu_lines):
         """Transliterate CoNLL-U Data"""
-        if self.target_scheme != self.input_scheme:
+        if self.store_scheme != self.input_scheme:
             for textline in conllu_lines:
                 textline.metadata = self.transliterate_metadata(
                     textline.metadata
@@ -174,22 +174,22 @@ class CoNLLUParser:
 
     def transliterate_metadata(self, metadata):
         """Transliterate Metadata"""
-        if self.target_scheme == self.input_scheme:
+        if self.store_scheme == self.input_scheme:
             return metadata
         for key in self.transliterate_metadata_keys:
             if key not in metadata:
                 continue
             metadata[key] = transliterate(
-                metadata[key], self.input_scheme, self.target_scheme
+                metadata[key], self.input_scheme, self.store_scheme
             )
         return metadata
 
     def transliterate_token(self, token):
         """Transliterate Token"""
-        if self.target_scheme == self.input_scheme:
+        if self.store_scheme == self.input_scheme:
             return token
 
-        for key in self.transliterate_metadata_keys:
+        for key in self.transliterate_token_keys:
             if "." in key:
                 _key, _subkey = key.split(".", 1)
             else:
@@ -204,13 +204,13 @@ class CoNLLUParser:
 
             if _subkey is None:
                 token[_key] = transliterate(
-                    token[_key], self.input_scheme, self.target_scheme
+                    token[_key], self.input_scheme, self.store_scheme
                 )
             else:
                 if token[_key][_subkey] is None:
                     continue
                 token[_key][_subkey] = transliterate(
-                    token[_key][_subkey], self.input_scheme, self.target_scheme
+                    token[_key][_subkey], self.input_scheme, self.store_scheme
                 )
         return token
 
@@ -247,7 +247,7 @@ class CoNLLUParser:
                     "tokens": [
                         {
                             _name: token.get(_name) or _default
-                            for _name, _default in self.relevant_fields
+                            for _name, _default in self.relevant_fields.items()
                         }
                         for token in line
                     ]
