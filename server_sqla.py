@@ -274,7 +274,7 @@ def init_database():
         for idx, task in enumerate(tasks_data, start=1):
             t = Task()
             t.id = task["id"]
-            t.name = task["name"]
+            t.category = task["category"]
             t.title = task["title"]
             t.short = task["short"]
             t.help = task["help"]
@@ -362,7 +362,7 @@ def inject_global_context():
     active_tasks = {
         task.id: {
             "id": task.id,
-            "name": task.name,
+            "category": task.category,
             "title": task.title,
             "short": task.short,
             "help": task.help,
@@ -394,7 +394,7 @@ def inject_global_context():
         # task default information
         'default': TASK_DEFAULT_INFORMATION,
 
-        # task names
+        # task categories
         'task_sentence_boundary': TASK_SENTENCE_BOUNDARY,
         'task_word_order': TASK_WORD_ORDER,
         'task_token_text_annotation': TASK_TOKEN_TEXT_ANNOTATION,
@@ -519,7 +519,7 @@ def show_admin():
     data['tasks'] = [
         {
             'id': task.id,
-            'name': task.name,
+            'category': task.category,
             'title': task.title,
             'order': task.order,
             'is_deleted': task.is_deleted
@@ -585,7 +585,7 @@ def show_export():
     data['tasks'] = [
         {
             "id": task.id,
-            "name": task.name,
+            "category": task.category,
             "title": task.title,
             "short": task.short,
             "help": task.help,

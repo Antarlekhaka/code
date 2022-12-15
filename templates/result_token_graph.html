@@ -62,35 +62,37 @@
 </script>
 {% for chapter_id, chapter_result in data.result.items() %}
 <script>
-    TOKEN_GRAPH_DATA["{{chapter_id}}"] =  JSON.parse('{{chapter_result[task.name] | tojson }}');
+    TOKEN_GRAPH_DATA["{{chapter_id}}"] =  JSON.parse('{{chapter_result[task.category] | tojson }}');
 </script>
-<button id="token-graph-snapshot-button-{{chapter_id}}" title="Snapshot" data-chapter="{{chapter_id}}" class="btn btn-primary mr-auto float-right token-graph-snapshot">
+<button id="token-graph-{{task.id}}-snapshot-button-{{chapter_id}}" title="Snapshot" data-task-id="{{task.id}}" data-task-category="{{task.category}}" data-chapter="{{chapter_id}}" class="btn btn-primary mr-auto float-right token-graph-snapshot">
     <i class="fa fa-camera"></i>
 </button>
-<div class="border rounded px-2 py-1" id="token-graph-{{chapter_id}}" style="height: 55vh;">
+<div class="border rounded px-2 py-1" id="token-graph-{{task.id}}-{{chapter_id}}" style="height: 55vh;">
     No edges found.
 </div>
 {% endfor %}
 <script>
     $(".token-graph-snapshot").click(function() {
         const $snapshot_button = $(this);
+        const task_id = $snapshot_button.data("task-id");
+        const task_category = $snapshot_button.data("task-category");
         const chapter_id = $snapshot_button.data('chapter');
         const download_anchor = document.createElement('a');
         download_anchor.href = $snapshot_button.data('src');
-        download_anchor.download = `token_graph_${chapter_id}.png`;
+        download_anchor.download = `${task_category}_${task_id}_${chapter_id}.png`;
         document.body.appendChild(download_anchor);
         download_anchor.click();
         document.body.removeChild(download_anchor);
     });
 
     function draw_token_graph(chapter_id) {
-        const container = document.getElementById(`token-graph-${chapter_id}`);
+        const container = document.getElementById(`token-graph-{{task.id}}-${chapter_id}`);
         TOKEN_GRAPH_NETWORK[chapter_id] = new vis.Network(container, TOKEN_GRAPH_DATA[chapter_id], TOKEN_GRAPH_OPTIONS);
 
         // get a JSON object
         TOKEN_GRAPH_NETWORK[chapter_id].on("afterDrawing", function (ctx) {
             const data_url = ctx.canvas.toDataURL();
-            $(`#token-graph-snapshot-button-${chapter_id}`).data("src", data_url);
+            $(`#token-graph-{{task.id}}-snapshot-button-${chapter_id}`).data("src", data_url);
         });
     }
 
@@ -102,8 +104,8 @@
 
     $('a[data-toggle="pill"]').on('shown.bs.tab', function (event) {
         const $active_tab = $(event.target);
-        const task_name = $active_tab.data("task-name");
-        if (task_name == "token_graph") {
+        const task_category = $active_tab.data("task-category");
+        if (task_category == "token_graph") {
             for (const chapter_id of Object.keys(TOKEN_GRAPH_DATA)) {
                 TOKEN_GRAPH_NETWORK[chapter_id].fit();
             }

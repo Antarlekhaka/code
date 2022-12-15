@@ -56,8 +56,8 @@ $corpus_table.on('expand-row.bs.table', function (e, index, row, $detail) {
     // Instead, simply locate the active tab and setup the corresponding task
 
     const $active_tab = $('a[aria-selected="true"]');
-    const active_task_name = $active_tab.data('task-name');
-    setup_task(active_task_name, verse_id);
+    const active_task_category = $active_tab.data('task-category');
+    setup_task(active_task_category, verse_id);
 });
 
 
@@ -74,8 +74,8 @@ $('a[data-toggle="pill"]').on('shown.bs.tab', function (event) {
     }
 
     const $active_tab = $(event.target);
-    const task_name = $active_tab.data("task-name");
-    setup_task(task_name, verse_id);
+    const task_category = $active_tab.data("task-category");
+    setup_task(task_category, verse_id);
 });
 
 // Page Change

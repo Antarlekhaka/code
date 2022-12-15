@@ -1,56 +1,56 @@
 [
     {
         "id": 1,
-        "name": "sentence_boundary",
+        "category": "sentence_boundary",
         "title": "Sentence Boundary",
         "short": "Boundary",
         "help": "Mark the sentence boundary."
     },
     {
         "id": 2,
-        "name": "word_order",
+        "category": "word_order",
         "title": "Canonical Word Order",
         "short": "Word Order",
         "help": "Arrange the words in the correct order."
     },
     {
         "id": 3,
-        "name": "token_classification",
+        "category": "token_classification",
         "title": "Token Classification",
         "short": "TokClass",
         "help": "Classify tokens."
     },
     {
         "id": 4,
-        "name": "token_graph",
+        "category": "token_graph",
         "title": "Token Graph",
         "short": "TokGraph",
         "help": "Create a token graph in the form of triplets."
     },
     {
         "id": 5,
-        "name": "token_connection",
+        "category": "token_connection",
         "title": "Token Connection",
         "short": "TokCon",
         "help": "Idenitfy token connections."
     },
     {
         "id": 6,
-        "name": "sentence_classification",
+        "category": "sentence_classification",
         "title": "Sentence Classification",
         "short": "SentClass",
         "help": "Classify sentences."
     },
     {
         "id": 7,
-        "name": "sentence_graph",
+        "category": "sentence_graph",
         "title": "Sentence Graph",
         "short": "SentGraph",
         "help": "Identify intersentence connections to create the sentence graph."
     },
     {
         "id": 8,
-        "name": "token_text_annotation",
+        "category": "token_text_annotation",
         "title": "Token Text Annotation",
         "short": "Text",
         "help": "Mark general text annotations to tokens."

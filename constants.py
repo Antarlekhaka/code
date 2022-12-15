@@ -54,13 +54,13 @@ TASK_UPDATE_ACTIONS = {
 
 TASK_DEFAULT_INFORMATION = {
     TASK_SENTENCE_BOUNDARY: {
-        "name": "sentence_boundary",
+        "category": "sentence_boundary",
         "title": "Sentence Boundary Detection",
         "short": "Boundary",
         "help": "Mark the sentence boundary using the boundary marker."
     },
     TASK_WORD_ORDER: {
-        "name": "word_order",
+        "category": "word_order",
         "title": "Canonical Word Order",
         "short": "Word Order",
         "help": (
@@ -69,13 +69,13 @@ TASK_DEFAULT_INFORMATION = {
         )
     },
     TASK_TOKEN_TEXT_ANNOTATION: {
-        "name": "token_text_annotation",
+        "category": "token_text_annotation",
         "title": "Token Text Annotation",
         "short": "TextAnno",
         "help": "Enter text annotations associated with the tokens."
     },
     TASK_TOKEN_CLASSIFICATION: {
-        "name": "token_classification",
+        "category": "token_classification",
         "title": "Token Classification",
         "short": "TokClf",
         "help": (
@@ -84,7 +84,7 @@ TASK_DEFAULT_INFORMATION = {
         )
     },
     TASK_TOKEN_GRAPH: {
-        "name": "token_graph",
+        "category": "token_graph",
         "title": "Token Graph",
         "short": "TokGraph",
         "help": (
@@ -93,7 +93,7 @@ TASK_DEFAULT_INFORMATION = {
         )
     },
     TASK_TOKEN_CONNECTION: {
-        "name": "token_connection",
+        "category": "token_connection",
         "title": "Token Connection",
         "short": "TokConn",
         "help": (
@@ -103,7 +103,7 @@ TASK_DEFAULT_INFORMATION = {
         )
     },
     TASK_SENTENCE_CLASSIFICATION: {
-        "name": "sentence_classification",
+        "category": "sentence_classification",
         "title": "Sentence Classification",
         "short": "SentClass",
         "help": (
@@ -112,7 +112,7 @@ TASK_DEFAULT_INFORMATION = {
         )
     },
     TASK_SENTENCE_GRAPH: {
-        "name": "sentence_graph",
+        "category": "sentence_graph",
         "title": "Sentence Graph",
         "short": "SentGraph",
         "help": (

@@ -21,6 +21,10 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_security import UserMixin, RoleMixin, SQLAlchemyUserDatastore
 from flask_security.forms import LoginForm, RegisterForm, StringField, Required
 
+# --------------------------------------------------------------------------- #
+
+from constants import TASK_CATEGORY_LIST
+
 ###############################################################################
 # Foreign Key Support for SQLite3
 
@@ -163,7 +167,7 @@ class RolesUsers(db.Model):
 
 class Task(db.Model):
     id = Column(Integer, primary_key=True)
-    name = Column(String(255), nullable=False)
+    category = Column(Enum(*TASK_CATEGORY_LIST), nullable=False)
     title = Column(String(255), nullable=False)
     short = Column(String(255), nullable=False)
     help = Column(String(255), nullable=False)

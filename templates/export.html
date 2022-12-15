@@ -94,7 +94,7 @@
             {% set aria_selected = "false" %}
         {% endif %}
         <li class="nav-item" title="{{task.title}}">
-          <a class="nav-link {{active_class}} task-tab" id="task-{{task.id}}-tab" data-task-name="{{task.name}}" data-toggle="pill" href="#task-{{task.id}}-tab-content" role="tab" aria-controls="task-{{task.id}}-tab-content" aria-selected="{{aria_selected}}">{{task.short}}</a>
+          <a class="nav-link {{active_class}} task-tab" id="task-{{task.id}}-tab" data-task-category="{{task.category}}" data-toggle="pill" href="#task-{{task.id}}-tab-content" role="tab" aria-controls="task-{{task.id}}-tab-content" aria-selected="{{aria_selected}}">{{task.short}}</a>
         </li>
         {% endfor %}
     </ul>
@@ -107,19 +107,20 @@
             {% set active_class = "" %}
         {% endif %}
         <div class="tab-pane {{active_class}}" id="task-{{task.id}}-tab-content" role="tabpanel" aria-labelledby="task-{{task.id}}-tab">
-            {% include "result_" + task.name + ".html" %}
+            {% include "result_" + task.category + ".html" %}
         </div>
         {% endfor %}
     </div>
 
     <script>
         $(".task-download").click(function() {
-            const task_name = $(this).data("task");
+            const task_id = $(this).data("task-id");
+            const task_category = $(this).data("task-category");
             const target_id = $(this).data("target");
             const chapter_id = $(this).data("chapter");
             const text_to_write = document.getElementById(target_id).innerText;
             const text_file_as_blob = new Blob([text_to_write], {type:'text/plain'});
-            const filename_to_save_as = `${task_name}_${chapter_id}.txt`;
+            const filename_to_save_as = `${task_category}_${task_id}_${chapter_id}.txt`;
 
             const download_link = document.createElement("a");
             download_link.download = filename_to_save_as;

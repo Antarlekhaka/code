@@ -182,8 +182,8 @@ $refresh_verse_buttons.click(function() {
 
 /* ****************************** Generic Task Setup ****************************** */
 
-function setup_task(task_name, verse_id) {
-    switch (task_name) {
+function setup_task(task_category, verse_id) {
+    switch (task_category) {
         case "sentence_boundary":
             setup_sentence_boundary(verse_id);
             break;
@@ -310,7 +310,7 @@ function setup_sentence_boundary(verse_id) {
 $task_1_submit.click(function () {
     const verse_id = $verse_id_containers.html();
     const task_id = $(this).data("task-id");
-    const task_name = $(this).data("task-name");
+    const task_category = $(this).data("task-category");
 
     // Identify Boundary Token IDs
     const marker_positions = $task_1_input.data('marker_positions');
@@ -327,7 +327,7 @@ $task_1_submit.click(function () {
     }
 
     $.post(API_URL, {
-        action: TASK_UPDATE_ACTIONS[task_name],
+        action: TASK_UPDATE_ACTIONS[task_category],
         task_id: task_id,
         verse_id: verse_id,
         boundaries: line_break_tokens.join(","),
@@ -611,7 +611,7 @@ $add_token_button.click(function() {
 $task_2_submit.click(function () {
     const verse_id = $verse_id_containers.html();
     const task_id = $(this).data("task-id");
-    const task_name = $(this).data("task-name");
+    const task_category = $(this).data("task-category");
 
     var word_order_data = {}
     $('.sortable').each(function(sentence_index, sentence_element) {
@@ -622,7 +622,7 @@ $task_2_submit.click(function () {
     // console.log(word_order_data);
 
     $.post(API_URL, {
-        action: TASK_UPDATE_ACTIONS[task_name],
+        action: TASK_UPDATE_ACTIONS[task_category],
         task_id: task_id,
         verse_id: verse_id,
         word_order: JSON.stringify(word_order_data)
@@ -775,7 +775,7 @@ $task_3_submit.click(function () {
 
     const verse_id = $verse_id_containers.html();
     const task_id = $(this).data("task-id");
-    const task_name = $(this).data("task-name");
+    const task_category = $(this).data("task-category");
 
     var token_classification_data = {}
     $task_3_token_classification_table.find("select").each(function(select_index, select_element) {
@@ -789,7 +789,7 @@ $task_3_submit.click(function () {
     });
 
     $.post(API_URL, {
-        action: TASK_UPDATE_ACTIONS[task_name],
+        action: TASK_UPDATE_ACTIONS[task_category],
         task_id: task_id,
         verse_id: verse_id,
         token_classification_data: JSON.stringify(token_classification_data)
@@ -1088,8 +1088,10 @@ function prepare_token_graph_data($data_location) {
 
 // Show Graph Modal
 $show_graph_modal.on('shown.bs.modal', function(event) {
+    // TODO: Maybe need to add task_id identifier in case of
+    // multiple graph tasks from same category
     const $trigger_button = $(event.relatedTarget);
-    const source_task = $trigger_button.data("task-name");
+    const source_task = $trigger_button.data("task-category");
 
     if (source_task == "token_graph") {
         // triggered from token_graph task
@@ -1136,7 +1138,7 @@ $task_4_submit.click(function () {
 
     const verse_id = $verse_id_containers.html();
     const task_id = $(this).data("task-id");
-    const task_name = $(this).data("task-name");
+    const task_category = $(this).data("task-category");
 
     var token_graph_data = [];
 
@@ -1166,7 +1168,7 @@ $task_4_submit.click(function () {
     console.log(token_graph_data);
 
     $.post(API_URL, {
-        action: TASK_UPDATE_ACTIONS[task_name],
+        action: TASK_UPDATE_ACTIONS[task_category],
         task_id: task_id,
         verse_id: verse_id,
         token_graph_data: JSON.stringify(token_graph_data)
@@ -1367,7 +1369,7 @@ $task_5_token_connection_reset_button.click(function () {
 $task_5_submit.click(function() {
     const verse_id = $verse_id_containers.html();
     const task_id = $(this).data("task-id");
-    const task_name = $(this).data("task-name");
+    const task_category = $(this).data("task-category");
 
     var context_data = [];
     var token_connection_data = [];
@@ -1388,7 +1390,7 @@ $task_5_submit.click(function() {
         });
     });
     $.post(API_URL, {
-        action: TASK_UPDATE_ACTIONS[task_name],
+        action: TASK_UPDATE_ACTIONS[task_category],
         task_id: task_id,
         verse_id: verse_id,
         context_data: JSON.stringify(context_data),
@@ -1488,7 +1490,7 @@ $task_6_submit.click(function() {
 
     const verse_id = $verse_id_containers.html();
     const task_id = $(this).data("task-id");
-    const task_name = $(this).data("task-name");
+    const task_category = $(this).data("task-category");
 
     var sentence_classification_data = [];
 
@@ -1504,7 +1506,7 @@ $task_6_submit.click(function() {
     });
 
     $.post(API_URL, {
-        action: TASK_UPDATE_ACTIONS[task_name],
+        action: TASK_UPDATE_ACTIONS[task_category],
         task_id: task_id,
         verse_id: verse_id,
         sentence_classification_data: JSON.stringify(sentence_classification_data)
@@ -1861,7 +1863,7 @@ $task_7_submit.click(function () {
 
     const verse_id = $verse_id_containers.html();
     const task_id = $(this).data("task-id");
-    const task_name = $(this).data("task-name");
+    const task_category = $(this).data("task-category");
 
     var context_data = [];
     var sentence_graph_data = [];
@@ -1906,7 +1908,7 @@ $task_7_submit.click(function () {
         });
     });
     $.post(API_URL, {
-        action: TASK_UPDATE_ACTIONS[task_name],
+        action: TASK_UPDATE_ACTIONS[task_category],
         task_id: task_id,
         verse_id: verse_id,
         context_data: JSON.stringify(context_data),
@@ -2061,7 +2063,7 @@ $task_8_submit.click(function () {
 
     const verse_id = $verse_id_containers.html();
     const task_id = $(this).data("task-id");
-    const task_name = $(this).data("task-name");
+    const task_category = $(this).data("task-category");
 
     var token_text_annotation_data = {}
     $task_8_token_text_annotation_table.find("input").each(function(input_index, input_element) {
@@ -2075,7 +2077,7 @@ $task_8_submit.click(function () {
     });
 
     $.post(API_URL, {
-        action: TASK_UPDATE_ACTIONS[task_name],
+        action: TASK_UPDATE_ACTIONS[task_category],
         task_id: task_id,
         verse_id: verse_id,
         text_annotation_data: JSON.stringify(token_text_annotation_data)
