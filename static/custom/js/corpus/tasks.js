@@ -309,6 +309,8 @@ function setup_sentence_boundary(verse_id) {
 // Submit-1
 $task_1_submit.click(function () {
     const verse_id = $verse_id_containers.html();
+    const task_id = $(this).data("task-id");
+    const task_name = $(this).data("task-name");
 
     // Identify Boundary Token IDs
     const marker_positions = $task_1_input.data('marker_positions');
@@ -326,6 +328,7 @@ $task_1_submit.click(function () {
 
     $.post(API_URL, {
         action: TASK_1_SUBMIT_ACTION,
+        task_id: task_id,
         verse_id: verse_id,
         boundaries: line_break_tokens.join(","),
     },
@@ -606,9 +609,10 @@ $add_token_button.click(function() {
 
 // Submit-2
 $task_2_submit.click(function () {
-    // Task 2 Actions
-
     const verse_id = $verse_id_containers.html();
+    const task_id = $(this).data("task-id");
+    const task_name = $(this).data("task-name");
+
     var word_order_data = {}
     $('.sortable').each(function(sentence_index, sentence_element) {
         const boundary_id = sentence_element.id;
@@ -619,6 +623,7 @@ $task_2_submit.click(function () {
 
     $.post(API_URL, {
         action: TASK_2_SUBMIT_ACTION,
+        task_id: task_id,
         verse_id: verse_id,
         word_order: JSON.stringify(word_order_data)
     },
@@ -763,13 +768,15 @@ function setup_token_classification(verse_id) {
 
 // Submit-3
 $task_3_submit.click(function () {
-    // Task 3 Actions
-
     if (!$task_3_form[0].checkValidity()) {
         $task_3_form[0].reportValidity();
         return;
     }
+
     const verse_id = $verse_id_containers.html();
+    const task_id = $(this).data("task-id");
+    const task_name = $(this).data("task-name");
+
     var token_classification_data = {}
     $task_3_token_classification_table.find("select").each(function(select_index, select_element) {
         const token_id = select_element.id;
@@ -783,6 +790,7 @@ $task_3_submit.click(function () {
 
     $.post(API_URL, {
         action: TASK_3_SUBMIT_ACTION,
+        task_id: task_id,
         verse_id: verse_id,
         token_classification_data: JSON.stringify(token_classification_data)
     },
@@ -1121,12 +1129,14 @@ $snapshot_graph_button.click(function() {
 
 // Submit-4
 $task_4_submit.click(function () {
-    const verse_id = $verse_id_containers.html();
-
     if (!$task_4_form[0].checkValidity()) {
         $task_4_form[0].reportValidity();
         return;
     }
+
+    const verse_id = $verse_id_containers.html();
+    const task_id = $(this).data("task-id");
+    const task_name = $(this).data("task-name");
 
     var token_graph_data = [];
 
@@ -1157,6 +1167,7 @@ $task_4_submit.click(function () {
 
     $.post(API_URL, {
         action: TASK_4_SUBMIT_ACTION,
+        task_id: task_id,
         verse_id: verse_id,
         token_graph_data: JSON.stringify(token_graph_data)
     },
@@ -1355,6 +1366,8 @@ $task_5_token_connection_reset_button.click(function () {
 // Submit-5
 $task_5_submit.click(function() {
     const verse_id = $verse_id_containers.html();
+    const task_id = $(this).data("task-id");
+    const task_name = $(this).data("task-name");
 
     var context_data = [];
     var token_connection_data = [];
@@ -1376,6 +1389,7 @@ $task_5_submit.click(function() {
     });
     $.post(API_URL, {
         action: TASK_5_SUBMIT_ACTION,
+        task_id: task_id,
         verse_id: verse_id,
         context_data: JSON.stringify(context_data),
         token_connection_data: JSON.stringify(token_connection_data)
@@ -1467,12 +1481,14 @@ function setup_sentence_classification(verse_id) {
 
 // Submit-6
 $task_6_submit.click(function() {
-    const verse_id = $verse_id_containers.html();
-
     if (!$task_6_form[0].checkValidity()) {
         $task_6_form[0].reportValidity();
         return;
     }
+
+    const verse_id = $verse_id_containers.html();
+    const task_id = $(this).data("task-id");
+    const task_name = $(this).data("task-name");
 
     var sentence_classification_data = [];
 
@@ -1489,6 +1505,7 @@ $task_6_submit.click(function() {
 
     $.post(API_URL, {
         action: TASK_6_SUBMIT_ACTION,
+        task_id: task_id,
         verse_id: verse_id,
         classification_data: JSON.stringify(sentence_classification_data)
     },
@@ -1837,12 +1854,14 @@ $task_7_sentence_graph_reset_button.click(function () {
 
 // Submit-7
 $task_7_submit.click(function () {
-    const verse_id = $verse_id_containers.html();
-
     if (!$task_7_form[0].checkValidity()) {
         $task_7_form[0].reportValidity();
         return;
     }
+
+    const verse_id = $verse_id_containers.html();
+    const task_id = $(this).data("task-id");
+    const task_name = $(this).data("task-name");
 
     var context_data = [];
     var sentence_graph_data = [];
@@ -1888,6 +1907,7 @@ $task_7_submit.click(function () {
     });
     $.post(API_URL, {
         action: TASK_7_SUBMIT_ACTION,
+        task_id: task_id,
         verse_id: verse_id,
         context_data: JSON.stringify(context_data),
         sentence_graph_data: JSON.stringify(sentence_graph_data)
@@ -2034,13 +2054,15 @@ function setup_token_text_annotation(verse_id) {
 
 // Submit-8
 $task_8_submit.click(function () {
-    // Task 8 Actions
-
     if (!$task_8_form[0].checkValidity()) {
         $task_8_form[0].reportValidity();
         return;
     }
+
     const verse_id = $verse_id_containers.html();
+    const task_id = $(this).data("task-id");
+    const task_name = $(this).data("task-name");
+
     var token_text_annotation_data = {}
     $task_8_token_text_annotation_table.find("input").each(function(input_index, input_element) {
         const token_id = input_element.id;
@@ -2054,6 +2076,7 @@ $task_8_submit.click(function () {
 
     $.post(API_URL, {
         action: TASK_8_SUBMIT_ACTION,
+        task_id: task_id,
         verse_id: verse_id,
         text_annotation_data: JSON.stringify(token_text_annotation_data)
     },
