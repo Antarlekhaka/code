@@ -284,7 +284,10 @@ def init_database():
         webapp.logger.info(f"Loaded {idx} tasks.")
 
     # Labels
-    label_models = [TokenLabel, TokenRelationLabel, SentenceLabel, SentenceRelationLabel]
+    label_models = [
+        TokenLabel, TokenRelationLabel,
+        SentenceLabel, SentenceRelationLabel
+    ]
     for label_model in label_models:
         if not label_model.query.first():
             table_name = label_model.__tablename__
@@ -351,6 +354,11 @@ def inject_global_context():
         ])
     }
 
+    # NOTE: do we really need to have these in global context?
+    # since they are not required on "every" page
+    # move them to individual routes?
+    # alternatively, can we add a check here which route is loading,
+    # and export variables based on that?
     active_tasks = {
         task.id: {
             "id": task.id,
@@ -485,28 +493,29 @@ def show_admin():
     user_query = user_model.query
     role_query = role_model.query
 
-    data['users'] = [
-        {
+    data['users'] = []
+    data['annotators'] = []
+
+    for user in user_query.all():
+        user_object = {
             "id": user.id,
             "username": user.username,
             "email": user.email
         }
-        for user in user_query.all()
-    ]
-    data['annotators'] = [
-        {
-            "id": user.id,
-            "username": user.username,
-            "email": user.email
-        }
-        for user in user_query.all()
-        if annotator_role in user.roles
-    ]
+        data['users'].append(user_object)
+        if annotator_role in user.roles:
+            data['annotators'].append(user_object)
+
     data['roles'] = [
         role.name
         for role in role_query.order_by(role_model.level).all()
         if role.level < user_level
     ]
+
+    # TODO: Task.query too many times, try to reduce that
+    # NOTE: At every template render, global_context are evaluated anyway
+    # May be move this task query in global and check every instance in JS
+    # and templates whether task.is_deleted
     data['tasks'] = [
         {
             'id': task.id,
@@ -1205,23 +1214,25 @@ def api():
         annotator_id = current_user.id
         task_id = int(request.form["task_id"])
         verse_id = int(request.form["verse_id"])
-        graph_data = json.loads(request.form.get("graph_data", "[]"))
+        token_graph_data = json.loads(
+            request.form.get("token_graph_data", "[]")
+        )
 
         objects_to_update = []
         try:
-            # validate graph_data: List[Dict]
+            # validate token_graph_data: List[Dict]
             # keys: boundary_id, src_id, label_id, dst_id
             # values: strings? cast int()
-            graph_data = {
+            token_graph_data = {
                 (
-                    int(rel["src_id"]),
-                    int(rel["label_id"]),
-                    int(rel["dst_id"])
+                    int(tokrel["src_id"]),
+                    int(tokrel["label_id"]),
+                    int(tokrel["dst_id"])
                 ): {
                     k: int(v)
-                    for k, v in rel.items()
+                    for k, v in tokrel.items()
                 }
-                for rel in graph_data
+                for tokrel in token_graph_data
             }
         except Exception:
             api_response["success"] = False
@@ -1237,12 +1248,12 @@ def api():
         existing_tokrels = existing_tokrels_query.all()
         existing_tokrel_tuples = [
             (tokrel.src_id, tokrel.label_id, tokrel.dst_id)
-            for tokrel in existing_tokrels_query.all()
+            for tokrel in existing_tokrels
         ]
 
         for tokrel in existing_tokrels:
-            rel_tuple = (tokrel.src_id, tokrel.label_id, tokrel.dst_id)
-            if rel_tuple not in graph_data:
+            tokrel_tuple = (tokrel.src_id, tokrel.label_id, tokrel.dst_id)
+            if tokrel_tuple not in token_graph_data:
                 # tokrel exists but was not submitted (i.e. removed)
                 tokrel.is_deleted = True
                 objects_to_update.append(tokrel)
@@ -1250,15 +1261,15 @@ def api():
                 # tokrel exists and is submitted (i.e. retained)
                 # check if there are any changes to the tokrel
                 if any([
-                    tokrel.boundary_id != graph_data[rel_tuple]["boundary_id"],
+                    tokrel.boundary_id != token_graph_data[tokrel_tuple]["boundary_id"],
                     tokrel.is_deleted is True
                 ]):
-                    tokrel.boundary_id = graph_data[rel_tuple]["boundary_id"]
+                    tokrel.boundary_id = token_graph_data[tokrel_tuple]["boundary_id"]
                     tokrel.is_deleted = False
                     objects_to_update.append(tokrel)
 
-        for rel_tuple, _tokrel_data in graph_data.items():
-            if rel_tuple in existing_tokrel_tuples:
+        for tokrel_tuple, _tokrel_data in token_graph_data.items():
+            if tokrel_tuple in existing_tokrel_tuples:
                 # submitted tokrel already exists
                 # "else" part of the previous condition block handles this
                 # so we can skip here
