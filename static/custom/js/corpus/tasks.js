@@ -1507,7 +1507,7 @@ $task_6_submit.click(function() {
         action: TASK_UPDATE_ACTIONS[task_name],
         task_id: task_id,
         verse_id: verse_id,
-        classification_data: JSON.stringify(sentence_classification_data)
+        sentence_classification_data: JSON.stringify(sentence_classification_data)
     },
     function (response) {
         $.notify({
