@@ -34,6 +34,7 @@ __version__ = "1.0"
 
 import os
 import re
+import csv
 import glob
 import json
 import logging
@@ -284,6 +285,7 @@ def init_database():
         webapp.logger.info(f"Loaded {idx} tasks.")
 
     # Labels
+    # NOTE: Refer to `data/tables/README.md` for format of JSON and CSV
     label_models = [
         TokenLabel, TokenRelationLabel,
         SentenceLabel, SentenceRelationLabel
@@ -291,15 +293,25 @@ def init_database():
     for label_model in label_models:
         if not label_model.query.first():
             table_name = label_model.__tablename__
-            table_data_file = os.path.join(
+            table_json_file = os.path.join(
                 app.tables_dir, f"{table_name}.json"
             )
+            table_csv_file = os.path.join(
+                app.tables_dir, f"{table_name}.csv"
+            )
 
-            if not os.path.isfile(table_data_file):
+            table_file = None
+            if os.path.isfile(table_json_file):
+                table_file = table_json_file
+                with open(table_json_file, encoding="utf-8") as f:
+                    table_data = json.load(f)
+            elif os.path.isfile(table_csv_file):
+                table_file = table_csv_file
+                with open(table_csv_file, encoding="utf-8") as f:
+                    table_data = list(csv.DictReader(f))
+
+            if table_file is None:
                 continue
-
-            with open(table_data_file, encoding="utf-8") as f:
-                table_data = json.load(f)
 
             for idx, label in enumerate(table_data, start=1):
                 lm = label_model()
@@ -307,7 +319,9 @@ def init_database():
                 lm.description = label["description"]
                 objects.append(lm)
 
-            webapp.logger.info(f"Loaded {idx} {table_name}s.")
+            webapp.logger.info(
+                f"Loaded {idx} items to {table_name} from {table_file}."
+            )
 
     # Save
     if objects:
