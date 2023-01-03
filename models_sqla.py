@@ -551,30 +551,62 @@ class SentenceGraph(db.Model):
 
 class TokenLabel(db.Model):
     id = Column(Integer, primary_key=True)
+    task_id = Column(Integer, ForeignKey('task.id'), nullable=False)
     label = Column(String(255), nullable=False)
     description = Column(String(255))
     is_deleted = Column(Boolean, default=False, nullable=False)
+    task = relationship(
+        'Task',
+        backref=backref(
+            'token_labels',
+            cascade='all,delete-orphan', lazy='dynamic'
+        )
+    )
 
 
 class TokenRelationLabel(db.Model):
     id = Column(Integer, primary_key=True)
+    task_id = Column(Integer, ForeignKey('task.id'), nullable=False)
     label = Column(String(255), nullable=False)
     description = Column(String(255))
     is_deleted = Column(Boolean, default=False, nullable=False)
+    task = relationship(
+        'Task',
+        backref=backref(
+            'token_relation_labels',
+            cascade='all,delete-orphan', lazy='dynamic'
+        )
+    )
 
 
 class SentenceLabel(db.Model):
     id = Column(Integer, primary_key=True)
+    task_id = Column(Integer, ForeignKey('task.id'), nullable=False)
     label = Column(String(255), nullable=False)
     description = Column(String(255))
     is_deleted = Column(Boolean, default=False, nullable=False)
+    task = relationship(
+        'Task',
+        backref=backref(
+            'sentence_labels',
+            cascade='all,delete-orphan', lazy='dynamic'
+        )
+    )
 
 
 class SentenceRelationLabel(db.Model):
     id = Column(Integer, primary_key=True)
+    task_id = Column(Integer, ForeignKey('task.id'), nullable=False)
     label = Column(String(255), nullable=False)
     description = Column(String(255))
     is_deleted = Column(Boolean, default=False, nullable=False)
+    task = relationship(
+        'Task',
+        backref=backref(
+            'sentence_relation_labels',
+            cascade='all,delete-orphan', lazy='dynamic'
+        )
+    )
 
 
 ###############################################################################
