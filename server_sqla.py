@@ -1922,9 +1922,6 @@ def perform_action():
         object_name = action_parts[0]
         target_action = action_parts[-1]
 
-        _label_text = request.form[f'{object_name}_label_text']
-        _label_description = request.form[f'{object_name}_label_desc']
-
         MODELS = {
             'token': (TokenLabel, TokenClassification, 'label_id'),
             'token_relation': (TokenRelationLabel, TokenGraph, 'label_id'),
@@ -1934,14 +1931,22 @@ def perform_action():
             ),
         }
         _model, _annotation_model, _attribute = MODELS[object_name]
-
-        _instance = _model.query.filter(_model.label == _label_text).first()
         _model_name = _model.__name__
 
         if target_action == 'add':
+            _label_task_id = request.form[f'{object_name}_label_task_id']
+            _label_text = request.form[f'{object_name}_label_text']
+            _label_description = request.form[f'{object_name}_label_desc']
+
+            _instance = _model.query.filter(
+                _model.label == _label_text,
+                _model.task_id == _label_task_id
+            ).first()
+
             message = f"Added {_model_name} '{_label_text}'."
             if _instance is None:
                 _instance = _model()
+                _instance.task_id = _label_task_id
                 _instance.label = _label_text
                 _instance.description = _label_description
                 _instance.is_deleted = False
@@ -1956,6 +1961,7 @@ def perform_action():
                     message = f"{_model_name} '{_label_text}' already exists."
 
         if target_action == 'remove':
+            _label_text = request.form[f'{object_name}_label_text']
             message = f"{_model_name} '{_label_text}' does not exists."
             if _instance is not None and not _instance.is_deleted:
                 objects_with_given_label = _annotation_model.query.filter(
