@@ -201,7 +201,7 @@ CONLLU_PARSER = CoNLLUParser(
 )
 
 ###############################################################################
-# Database Utlity Functions
+# Database Utility Functions
 
 
 def record_submit(verse_id: int, annotator_id: int, task_id: int):
@@ -839,6 +839,11 @@ def api():
         # SentenceClassification also gets deleted as (CASCADE)
         # SentenceGraph also gets deleted as (CASCADE)
 
+        # NOTE: A sentence boundary task should always be "present"
+        # (even if inactive), since very other task is tied to boundary_id
+        # NOTE: We do not check with task_id because, only single sentence
+        # boundary task is supported
+        # TODO: Perhaps remove `task_id` column from Boundary table altogether
         existing_boundary_query = Boundary.query.filter(
             Boundary.verse_id == verse_id,
             Boundary.annotator_id == annotator_id
@@ -865,6 +870,12 @@ def api():
             ).order_by(Boundary.token_id).first()
             print(next_boundary)
 
+            # NOTE: We do not check with task_id because, currently, only
+            # single word order task is supported (as there needs to be a
+            # link between this and boundary task)
+            # NOTE: If for some reason we need multiple word order tasks,
+            # all of them would require to be deleted anyway as the boundary
+            # gets changed, so we might never need to check with task_id here
             if next_boundary:
                 word_order_of_next_boundary_query = WordOrder.query.filter(
                     WordOrder.boundary_id == next_boundary.id,
@@ -877,6 +888,7 @@ def api():
             # add new boundary markers
             for boundary_token in boundary_tokens:
                 boundary = Boundary()
+                boundary.task_id = task_id
                 boundary.verse_id = verse_id
                 boundary.token_id = boundary_token
                 boundary.annotator_id = annotator_id
@@ -983,6 +995,7 @@ def api():
         objects_to_update = []
 
         existing_word_order_query = WordOrder.query.filter(
+            WordOrder.task_id == task_id,
             WordOrder.boundary_id.in_(boundary_ids),
             WordOrder.annotator_id == annotator_id
         )
@@ -991,6 +1004,7 @@ def api():
         for boundary_id, token_ids in word_order_order.items():
             for order_id, token_id in enumerate(token_ids, start=1):
                 _word_order = WordOrder()
+                _word_order.task_id = task_id
                 _word_order.boundary_id = boundary_id
                 _word_order.token_id = token_id
                 _word_order.order = order_id
@@ -1049,6 +1063,7 @@ def api():
             return jsonify(api_response)
 
         existing_text_annotations = TokenTextAnnotation.query.filter(
+            TokenTextAnnotation.task_id == task_id,
             TokenTextAnnotation.boundary.has(Boundary.verse_id == verse_id),
             TokenTextAnnotation.annotator_id == annotator_id,
         ).all()
@@ -1088,6 +1103,7 @@ def api():
 
             # submitted text_annotation doesn't exist, create
             text_annotation = TokenTextAnnotation()
+            text_annotation.task_id = task_id
             text_annotation.boundary_id = _text_annotation_data["boundary_id"]
             text_annotation.token_id = token_id
             text_annotation.text = _text_annotation_data["text_annotation"]
@@ -1149,6 +1165,7 @@ def api():
             return jsonify(api_response)
 
         existing_token_classification = TokenClassification.query.filter(
+            TokenClassification.task_id == task_id,
             TokenClassification.boundary.has(Boundary.verse_id == verse_id),
             TokenClassification.annotator_id == annotator_id,
         ).all()
@@ -1188,6 +1205,7 @@ def api():
 
             # submitted tokclf doesn't exist, create
             tokclf = TokenClassification()
+            tokclf.task_id = task_id
             tokclf.boundary_id = _tokclf_data["boundary_id"]
             tokclf.token_id = token_id
             tokclf.label_id = _tokclf_data["label_id"]
@@ -1255,6 +1273,7 @@ def api():
             return jsonify(api_response)
 
         existing_tokrels_query = TokenGraph.query.filter(
+            TokenGraph.task_id == task_id,
             TokenGraph.boundary.has(Boundary.verse_id == verse_id),
             TokenGraph.annotator_id == annotator_id,
         )
@@ -1291,6 +1310,7 @@ def api():
 
             # submitted tokrel doesn't exist, create
             tokrel = TokenGraph()
+            tokrel.task_id = task_id
             tokrel.boundary_id = _tokrel_data["boundary_id"]
             tokrel.src_id = _tokrel_data["src_id"]
             tokrel.label_id = _tokrel_data["label_id"]
@@ -1362,6 +1382,7 @@ def api():
             return jsonify(api_response)
 
         existing_tokcons_query = TokenConnection.query.filter(
+            TokenConnection.task_id == task_id,
             TokenConnection.boundary_id.in_(context_data),
             TokenConnection.annotator_id == annotator_id,
         )
@@ -1402,6 +1423,7 @@ def api():
 
             # submitted tokcon doesn't exist, create
             tokcon = TokenConnection()
+            tokcon.task_id = task_id
             tokcon.boundary_id = _tokcon_data["boundary_id"]
             tokcon.src_id = _tokcon_data["src_id"]
             tokcon.dst_id = _tokcon_data["dst_id"]
@@ -1461,6 +1483,7 @@ def api():
             return jsonify(api_response)
 
         existing_sentence_classification = SentenceClassification.query.filter(
+            SentenceClassification.task_id == task_id,
             SentenceClassification.boundary.has(Boundary.verse_id == verse_id),
             SentenceClassification.annotator_id == annotator_id,
         ).all()
@@ -1494,6 +1517,7 @@ def api():
 
             # submitted sentclf doesn't exist, create
             sentclf = SentenceClassification()
+            sentclf.task_id = task_id
             sentclf.boundary_id = _boundary_id
             sentclf.label_id = _label_id
             sentclf.annotator_id = annotator_id
@@ -1571,6 +1595,7 @@ def api():
 
         # TODO: Re-examine if the conditions are proper
         existing_sentrels_query = SentenceGraph.query.filter(
+            SentenceGraph.task_id == task_id,
             SentenceGraph.src_boundary_id.in_(context_data),
             SentenceGraph.dst_boundary_id.in_(context_data),
             SentenceGraph.annotator_id == annotator_id,
@@ -1623,6 +1648,7 @@ def api():
 
             # submitted sentrel doesn't exist, create
             sentrel = SentenceGraph()
+            sentrel.task_id = task_id
             sentrel.src_boundary_id = _sentrel_data["src_boundary_id"]
             sentrel.src_token_id = _sentrel_data["src_token_id"]
             sentrel.dst_boundary_id = _sentrel_data["dst_boundary_id"]
