@@ -22,8 +22,10 @@
         <div id="sentence-graph-source-token-container" class="col-sm"></div>
         <div id="sentence-graph-relation-container" class="col-sm-4">
             <select id="sentence-graph-relation-selector" title="Select Sentence Relation" class="selectpicker" data-show-subtext="true" data-width="75%" data-live-search="true" required>
-                {% for _id, _label, _description in context_labels.sentence_relation_labels %}
+                {% for _id, _task_id, _label, _description in context_labels.sentence_relation_labels %}
+                {% if _task_id == task.id %}
                 <option value="{{_id}}" data-subtext="{{_description}}">{{_label}}</option>
+                {% endif %}
                 {% endfor %}
             </select>
         </div>

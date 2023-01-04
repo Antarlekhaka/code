@@ -24,13 +24,15 @@
         </div>
         <div class="card-body token-graph-input"></div>
     </div>
-    <select id="sample-source-entity" title="Action {}" class="form-control" data-width="false" data-live-search="true" required></select>
+    <select id="sample-source-entity" title="Source {}" class="form-control" data-width="false" data-live-search="true" required></select>
     <select id="sample-relation-label" title="Relation Label {}" class="form-control" data-width="false" data-live-search="true" required>
-        {% for _id, _label, _description in context_labels.token_relation_labels %}
+        {% for _id, _task_id, _label, _description in context_labels.token_relation_labels %}
+        {% if _task_id == task.id %}
         <option value="{{_id}}" data-subtext="{{_description}}" data-content='<span class="btn-sm">{{_description}}</span>'></option>
+        {% endif %}
         {% endfor %}
     </select>
-    <select id="sample-target-entity" title="Entity {}" class="form-control" data-width="false" data-live-search="true" required></select>
+    <select id="sample-target-entity" title="Target {}" class="form-control" data-width="false" data-live-search="true" required></select>
 </div>
 <script>
     const VARIABLE_PREFIX = "{{config.var_prefix}}";
