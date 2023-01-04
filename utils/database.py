@@ -276,6 +276,7 @@ def export_data(
 
             annotation_data["sentence_boundary"] = {
                 boundary.id: {
+                    "task_id": boundary.task_id,
                     "token_id": boundary.token_id,
                     "verse_id": boundary.verse_id,
                 }
@@ -288,12 +289,15 @@ def export_data(
             word_order_query = WordOrder.query.filter(
                 WordOrder.boundary_id.in_(boundary_ids),
                 WordOrder.annotator_id == annotator.id
-            ).join(Boundary).order_by(Boundary.token_id, WordOrder.order)
+            ).join(Boundary).order_by(
+                WordOrder.task_id, Boundary.token_id, WordOrder.order
+            )
 
             # TODO: avoid .boundary.verse_id call ?
             # fetch from task_data["sentence_boundary"] ?
             annotation_data["word_order"] = [
                 {
+                    "task_id": word_order.task_id,
                     "verse_id": word_order.boundary.verse_id,
                     "boundary_id": word_order.boundary_id,
                     "token_id": word_order.token_id
@@ -313,6 +317,7 @@ def export_data(
             # fetch from task_data["sentence_boundary"] ?
             annotation_data["token_text_annotation"] = [
                 {
+                    "task_id": text_annotation.task_id,
                     "verse_id": text_annotation.boundary.verse_id,
                     "boundary_id": text_annotation.boundary_id,
                     "token_id": text_annotation.token_id,
@@ -333,6 +338,7 @@ def export_data(
             # fetch from task_data["sentence_boundary"] ?
             annotation_data["token_classification"] = [
                 {
+                    "task_id": tokclf.task_id,
                     "verse_id": tokclf.boundary.verse_id,
                     "boundary_id": tokclf.boundary_id,
                     "token_id": tokclf.token_id,
@@ -355,15 +361,16 @@ def export_data(
             # fetch from task_data["sentence_boundary"] ?
             annotation_data["token_graph"] = [
                 {
-                    "verse_id": relation.boundary.verse_id,
-                    "boundary_id": relation.boundary_id,
-                    "src_id": relation.src_id,
-                    "label_id": relation.label_id,
-                    "label_label": relation.label.label,
-                    "label_description": relation.label.description,
-                    "dst_id": relation.dst_id,
+                    "task_id": tokrel.task_id,
+                    "verse_id": tokrel.boundary.verse_id,
+                    "boundary_id": tokrel.boundary_id,
+                    "src_id": tokrel.src_id,
+                    "label_id": tokrel.label_id,
+                    "label_label": tokrel.label.label,
+                    "label_description": tokrel.label.description,
+                    "dst_id": tokrel.dst_id,
                 }
-                for relation in token_graph_query.all()
+                for tokrel in token_graph_query.all()
             ]
 
             # --------------------------------------------------------------- #
@@ -378,6 +385,7 @@ def export_data(
             # fetch from task_data["sentence_boundary"] ?
             annotation_data["token_connection"] = [
                 {
+                    "task_id": token_connection.task_id,
                     "verse_id": token_connection.boundary.verse_id,
                     "boundary_id": token_connection.boundary_id,
                     "src_id": token_connection.src_id,
@@ -398,6 +406,7 @@ def export_data(
             # fetch from task_data["sentence_boundary"] ?
             annotation_data["sentence_classification"] = [
                 {
+                    "task_id": sentclf.task_id,
                     "verse_id": sentclf.boundary.verse_id,
                     "boundary_id": sentclf.boundary_id,
                     "label_id": sentclf.label_id,
@@ -423,6 +432,7 @@ def export_data(
 
             annotation_data["sentence_graph"] = [
                 {
+                    "task_id": sentrel.task_id,
                     "src_verse_id": sentrel.src_boundary.verse_id,
                     "src_boundary_id": sentrel.src_boundary_id,
                     "src_token_id": sentrel.src_token_id,
@@ -558,12 +568,12 @@ def get_verse_data(
                     # Could also consider keeping original tokens in "tokens"
                     # and adding a "_tokens" for custom tokens
                 ]],
-                "boundary": {},
+                "sentence_boundary": {},
                 "sentences": {},
                 "word_order": {},
                 "token_text_annotation": [],
                 "token_classification": [],
-                "relation": [],
+                "token_graph": [],
                 "token_connection": [],
                 "sentence_classification": [],
                 "sentence_graph": [],
@@ -632,8 +642,9 @@ def get_verse_data(
     # boundary specific data - BEGIN
     for boundary in boundary_query.all():
         verse_id = boundary.verse_id
-        data[verse_id]["boundary"][boundary.id] = {
+        data[verse_id]["sentence_boundary"][boundary.id] = {
             "id": boundary.id,
+            "task_id": boundary.task_id,
             "token_id": boundary.token_id,
             "verse_id": boundary.verse_id,
             "annotator_id": boundary.annotator_id,
@@ -642,6 +653,11 @@ def get_verse_data(
         data[verse_id]["sentences"] = get_sentences(
             verse_id, boundary.annotator_id
         )
+
+        # NOTE: Currently there is no support for multiple word order tasks.
+        # Further, since the word order is used in other tasks to display
+        # tokens, it is straightforward how such support would work, as it
+        # would require a choice of word order task to display order
         word_order_query = WordOrder.query.filter(
             WordOrder.boundary_id == boundary.id,
             WordOrder.annotator_id.in_(annotator_ids)
@@ -669,6 +685,7 @@ def get_verse_data(
         data[verse_id]["token_text_annotation"].extend([
             {
                 "id": text_annotation.id,
+                "task_id": text_annotation.task_id,
                 "boundary_id": text_annotation.boundary_id,
                 "token_id": text_annotation.token_id,
                 "text": text_annotation.text,
@@ -688,6 +705,7 @@ def get_verse_data(
         data[verse_id]["token_classification"].extend([
             {
                 "id": tokclf.id,
+                "task_id": tokclf.task_id,
                 "boundary_id": tokclf.boundary_id,
                 "token_id": tokclf.token_id,
                 "label_id": tokclf.label_id,
@@ -704,17 +722,18 @@ def get_verse_data(
             TokenGraph.annotator_id.in_(annotator_ids)
         )
 
-        data[verse_id]["relation"].extend([
+        data[verse_id]["token_graph"].extend([
             {
-                "id": relation.id,
-                "boundary_id": relation.boundary_id,
-                "src_id": relation.src_id,
-                "label_id": relation.label_id,
-                "dst_id": relation.dst_id,
-                "annotator_id": relation.annotator_id,
-                "is_deleted": relation.is_deleted
+                "id": tokrel.id,
+                "task_id": tokrel.task_id,
+                "boundary_id": tokrel.boundary_id,
+                "src_id": tokrel.src_id,
+                "label_id": tokrel.label_id,
+                "dst_id": tokrel.dst_id,
+                "annotator_id": tokrel.annotator_id,
+                "is_deleted": tokrel.is_deleted
             }
-            for relation in token_graph_query.all()
+            for tokrel in token_graph_query.all()
         ])
 
         # ------------------------------------------------------------------- #
@@ -727,6 +746,7 @@ def get_verse_data(
         data[verse_id]["token_connection"].extend([
             {
                 "id": token_connection.id,
+                "task_id": token_connection.task_id,
                 "boundary_id": token_connection.boundary_id,
                 "src_id": token_connection.src_id,
                 "dst_id": token_connection.dst_id,
@@ -746,6 +766,7 @@ def get_verse_data(
         data[verse_id]["sentence_classification"].extend([
             {
                 "id": sentclf.id,
+                "task_id": sentclf.task_id,
                 "boundary_id": sentclf.boundary_id,
                 "label_id": sentclf.label_id,
                 "annotator_id": sentclf.annotator_id,
@@ -765,6 +786,7 @@ def get_verse_data(
         data[verse_id]["sentence_graph"].extend([
             {
                 "id": sentrel.id,
+                "task_id": sentrel.task_id,
                 "src_boundary_id": sentrel.src_boundary_id,
                 "src_token_id": sentrel.src_token_id,
                 "dst_boundary_id": sentrel.dst_boundary_id,
