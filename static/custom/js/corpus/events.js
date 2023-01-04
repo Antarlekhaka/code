@@ -57,7 +57,8 @@ $corpus_table.on('expand-row.bs.table', function (e, index, row, $detail) {
 
     const $active_tab = $('a[aria-selected="true"]');
     const active_task_category = $active_tab.data('task-category');
-    setup_task(active_task_category, verse_id);
+    const active_task_id = $active_tab.data('task-id');
+    setup_task(active_task_category, active_task_id, verse_id);
 });
 
 
@@ -75,8 +76,18 @@ $('a[data-toggle="pill"]').on('shown.bs.tab', function (event) {
 
     const $active_tab = $(event.target);
     const task_category = $active_tab.data("task-category");
-    setup_task(task_category, verse_id);
+    const task_id = $active_tab.data("task-id");
+    setup_task(task_category, task_id, verse_id);
 });
+
+// Submit Button
+
+$task_submit_buttons.click(function () {
+    const task_category = $(this).data("task-category");
+    const task_id = $(this).data("task-id");
+    submit_task(task_category, task_id);
+});
+
 
 // Page Change
 $corpus_table.on('page-change.bs.table', function (e, number, size) {

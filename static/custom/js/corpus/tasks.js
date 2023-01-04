@@ -180,33 +180,33 @@ $refresh_verse_buttons.click(function() {
 });
 
 
-/* ****************************** Generic Task Setup ****************************** */
+/* ************************** Generic Task Setup ************************** */
 
-function setup_task(task_category, verse_id) {
+function setup_task(task_category, task_id, verse_id) {
     switch (task_category) {
-        case "sentence_boundary":
-            setup_sentence_boundary(verse_id);
+        case TASK_SENTENCE_BOUNDARY:
+            setup_task_sentence_boundary(task_id, verse_id);
             break;
-        case "word_order":
-            setup_word_order(verse_id);
+        case TASK_WORD_ORDER:
+            setup_task_word_order(task_id, verse_id);
             break;
-        case "token_text_annotation":
-            setup_token_text_annotation(verse_id);
+        case TASK_TOKEN_TEXT_ANNOTATION:
+            setup_task_token_text_annotation(task_id, verse_id);
             break;
-        case "token_classification":
-            setup_token_classification(verse_id);
+        case TASK_TOKEN_CLASSIFICATION:
+            setup_task_token_classification(task_id, verse_id);
             break;
-        case "token_graph":
-            setup_token_graph(verse_id);
+        case TASK_TOKEN_GRAPH:
+            setup_task_token_graph(task_id, verse_id);
             break;
-        case "token_connection":
-            setup_token_connection(verse_id);
+        case TASK_TOKEN_CONNECTION:
+            setup_task_token_connection(task_id, verse_id);
             break;
-        case "sentence_classification":
-            setup_sentence_classification(verse_id);
+        case TASK_SENTENCE_CLASSIFICATION:
+            setup_task_sentence_classification(task_id, verse_id);
             break;
-        case "sentence_graph":
-            setup_sentence_graph(verse_id);
+        case TASK_SENTENCE_GRAPH:
+            setup_task_sentence_graph(task_id, verse_id);
             break;
 
         default:
@@ -214,11 +214,45 @@ function setup_task(task_category, verse_id) {
     }
 }
 
-/* ********************************** BEGIN Task 1 ********************************** */
-// Task 1: Sentence Boundary
+/* ************************** Generic Task Submit ************************** */
 
-// Setup-1
-function setup_sentence_boundary(verse_id) {
+function submit_task(task_category, task_id) {
+    switch (task_category) {
+        case TASK_SENTENCE_BOUNDARY:
+            submit_task_sentence_boundary(task_id);
+            break;
+        case TASK_WORD_ORDER:
+            submit_task_word_order(task_id);
+            break;
+        case TASK_TOKEN_TEXT_ANNOTATION:
+            submit_task_token_text_annotation(task_id);
+            break;
+        case TASK_TOKEN_CLASSIFICATION:
+            submit_task_token_classification(task_id);
+            break;
+        case TASK_TOKEN_GRAPH:
+            submit_task_token_graph(task_id);
+            break;
+        case TASK_TOKEN_CONNECTION:
+            submit_task_token_connection(task_id);
+            break;
+        case TASK_SENTENCE_CLASSIFICATION:
+            submit_task_sentence_classification(task_id);
+            break;
+        case TASK_SENTENCE_GRAPH:
+            submit_task_sentence_graph(task_id);
+            break;
+
+        default:
+            break;
+    }
+}
+
+/* ********************* BEGIN Task: Sentence Boundary ********************* */
+// Task: Sentence Boundary
+
+// Setup: Sentence Boundary
+function setup_task_sentence_boundary(task_id, verse_id) {
     console.log(`Called ${arguments.callee.name}(${Object.values(arguments).join(", ")});`);
 
     const row = $corpus_table.bootstrapTable('getRowByUniqueId', verse_id);
@@ -247,12 +281,12 @@ function setup_sentence_boundary(verse_id) {
         // console.log("Verse Tokens:");
         // console.log(verse.tokens);
         // console.log("Verse Boundary:");
-        // console.log(verse.boundary);
+        // console.log(verse.sentence_boundary);
 
         var verse_text = [`${verse_data.verse_id}`];
         var boundary_tokens = new Set();
 
-        for (const [boundary_id, boundary] of Object.entries(verse_data.boundary)) {
+        for (const [boundary_id, boundary] of Object.entries(verse_data.sentence_boundary)) {
             boundary_tokens.add(boundary.token_id);
         };
         $.each(verse_data.tokens, function(verse_index, line_tokens) {
@@ -306,11 +340,13 @@ function setup_sentence_boundary(verse_id) {
     $task_1_input.prop('disabled', false).removeClass('text-muted').addClass('text-info').focus();
 }
 
-// Submit-1
-$task_1_submit.click(function () {
+// Submit: Sentence Boundary
+// $task_1_submit.click(function () {
+function submit_task_sentence_boundary(task_id) {
+    console.log(`Called ${arguments.callee.name}(${Object.values(arguments).join(", ")});`);
+
+    const task_category = TASK_SENTENCE_BOUNDARY;
     const verse_id = $verse_id_containers.html();
-    const task_id = $(this).data("task-id");
-    const task_category = $(this).data("task-category");
 
     // Identify Boundary Token IDs
     const marker_positions = $task_1_input.data('marker_positions');
@@ -352,14 +388,14 @@ $task_1_submit.click(function () {
         }
     },
     'json');
-});
+};
 
-/* *********************************** END Task 1 *********************************** */
+/* ********************** END Task: Sentence Boundary ********************** */
 
-/* ********************************** BEGIN Task 2 ********************************** */
-// Task 2: Canonical Word Order
+/* ************************ BEGIN Task: Word Order ************************ */
+// Task: Word Order
 
-// Setup-2
+// Setup: Word Order
 function setup_sortable() {
     console.log(`Called ${arguments.callee.name}(${Object.values(arguments).join(", ")});`);
 
@@ -392,7 +428,7 @@ function setup_sortable() {
     });
 }
 
-function setup_word_order(verse_id) {
+function setup_task_word_order(task_id, verse_id) {
     console.log(`Called ${arguments.callee.name}(${Object.values(arguments).join(", ")});`);
 
     const row = $corpus_table.bootstrapTable('getRowByUniqueId', verse_id);
@@ -549,7 +585,7 @@ function setup_word_order(verse_id) {
     setup_sortable();
 }
 
-/* Task-2 Actions */
+/* Task: Word Order: Actions */
 
 // Add Token
 $add_token_button.click(function() {
@@ -607,11 +643,13 @@ $add_token_button.click(function() {
     });
 });
 
-// Submit-2
-$task_2_submit.click(function () {
+// Submit: Word Order
+// $task_2_submit.click(function () {
+function submit_task_word_order(task_id) {
+    console.log(`Called ${arguments.callee.name}(${Object.values(arguments).join(", ")});`);
+
     const verse_id = $verse_id_containers.html();
-    const task_id = $(this).data("task-id");
-    const task_category = $(this).data("task-category");
+    const task_category = TASK_WORD_ORDER;
 
     var word_order_data = {}
     $('.sortable').each(function(sentence_index, sentence_element) {
@@ -644,15 +682,15 @@ $task_2_submit.click(function () {
             }
         }
     });
-});
+};
 
-/* *********************************** END Task 2 *********************************** */
+/* ************************* END Task: Word Order ************************* */
 
-/* ********************************** BEGIN Task 3 ********************************** */
-// Task 3: Token Classification
+/* ******************* BEGIN Task: Token Classification ******************* */
+// Task: Token Classification
 
-// Setup-3
-function setup_token_classification(verse_id) {
+// Setup: Token Classification
+function setup_task_token_classification(task_id, verse_id) {
     console.log(`Called ${arguments.callee.name}(${Object.values(arguments).join(", ")});`);
 
     const row = $corpus_table.bootstrapTable('getRowByUniqueId', verse_id);
@@ -678,7 +716,7 @@ function setup_token_classification(verse_id) {
     var existing_token_classification = [];
     var existing_labels = {};
     for (const tokclf of row.token_classification) {
-        if (tokclf.is_deleted) {
+        if (tokclf.is_deleted || tokclf.task_id != task_id) {
             continue;
         }
         existing_token_classification.push(tokclf.token_id);
@@ -764,18 +802,20 @@ function setup_token_classification(verse_id) {
     }
 }
 
-/* Task-3 Actions */
+/* Task: Token Classification: Actions */
 
-// Submit-3
-$task_3_submit.click(function () {
+// Submit: Token Classification
+// $task_3_submit.click(function () {
+function submit_task_token_classification(task_id) {
+    console.log(`Called ${arguments.callee.name}(${Object.values(arguments).join(", ")});`);
+
     if (!$task_3_form[0].checkValidity()) {
         $task_3_form[0].reportValidity();
         return;
     }
 
     const verse_id = $verse_id_containers.html();
-    const task_id = $(this).data("task-id");
-    const task_category = $(this).data("task-category");
+    const task_category = TASK_TOKEN_CLASSIFICATION;
 
     var token_classification_data = {}
     $task_3_token_classification_table.find("select").each(function(select_index, select_element) {
@@ -811,15 +851,15 @@ $task_3_submit.click(function () {
             }
         }
     });
-});
+};
 
-/* *********************************** END Task 3 *********************************** */
+/* ******************** END Task: Token Classification ******************** */
 
-/* ********************************** BEGIN Task 4 ********************************** */
-// Task 4: Token Graph (e.g. Action Graph)
-// Setup-4
+/* ************************ BEGIN Task: Token Graph ************************ */
+// Task: Token Graph (e.g. Action Graph)
+// Setup: Token Graph
 
-function setup_token_graph(verse_id) {
+function setup_task_token_graph(task_id, verse_id) {
     console.log(`Called ${arguments.callee.name}(${Object.values(arguments).join(", ")});`);
 
     const row = $corpus_table.bootstrapTable('getRowByUniqueId', verse_id);
@@ -838,17 +878,17 @@ function setup_token_graph(verse_id) {
 
     // record existing relations
     var existing_relations = {};
-    for (const relation of row.relation) {
-        if (relation.is_deleted) {
+    for (const tokrel of row.token_graph) {
+        if (tokrel.is_deleted || tokrel.task_id != task_id) {
             continue;
         }
-        if (!existing_relations.hasOwnProperty(relation.boundary_id)) {
-            existing_relations[relation.boundary_id] = [];
+        if (!existing_relations.hasOwnProperty(tokrel.boundary_id)) {
+            existing_relations[tokrel.boundary_id] = [];
         }
-        existing_relations[relation.boundary_id].push([
-            relation.src_id,
-            relation.label_id,
-            relation.dst_id
+        existing_relations[tokrel.boundary_id].push([
+            tokrel.src_id,
+            tokrel.label_id,
+            tokrel.dst_id
         ]);
     }
     console.log(existing_relations);
@@ -892,12 +932,12 @@ function setup_token_graph(verse_id) {
 
         $add_triplet_button.off("click");
         $add_triplet_button.click(function () {
-            add_triplet_row($triplet_location);
+            add_token_graph_row($triplet_location);
         });
 
         if (existing_relations.hasOwnProperty(boundary_id)) {
             for (const [_src_id, _label_id, _dst_id] of existing_relations[boundary_id]) {
-                const $triple_row = add_triplet_row($triplet_location);
+                const $triple_row = add_token_graph_row($triplet_location);
                 $triple_row.find(".source-entity").selectpicker('val', _src_id);
                 $triple_row.find(".relation-label").selectpicker('val', _label_id);
                 $triple_row.find(".target-entity").selectpicker('val', _dst_id);
@@ -908,7 +948,7 @@ function setup_token_graph(verse_id) {
     }
 }
 
-function add_triplet_row($location) {
+function add_token_graph_row($location) {
     const source_entity_options = $location.data("source-options");
     const target_entity_options = $location.data("target-options");
 
@@ -1091,9 +1131,9 @@ $show_graph_modal.on('shown.bs.modal', function(event) {
     // TODO: Maybe need to add task_id identifier in case of
     // multiple graph tasks from same category
     const $trigger_button = $(event.relatedTarget);
-    const source_task = $trigger_button.data("task-category");
+    const source_task_category = $trigger_button.data("task-category");
 
-    if (source_task == "token_graph") {
+    if (source_task_category == TASK_TOKEN_GRAPH) {
         // triggered from token_graph task
         const $target_card = $trigger_button.parents(`.${sentence_token_graph_input_container_class}`);
         const $target_location = $target_card.find(".token-graph-input");
@@ -1104,14 +1144,14 @@ $show_graph_modal.on('shown.bs.modal', function(event) {
         const token_graph_data = prepare_token_graph_data($target_location);
         draw_graph(token_graph_data);
 
-    } else if (source_task == "sentence_graph") {
+    } else if (source_task_category == TASK_SENTENCE_GRAPH) {
         // triggered from sentence_graph task
         const sentence_graph_data = prepare_sentence_graph_data();
         draw_graph(sentence_graph_data);
     }
 });
 
-/* Task-4 Actions */
+/* Task: Token Graph: Actions */
 
 // Capture Graph Snapshot
 /* Logic:
@@ -1129,16 +1169,18 @@ $snapshot_graph_button.click(function() {
     document.body.removeChild(download_anchor);
 });
 
-// Submit-4
-$task_4_submit.click(function () {
+// Submit: Token Graph
+// $task_4_submit.click(function () {
+function submit_task_token_graph(task_id) {
+    console.log(`Called ${arguments.callee.name}(${Object.values(arguments).join(", ")});`);
+
     if (!$task_4_form[0].checkValidity()) {
         $task_4_form[0].reportValidity();
         return;
     }
 
+    const task_category = TASK_TOKEN_GRAPH;
     const verse_id = $verse_id_containers.html();
-    const task_id = $(this).data("task-id");
-    const task_category = $(this).data("task-category");
 
     var token_graph_data = [];
 
@@ -1190,17 +1232,17 @@ $task_4_submit.click(function () {
             }
         }
     });
-});
+};
 
-/* *********************************** END Task 4 *********************************** */
+/* ************************* END Task: Token Graph ************************* */
 
-/* ********************************** BEGIN Task 5 ********************************** */
-// Task 5: Co-reference Resolution
+/* ********************* BEGIN Task: Token Connection ********************* */
+// Task: Token Connection (e.g. Co-reference Resolution)
 
-// Setup-5
+// Setup: Token Connection
 
 
-function setup_token_connection(verse_id) {
+function setup_task_token_connection(task_id, verse_id) {
     console.log(`Called ${arguments.callee.name}(${Object.values(arguments).join(", ")});`);
 
     const row = $corpus_table.bootstrapTable('getRowByUniqueId', verse_id);
@@ -1230,7 +1272,7 @@ function setup_token_connection(verse_id) {
             // if one is doing word_order in order, this won't be an issue
         }
         for (const token_connection of verse_data.token_connection) {
-            if (token_connection.is_deleted) {
+            if (token_connection.is_deleted || token_connection.task_id != task_id) {
                 continue;
             }
             existing_token_connections.push(token_connection);
@@ -1363,13 +1405,15 @@ $task_5_token_connection_reset_button.click(function () {
     $task_5_token_connection_target_container.html("");
 });
 
-/* Task-5 Actions */
+/* Task: Token Connection: Actions */
 
-// Submit-5
-$task_5_submit.click(function() {
+// Submit: Token Connection
+// $task_5_submit.click(function() {
+function submit_task_token_connection(task_id) {
+    console.log(`Called ${arguments.callee.name}(${Object.values(arguments).join(", ")});`);
+
+    const task_category = TASK_TOKEN_CONNECTION;
     const verse_id = $verse_id_containers.html();
-    const task_id = $(this).data("task-id");
-    const task_category = $(this).data("task-category");
 
     var context_data = [];
     var token_connection_data = [];
@@ -1412,16 +1456,16 @@ $task_5_submit.click(function() {
             }
         }
     });
-});
+};
 
-/* *********************************** END Task 5 *********************************** */
+/* ********************** END Task: Token Connection ********************** */
 
-/* ********************************** BEGIN Task 6 ********************************** */
-// Task 6: Sentence Classification
+/* ****************** BEGIN Task: Sentence Classification ****************** */
+// Task: Sentence Classification
 
-// Setup-6
+// Setup: Sentence Classification
 
-function setup_sentence_classification(verse_id) {
+function setup_task_sentence_classification(task_id, verse_id) {
     console.log(`Called ${arguments.callee.name}(${Object.values(arguments).join(", ")});`);
 
     const row = $corpus_table.bootstrapTable('getRowByUniqueId', verse_id);
@@ -1440,11 +1484,14 @@ function setup_sentence_classification(verse_id) {
 
     // record existing sentence classification
     var existing_sentence_classification = {};
-    for (const sentence of row.sentence_classification) {
-        if (!existing_sentence_classification.hasOwnProperty(sentence.boundary_id)) {
-            existing_sentence_classification[sentence.boundary_id] = [];
+    for (const sentclf of row.sentence_classification) {
+        if (sentclf.task_id != task_id) {
+            continue;
         }
-        existing_sentence_classification[sentence.boundary_id] = sentence.label_id;
+        if (!existing_sentence_classification.hasOwnProperty(sentclf.boundary_id)) {
+            existing_sentence_classification[sentclf.boundary_id] = [];
+        }
+        existing_sentence_classification[sentclf.boundary_id] = sentclf.label_id;
     }
 
     for (const [boundary_id, used_token_ids] of Object.entries(boundary_tokens)) {
@@ -1479,18 +1526,20 @@ function setup_sentence_classification(verse_id) {
     }
 }
 
-/* Task-6 Actions */
+/* Task: Sentence Classification: Actions */
 
-// Submit-6
-$task_6_submit.click(function() {
+// Submit: Sentence Classification
+// $task_6_submit.click(function() {
+function submit_task_sentence_classification(task_id) {
+    console.log(`Called ${arguments.callee.name}(${Object.values(arguments).join(", ")});`);
+
     if (!$task_6_form[0].checkValidity()) {
         $task_6_form[0].reportValidity();
         return;
     }
 
+    const task_category = TASK_SENTENCE_CLASSIFICATION;
     const verse_id = $verse_id_containers.html();
-    const task_id = $(this).data("task-id");
-    const task_category = $(this).data("task-category");
 
     var sentence_classification_data = [];
 
@@ -1529,15 +1578,15 @@ $task_6_submit.click(function() {
             }
         }
     });
-});
+};
 
-/* *********************************** END Task 6 *********************************** */
+/* ******************* END Task: Sentence Classification ******************* */
 
-/* ********************************** BEGIN Task 7 ********************************** */
-// Task 7: Sentence Graph (e.g. Discourse Graph)
+/* ********************** BEGIN Task: Sentence Graphs ********************** */
+// Task: Sentence Graph (e.g. Discourse Graph)
 
-// Setup-7
-function setup_sentence_graph(verse_id) {
+// Setup: Sentence Graph
+function setup_task_sentence_graph(task_id, verse_id) {
     console.log(`Called ${arguments.callee.name}(${Object.values(arguments).join(", ")});`);
 
     const row = $corpus_table.bootstrapTable('getRowByUniqueId', verse_id);
@@ -1559,7 +1608,7 @@ function setup_sentence_graph(verse_id) {
 
     for (const verse_data of context) {
         // verse_data
-        $.extend(boundary_marker_tokens, verse_data.boundary);
+        $.extend(boundary_marker_tokens, verse_data.sentence_boundary);
         for (const [boundary_id, sentence_tokens] of Object.entries(verse_data.sentences)) {
             $.extend(all_tokens, sentence_tokens);
             if (boundary_id != "extra") {
@@ -1568,11 +1617,11 @@ function setup_sentence_graph(verse_id) {
             // ensure that every boundary in the previous n verses has word_order
             // if one is doing word_order in order, this won't be an issue
         }
-        for (const sentence_graph of verse_data.sentence_graph) {
-            if (sentence_graph.is_deleted) {
+        for (const sentrel of verse_data.sentence_graph) {
+            if (sentrel.is_deleted || sentrel.task_id != task_id) {
                 continue;
             }
-            existing_sentence_graphs.push(sentence_graph);
+            existing_sentence_graphs.push(sentrel);
         }
     };
     console.log(boundary_marker_tokens);
@@ -1649,8 +1698,8 @@ function setup_sentence_graph(verse_id) {
     }
 
     // add existing references
-    for (const sentence_graph of existing_sentence_graphs) {
-        const relation_relation_type = sentence_graph.relation_type;
+    for (const sentrel of existing_sentence_graphs) {
+        const relation_relation_type = sentrel.relation_type;
 
         // type == 0: token-token connection
         // type == 1: token-sentence connection
@@ -1659,26 +1708,26 @@ function setup_sentence_graph(verse_id) {
 
         var $source_token, $target_token;
         if ((relation_relation_type == 0) || (relation_relation_type == 1)) {
-            $source_token = $(`#sentence-graph-token-${sentence_graph.src_token_id}`).clone();
+            $source_token = $(`#sentence-graph-token-${sentrel.src_token_id}`).clone();
         } else {
-            $source_token = $(`#sentence-graph-sentence-token-${sentence_graph.src_token_id}`).clone();
+            $source_token = $(`#sentence-graph-sentence-token-${sentrel.src_token_id}`).clone();
         }
         $source_token.removeAttr("id");
-        $source_token.data("token-id", sentence_graph.src_token_id);
-        $source_token.data("boundary-id", sentence_graph.src_boundary_id);
+        $source_token.data("token-id", sentrel.src_token_id);
+        $source_token.data("boundary-id", sentrel.src_boundary_id);
         $source_token.addClass("sentence-graph-source-token");
 
         if ((relation_relation_type == 0) || (relation_relation_type == 2)) {
-            $target_token = $(`#sentence-graph-token-${sentence_graph.dst_token_id}`).clone();
+            $target_token = $(`#sentence-graph-token-${sentrel.dst_token_id}`).clone();
         } else {
-            $target_token = $(`#sentence-graph-sentence-token-${sentence_graph.dst_token_id}`).clone();
+            $target_token = $(`#sentence-graph-sentence-token-${sentrel.dst_token_id}`).clone();
         }
         $target_token.removeAttr("id");
-        $target_token.data("token-id", sentence_graph.dst_token_id);
-        $target_token.data("boundary-id", sentence_graph.dst_boundary_id);
+        $target_token.data("token-id", sentrel.dst_token_id);
+        $target_token.data("boundary-id", sentrel.dst_boundary_id);
         $target_token.addClass("sentence-graph-target-token");
 
-        const relation_label_id = sentence_graph.label_id;
+        const relation_label_id = sentrel.label_id;
 
         add_sentence_graph_row($source_token, $target_token, relation_label_id);
     }
@@ -1852,18 +1901,20 @@ $task_7_sentence_graph_reset_button.click(function () {
     $task_7_sentence_graph_target_container.html("");
 });
 
-/* Task-7 Actions */
+/* Task: Sentence Graph: Actions */
 
-// Submit-7
-$task_7_submit.click(function () {
+// Submit: Sentence Graph
+// $task_7_submit.click(function () {
+function submit_task_sentence_graph(task_id) {
+    console.log(`Called ${arguments.callee.name}(${Object.values(arguments).join(", ")});`);
+
     if (!$task_7_form[0].checkValidity()) {
         $task_7_form[0].reportValidity();
         return;
     }
 
+    const task_category = TASK_SENTENCE_GRAPH;
     const verse_id = $verse_id_containers.html();
-    const task_id = $(this).data("task-id");
-    const task_category = $(this).data("task-category");
 
     var context_data = [];
     var sentence_graph_data = [];
@@ -1932,15 +1983,15 @@ $task_7_submit.click(function () {
         }
     },
     'json');
-});
+};
 
-/* *********************************** END Task 7 *********************************** */
+/* *********************** END Task: Sentence Graph *********************** */
 
-/* ********************************** BEGIN Task 8 ********************************** */
-// Task 8: Token Text Annotation
+/* ******************* BEGIN Task: Token Text Annotation ******************* */
+// Task: Token Text Annotation
 
-// Setup-8
-function setup_token_text_annotation(verse_id) {
+// Setup: Token Text Annotation
+function setup_task_token_text_annotation(task_id, verse_id) {
     console.log(`Called ${arguments.callee.name}(${Object.values(arguments).join(", ")});`);
 
     const row = $corpus_table.bootstrapTable('getRowByUniqueId', verse_id);
@@ -1966,7 +2017,7 @@ function setup_token_text_annotation(verse_id) {
     var existing_token_text_annotations = [];
     var existing_texts = {};
     for (const token_text_annotation of row.token_text_annotation) {
-        if (token_text_annotation.is_deleted) {
+        if (token_text_annotation.is_deleted || token_text_annotation.task_id != task_id) {
             continue;
         }
         existing_token_text_annotations.push(token_text_annotation.token_id);
@@ -2052,18 +2103,20 @@ function setup_token_text_annotation(verse_id) {
     }
 }
 
-/* Task-8 Actions */
+/* Task: Token Text Annotation: Actions */
 
-// Submit-8
-$task_8_submit.click(function () {
+// Submit: Token Text Annotation
+// $task_8_submit.click(function () {
+function submit_task_token_text_annotation(task_id) {
+    console.log(`Called ${arguments.callee.name}(${Object.values(arguments).join(", ")});`);
+
     if (!$task_8_form[0].checkValidity()) {
         $task_8_form[0].reportValidity();
         return;
     }
 
+    const task_category = TASK_TOKEN_TEXT_ANNOTATION;
     const verse_id = $verse_id_containers.html();
-    const task_id = $(this).data("task-id");
-    const task_category = $(this).data("task-category");
 
     var token_text_annotation_data = {}
     $task_8_token_text_annotation_table.find("input").each(function(input_index, input_element) {
@@ -2099,6 +2152,6 @@ $task_8_submit.click(function () {
             }
         }
     });
-});
+};
 
-/* *********************************** END Task 8 *********************************** */
+/* ******************** END Task: Token Text Annotation ******************** */
