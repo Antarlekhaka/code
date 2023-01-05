@@ -178,11 +178,6 @@
                                         <label class="custom-file-label" for="chapter_file">Choose chapter file</label>
                                     </div>
                                 </div>
-                                <script>
-                                    $(document).ready(function () {
-                                        bsCustomFileInput.init();
-                                    })
-                                </script>
                                 <button type="submit" name="action" value="chapter_add" class="btn btn-success m-1">
                                     Add
                                 </button>
@@ -325,6 +320,42 @@
                                 Add
                             </button>
                         </form>
+                        <hr>
+                        <form class="form" method=POST enctype=multipart/form-data action="{{url_for('perform_action')}}">
+                            <input type="hidden" name="csrf_token" value={{csrf_token()}}>
+                            <input type="hidden" name="{{label.name}}_label_task_id" value="{{label.task_id}}">
+                            <div class="input-group my-2">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text" id="{{label.name}}_{{label.task_id}}_label_file_upload">Upload</span>
+                                </div>
+                                <div class="custom-file">
+                                    <input type="file" class="custom-file-input" id="{{label.name}}-{{label.task_id}}-label-file" name="label_file" aria-describedby="{{label.name}}_{{label.task_id}}_label_file_upload" required>
+                                    <label class="custom-file-label" for="{{label.name}}-{{label.task_id}}-label-file">Choose label file</label>
+                                </div>
+                            </div>
+                            <div class="form-group form-row">
+                                <div class="mt-2 col-sm">
+                                    <div class="custom-control custom-radio custom-control-inline">
+                                        <input class="custom-control-input" type="radio" name="upload_format" id="{{label.name}}-{{label.task_id}}-upload-format-json" value="json" checked>
+                                        <label class="custom-control-label" for="{{label.name}}-{{label.task_id}}-upload-format-json">JSON</label>
+                                    </div>
+                                    <div class="custom-control custom-radio custom-control-inline">
+                                        <input class="custom-control-input" type="radio" name="upload_format" id="{{label.name}}-{{label.task_id}}-upload-format-csv" value="csv">
+                                        <label class="custom-control-label" for="{{label.name}}-{{label.task_id}}-upload-format-csv">CSV</label>
+                                    </div>
+                                </div>
+                                <div class="col-sm">
+                                    <button type="submit" name="action" value="{{label.name}}_label_upload" class="btn btn-primary m-1 float-right">
+                                        Upload
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                        <script>
+                            $(document).ready(function () {
+                                bsCustomFileInput.init();
+                            });
+                        </script>
                         <hr>
                         <form class="form" method=POST enctype=multipart/form-data action="{{url_for('perform_action')}}">
                             <input type="hidden" name="csrf_token" value={{csrf_token()}}>

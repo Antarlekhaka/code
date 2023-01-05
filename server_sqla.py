@@ -284,45 +284,6 @@ def init_database():
 
         webapp.logger.info(f"Loaded {idx} tasks.")
 
-    # Labels
-    # NOTE: Refer to `data/tables/README.md` for format of JSON and CSV
-    label_models = [
-        TokenLabel, TokenRelationLabel,
-        SentenceLabel, SentenceRelationLabel
-    ]
-    for label_model in label_models:
-        if not label_model.query.first():
-            table_name = label_model.__tablename__
-            table_json_file = os.path.join(
-                app.tables_dir, f"{table_name}.json"
-            )
-            table_csv_file = os.path.join(
-                app.tables_dir, f"{table_name}.csv"
-            )
-
-            table_file = None
-            if os.path.isfile(table_json_file):
-                table_file = table_json_file
-                with open(table_json_file, encoding="utf-8") as f:
-                    table_data = json.load(f)
-            elif os.path.isfile(table_csv_file):
-                table_file = table_csv_file
-                with open(table_csv_file, encoding="utf-8") as f:
-                    table_data = list(csv.DictReader(f))
-
-            if table_file is None:
-                continue
-
-            for idx, label in enumerate(table_data, start=1):
-                lm = label_model()
-                lm.label = label["label"]
-                lm.description = label["description"]
-                objects.append(lm)
-
-            webapp.logger.info(
-                f"Loaded {idx} items to {table_name} from {table_file}."
-            )
-
     # Save
     if objects:
         db.session.bulk_save_objects(objects)
@@ -1770,19 +1731,27 @@ def perform_action():
             # Task Order/Status Update
             'task_update',
 
-            # Add/Remove Labels
+            # Add/Remove/Upload Labels
 
             # - Token Label
-            'token_label_add', 'token_label_remove',
+            'token_label_add',
+            'token_label_remove',
+            'token_label_upload',
 
             # - Token Graph Relation Label
-            'token_relation_label_add', 'token_relation_label_remove',
+            'token_relation_label_add',
+            'token_relation_label_remove',
+            'token_relation_label_upload',
 
             # - Sentence Label
-            'sentence_label_add', 'sentence_label_remove',
+            'sentence_label_add',
+            'sentence_label_remove',
+            'sentence_label_upload',
 
             # - Sentence Graph Relation Label
-            'sentence_relation_label_add', 'sentence_relation_label_remove',
+            'sentence_relation_label_add',
+            'sentence_relation_label_remove',
+            'sentence_relation_label_upload',
 
             # Data
             'corpus_add', 'chapter_add',
@@ -1919,10 +1888,25 @@ def perform_action():
     # Ontology
 
     if action in [
-        'token_label_add', 'token_label_remove',
-        'token_relation_label_add', 'token_relation_label_remove',
-        'sentence_label_add', 'sentence_label_remove',
-        'sentence_relation_label_add', 'sentence_relation_label_remove',
+            # - Token Label
+            'token_label_add',
+            'token_label_remove',
+            'token_label_upload',
+
+            # - Token Graph Relation Label
+            'token_relation_label_add',
+            'token_relation_label_remove',
+            'token_relation_label_upload',
+
+            # - Sentence Label
+            'sentence_label_add',
+            'sentence_label_remove',
+            'sentence_label_upload',
+
+            # - Sentence Graph Relation Label
+            'sentence_relation_label_add',
+            'sentence_relation_label_remove',
+            'sentence_relation_label_upload',
     ]:
         action_parts = action.split('_')
 
@@ -1982,6 +1966,58 @@ def perform_action():
                     db.session.add(_instance)
                     status = True
                     message = f"Removed {_model_name} '{_label_text}'."
+
+        if target_action == 'upload':
+            # Labels
+            # NOTE: Refer to `data/tables/README.md` for format of JSON and CSV
+            _label_task_id = int(request.form[f'{object_name}_label_task_id'])
+            _label_file = request.files['label_file']
+            _upload_format = request.files['upload_format']
+
+            _existing_labels = {
+                (_instance.task_id, _instance.label): _instance
+                for _instance in _model.query.all()
+            }
+
+            if _upload_format == "json":
+                with open(_label_file, encoding="utf-8") as f:
+                    table_data = json.load(f)
+            elif _upload_format == "csv":
+                with open(_label_file, encoding="utf-8") as f:
+                    table_data = list(csv.DictReader(f))
+
+            _add_count = 0
+            _undelete_count = 0
+            _ignore_count = 0
+            objects_to_update = []
+            for idx, label in enumerate(table_data, start=1):
+                _label_identifier = (_label_task_id, label["label"])
+                if _label_identifier in _existing_labels:
+                    _instance = _existing_labels[_label_identifier]
+                    if _instance.is_deleted:
+                        _instance.is_deleted = False
+                        _undelete_count += 1
+                        objects_to_update.append(_instance)
+                    else:
+                        _ignore_count += 1
+                else:
+                    _instance = _model()
+                    _instance.task_id = _label_task_id
+                    _instance.label = label["label"]
+                    _instance.description = label["description"]
+                    _add_count += 1
+                    objects_to_update.append(_instance)
+
+                if objects_to_update:
+                    db.session.bulk_save_objects(objects_to_update)
+                    status = True
+                    _total = _add_count + _undelete_count
+                    message = (
+                        f"Added {_total} {_model_name}s. "
+                        f"({_add_count} + {_undelete_count})"
+                    )
+                else:
+                    message = f"No new {_model_name}s were added."
 
         if status:
             db.session.commit()
