@@ -431,54 +431,61 @@ def inject_global_context():
         'token_labels': TokenLabel.query.filter(
             TokenLabel.is_deleted == False  # noqa # '== False' is required
         ).with_entities(
-            TokenLabel.id, TokenLabel.label, TokenLabel.description
+            TokenLabel.id,
+            TokenLabel.task_id,
+            TokenLabel.label,
+            TokenLabel.description
         ).order_by(TokenLabel.label).all(),
         'token_relation_labels': TokenRelationLabel.query.filter(
             TokenRelationLabel.is_deleted == False  # noqa # '== False' is required
         ).with_entities(
             TokenRelationLabel.id,
+            TokenRelationLabel.task_id,
             TokenRelationLabel.label,
             TokenRelationLabel.description
         ).order_by(TokenRelationLabel.label).all(),
         'sentence_labels': SentenceLabel.query.filter(
             SentenceLabel.is_deleted == False  # noqa # '== False' is required
         ).with_entities(
-            SentenceLabel.id, SentenceLabel.label, SentenceLabel.description
+            SentenceLabel.id,
+            SentenceLabel.task_id,
+            SentenceLabel.label,
+            SentenceLabel.description
         ).order_by(SentenceLabel.label).all(),
         'sentence_relation_labels': SentenceRelationLabel.query.filter(
             SentenceRelationLabel.is_deleted == False  # noqa # '== False' is required
         ).with_entities(
             SentenceRelationLabel.id,
+            SentenceRelationLabel.task_id,
             SentenceRelationLabel.label,
             SentenceRelationLabel.description
         ).order_by(SentenceRelationLabel.label).all(),
-        'admin_labels': [
-            {
-                "name": "token",
-                "title": "Token",
-                "is_active": True,
-                "object_name": "token_labels"
-            },
-            {
-                "name": "token_relation",
-                "title": "Token Relation",
-                "is_active": False,
-                "object_name": "token_relation_labels"
-            },
-            {
-                "name": "sentence",
-                "title": "Sentence",
-                "is_active": False,
-                "object_name": "sentence_labels"
-            },
-            {
-                "name": "sentence_relation",
-                "title": "Sentence Relation",
-                "is_active": False,
-                "object_name": "sentence_relation_labels"
-            },
-        ]
+        'admin_labels': []
     }
+
+    for task in Task.query.all():
+        _name = None
+        if task.category == TASK_TOKEN_CLASSIFICATION:
+            _name = "token"
+            _object_name = "token_labels"
+        if task.category == TASK_TOKEN_GRAPH:
+            _name = "token_relation"
+            _object_name = "token_relation_labels"
+        if task.category == TASK_SENTENCE_CLASSIFICATION:
+            _name = "sentence"
+            _object_name = "sentence_labels"
+        if task.category == TASK_SENTENCE_GRAPH:
+            _name = "sentence_relation"
+            _object_name = "sentence_relation_labels"
+
+        if _name is not None:
+            LABELS["admin_labels"].append({
+                "task_id": task.id,
+                "name": _name,
+                "title": task.title,
+                "object_name": _object_name
+            })
+
     return {
         'title': app.title,
         'now': datetime.datetime.utcnow(),

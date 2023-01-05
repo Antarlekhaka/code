@@ -277,7 +277,7 @@
         <div class="card-body p-0">
             <ul class="nav nav-tabs mb-3" id="labels-tab" role="tablist">
                 {% for label in context_labels.admin_labels %}
-                {% if label.is_active %}
+                {% if loop.first %}
                     {% set active_status = "active" %}
                     {% set aria_selected = "true" %}
                 {% else %}
@@ -285,34 +285,41 @@
                     {% set aria_selected = "false" %}
                 {% endif %}
                     <li class="nav-item">
-                        <a class="nav-link {{active_status}}" id="{{label.name}}-label-tab" data-toggle="tab" href="#{{label.name}}-label-tab-content" role="tab" aria-controls="{{label.name}}-label-tab-content" aria-selected="{{aria_selected}}">{{label.title}}</a>
+                        <a class="nav-link {{active_status}}" id="{{label.name}}-{{label.task_id}}-label-tab" data-toggle="tab" href="#{{label.name}}-{{label.task_id}}-label-tab-content" role="tab" aria-controls="{{label.name}}-{{label.task_id}}-label-tab-content" aria-selected="{{aria_selected}}">{{label.title}}</a>
                     </li>
                 {% endfor %}
             </ul>
             <div class="tab-content m-3" id="labels-tab-content">
                 {% for label in context_labels.admin_labels %}
-                {% if label.is_active %}
+                {% if loop.first %}
                     {% set active_status = "active" %}
                 {% else %}
                     {% set active_status = "" %}
                 {% endif %}
-                <div class="tab-pane {{active_status}}" id="{{label.name}}-label-tab-content" role="tabpanel" aria-labelledby="{{label.name}}-label-tab">
+                <div class="tab-pane {{active_status}}" id="{{label.name}}-{{label.task_id}}-label-tab-content" role="tabpanel" aria-labelledby="{{label.name}}-{{label.task_id}}-label-tab">
                     <div class="container">
                         <form class="form " method=POST enctype=multipart/form-data action="{{url_for('perform_action')}}">
                             <input type="hidden" name="csrf_token" value={{csrf_token()}}>
-                            <div class="form-group">
-                                <label for="{{label.name}}-label-text">
-                                    Label
-                                    <small class="text-muted">{{label.title}} Label</small>
+                            <input type="hidden" name="{{label.name}}_label_task_id" value="{{label.task_id}}">
+                            <div class="form-group form-row">
+                                <label class="col-sm-2">
+                                    Task ID
                                 </label>
-                                <input class="form-control" type="text" name="{{label.name}}_label_text" id="{{label.name}}-label-text" required>
+                                <span class="col-sm-2">{{label.task_id}}</span>
                             </div>
-                            <div class="form-group">
-                                <label for="{{label.name}}-label-desc">
-                                    Description
-                                    <small class="text-muted">{{label.title}} Label</small>
+                            <div class="form-group form-row">
+                                <label class="col-sm-2" for="{{label.name}}-{{label.task_id}}-label-text">
+                                    Label
+                                    <!-- <small class="text-muted">{{label.title}} Label</small> -->
                                 </label>
-                                <input class="form-control" type="text" name="{{label.name}}_label_desc" id="{{label.name}}-label-desc" required>
+                                <input class="form-control col-sm" type="text" name="{{label.name}}_label_text" id="{{label.name}}-{{label.task_id}}-label-text" required>
+                            </div>
+                            <div class="form-group form-row">
+                                <label class="col-sm-2" for="{{label.name}}-{{label.task_id}}-label-desc">
+                                    Description
+                                    <!-- <small class="text-muted">{{label.title}} Label</small> -->
+                                </label>
+                                <input class="form-control col-sm" type="text" name="{{label.name}}_label_desc" id="{{label.name}}-{{label.task_id}}-label-desc" required>
                             </div>
                             <button type="submit" name="action" value="{{label.name}}_label_add" class="btn btn-success m-1">
                                 Add
@@ -322,13 +329,15 @@
                         <form class="form" method=POST enctype=multipart/form-data action="{{url_for('perform_action')}}">
                             <input type="hidden" name="csrf_token" value={{csrf_token()}}>
                             <div class="form-group">
-                                <label for="{{label.name}}-label-select">Label</label>
-                                <select class="lead m-1 selectpicker" name="{{label.name}}_label_text" id="{{label.name}}-label-select" data-live-search="true" required>
-                                    {% for _id, _label, _description in context_labels[label.object_name] %}
+                                <label for="{{label.name}}-{{label.id}}-label-select">Label</label>
+                                <select class="lead m-1 selectpicker" name="{{label.name}}_label_text" id="{{label.name}}-{{label.id}}-label-select" data-live-search="true" required>
+                                    {% for _id, _task_id, _label, _description in context_labels[label.object_name] %}
+                                    {% if _task_id == label.task_id %}
                                     <option value="{{_label}}">{{_description}}</option>
+                                    {% endif %}
                                     {% endfor %}
                                 </select>
-                                <button type="submit" name="action" value="{{label.name}}_type_remove" class="btn btn-danger m-1">
+                                <button type="submit" name="action" value="{{label.name}}_label_remove" class="btn btn-danger m-1">
                                     Remove
                                 </button>
                             </div>
