@@ -334,18 +334,22 @@ def inject_global_context():
     # move them to individual routes?
     # alternatively, can we add a check here which route is loading,
     # and export variables based on that?
-    active_tasks = {
+    all_tasks = {
         task.id: {
             "id": task.id,
             "category": task.category,
             "title": task.title,
             "short": task.short,
             "help": task.help,
-            "order": task.order
+            "order": task.order,
+            "is_deleted": task.is_deleted
         }
-        for task in Task.query.filter(
-            Task.is_deleted == False  # noqa # '== False' is required
-        ).order_by(Task.order).all()
+        for task in Task.query.order_by(Task.order).all()
+    }
+    active_tasks = {
+        task_id: task for
+        task_id, task in all_tasks.items()
+        if not task["is_deleted"]
     }
     active_task_ids = list(active_tasks)
     if active_task_ids:
@@ -361,6 +365,7 @@ def inject_global_context():
         next_task = {}
 
     TASKS = {
+        'tasks': all_tasks,
         'active_ids': active_task_ids,
         'active_tasks': active_tasks,
         'first_task': first_task,
@@ -494,21 +499,6 @@ def show_admin():
         if role.level < user_level
     ]
 
-    # TODO: Task.query too many times, try to reduce that
-    # NOTE: At every template render, global_context are evaluated anyway
-    # May be move this task query in global and check every instance in JS
-    # and templates whether task.is_deleted
-    data['tasks'] = [
-        {
-            'id': task.id,
-            'category': task.category,
-            'title': task.title,
-            'order': task.order,
-            'is_deleted': task.is_deleted
-        }
-        for task in Task.query.order_by(Task.order).all()
-    ]
-
     data['corpus_list'] = [
         {
             'id': corpus.id,
@@ -563,19 +553,6 @@ def show_export():
             ]
         }
         for corpus in Corpus.query.all()
-    ]
-    data['tasks'] = [
-        {
-            "id": task.id,
-            "category": task.category,
-            "title": task.title,
-            "short": task.short,
-            "help": task.help,
-            "order": task.order
-        }
-        for task in Task.query.filter(
-            Task.is_deleted == False  # noqa # '== False' is required
-        ).order_by(Task.order).all()
     ]
 
     if request.method == "POST":
