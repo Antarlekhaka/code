@@ -85,8 +85,8 @@
     {% if data.result %}
     <hr>
     <ul class="nav nav-pills my-3" id="pills-tab" role="tablist">
-        {% for task in data.tasks %}
-        {% if task.id == 1 %}
+        {% for task_id, task in context_tasks.active_tasks.items() %}
+        {% if loop.first %}
             {% set active_class = "active" %}
             {% set aria_selected = "true" %}
         {% else %}
@@ -100,8 +100,8 @@
     </ul>
 
     <div class="tab-content" id="pills-tab-content">
-        {% for task in data.tasks %}
-        {% if task.id == 1 %}
+        {% for task_id, task in context_tasks.active_tasks.items() %}
+        {% if loop.first %}
             {% set active_class = "active" %}
         {% else %}
             {% set active_class = "" %}

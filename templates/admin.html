@@ -56,7 +56,7 @@
                         </tr>
                     </thead>
                     <tbody id="task-table-body">
-                    {% for task in data.tasks %}
+                    {% for task_id, task in context_tasks.tasks.items() %}
                     <tr data-target="#task-{{task.id}}-order">
                         <input type="hidden" name="task-{{task.id}}-order" id="task-{{task.id}}-order" value="{{task.order}}">
                         <td class="pl-4">{{task.id}}</td>
