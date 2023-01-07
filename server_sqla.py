@@ -1707,6 +1707,7 @@ def perform_action():
 
             # Task Order/Status Update
             'task_update',
+            'task_collection_update',
 
             # Add/Remove/Upload Labels
 
@@ -1847,7 +1848,42 @@ def perform_action():
 
     # ----------------------------------------------------------------------- #
     # Task Update
+
     if action == 'task_update':
+        task_id = request.form["task_id"]
+        task_category = request.form["task_category"]
+        task_title = request.form["task_title"]
+        task_short = request.form["task_short"]
+        task_help = request.form["task_order"]
+
+        if task_id == "auto":
+            task_count = Task.query.count()
+            task = Task()
+            task.category = task_category
+            task.title = task_title
+            task.short = task_short
+            task.help = task_help
+            task.order = task_count + 1
+            message = f"New '{task_category}' task added."
+        else:
+            task = Task.query.get(task_id)
+            if task is None:
+                message = f"Invalid task ID: {task_id}"
+            else:
+                task.title = task_title
+                task.short = task_short
+                task.help = task_help
+                message = f"Task '{task_id}' updated."
+
+        if task is not None:
+            db.session.add(task)
+            db.session.commit()
+            flash(message, "success")
+        else:
+            flash(message)
+        return redirect(request.referrer)
+
+    if action == 'task_collection_update':
         print(request.form)
         tasks = Task.query.all()
         for task in tasks:
