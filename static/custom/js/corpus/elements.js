@@ -51,10 +51,9 @@ const add_token_feature_input_selector = ".add-token-feature-input";
 
 /* ***************** */
 
-// Task-4
-const $task_4_form = $("#token-graph-form");
-
 /* *** Graph Modal *** */
+// Single modal is used to show token graph and sentence graph
+// across all relevant tasks
 
 const $show_graph_modal_buttons = $(".show-graph-modal-button");
 const $show_graph_modal = $("#show-graph-modal");
@@ -63,15 +62,6 @@ const $snapshot_graph_button = $('#snapshot-graph-button');
 const $graph = $("#graph");
 
 /* ******************* */
-
-const $task_4_token_graph_container = $("#token-graph-container");
-const $task_4_token_graph_input_container = $("#token-graph-input-container");
-
-const $task_4_sample_token_graph_input_container = $("#sample-token-graph-input-container");
-const $task_4_sample_token_graph_input = $("#sample-token-graph-input");
-const $task_4_sample_source_entity = $("#sample-source-entity");
-const $task_4_sample_target_entity = $("#sample-target-entity");
-const $task_4_sample_relation_label = $("#sample-relation-label");
 
 // Task-5
 const $task_5_token_connection_context_container = $("#tokcon-context-container");

@@ -871,7 +871,16 @@ function setup_task_token_graph(task_id, verse_id) {
 
     const row = $corpus_table.bootstrapTable('getRowByUniqueId', verse_id);
 
-    $task_4_token_graph_input_container.html("");
+    const $token_graph_container = $(`#token-graph-container-${task_id}`);
+    const $token_graph_input_container = $(`#token-graph-input-container-${task_id}`);
+
+    const $sample_token_graph_input_container = $(`#sample-token-graph-input-container-${task_id}`);
+    const $sample_token_graph_input = $(`#sample-token-graph-input-${task_id}`);
+    const $sample_token_graph_source_entity = $(`#sample-token-graph-source-entity-${task_id}`);
+    const $sample_token_graph_target_entity = $(`#sample-token-graph-target-entity-${task_id}`);
+    const $sample_token_graph_relation_label = $(`#sample-token-graph-relation-label-${task_id}`);
+
+    $token_graph_input_container.html("");
 
     var all_tokens = {};
     var boundary_tokens = {};
@@ -901,11 +910,11 @@ function setup_task_token_graph(task_id, verse_id) {
     console.log(existing_relations);
 
     for (const [boundary_id, used_token_ids] of Object.entries(boundary_tokens)) {
-        const $graph_input = $task_4_sample_token_graph_input.clone();
-        $graph_input.prop("id", `token-graph-input-${boundary_id}`);
+        const $graph_input = $sample_token_graph_input.clone();
+        $graph_input.prop("id", `token-graph-input-${task_id}-${boundary_id}`);
         $graph_input.addClass(sentence_token_graph_input_container_class);
         $graph_input.data("boundary-id", boundary_id);
-        $graph_input.appendTo($task_4_token_graph_input_container);
+        $graph_input.appendTo($token_graph_input_container);
 
         const $graph_input_header = $graph_input.find(".boundary-token-graph-header");
 
@@ -939,12 +948,12 @@ function setup_task_token_graph(task_id, verse_id) {
 
         $add_triplet_button.off("click");
         $add_triplet_button.click(function () {
-            add_token_graph_row($triplet_location);
+            add_token_graph_row($triplet_location, task_id);
         });
 
         if (existing_relations.hasOwnProperty(boundary_id)) {
             for (const [_src_id, _label_id, _dst_id] of existing_relations[boundary_id]) {
-                const $triple_row = add_token_graph_row($triplet_location);
+                const $triple_row = add_token_graph_row($triplet_location, task_id);
                 $triple_row.find(".source-entity").selectpicker('val', _src_id);
                 $triple_row.find(".relation-label").selectpicker('val', _label_id);
                 $triple_row.find(".target-entity").selectpicker('val', _dst_id);
@@ -955,7 +964,7 @@ function setup_task_token_graph(task_id, verse_id) {
     }
 }
 
-function add_token_graph_row($location) {
+function add_token_graph_row($location, task_id) {
     const source_entity_options = $location.data("source-options");
     const target_entity_options = $location.data("target-options");
 
@@ -968,7 +977,7 @@ function add_token_graph_row($location) {
 
     // Create Action Entity Input Element
     const $input_source_entity = $task_4_sample_source_entity.clone();
-    $input_source_entity.attr("id", `element-source-entity-${triplet_count}`);
+    $input_source_entity.attr("id", `element-source-entity-${task_id}-${triplet_count}`);
     var current_value = $input_source_entity.attr("title");
     var updated_value = current_value.replace(
         "{}",
@@ -995,7 +1004,7 @@ function add_token_graph_row($location) {
 
     // Create Actor Label Selector Element
     const $input_relation_label = $task_4_sample_relation_label.clone();
-    $input_relation_label.attr("id", `element-relation-label-${triplet_count}`);
+    $input_relation_label.attr("id", `element-relation-label-${task_id}-${triplet_count}`);
     var current_value = $input_relation_label.attr("title");
     var updated_value = current_value.replace(
         "{}",
@@ -1010,7 +1019,7 @@ function add_token_graph_row($location) {
 
     // Create Target Entity Input Element
     const $input_target_entity = $task_4_sample_target_entity.clone();
-    $input_target_entity.attr("id", `element-target-entity-${triplet_count}`);
+    $input_target_entity.attr("id", `element-target-entity-${task_id}-${triplet_count}`);
     var current_value = $input_target_entity.attr("title");
     var updated_value = current_value.replace(
         "{}",
@@ -1037,7 +1046,7 @@ function add_token_graph_row($location) {
 
     // Create Remove Triplet Button
     const $remove_triplet_button = $('<button />').addClass("btn btn-danger");
-    $remove_triplet_button.attr("id", `remove-triplet-button-${triplet_count}`);
+    $remove_triplet_button.attr("id", `remove-triplet-button-${task_id}-${triplet_count}`);
     $remove_triplet_button.attr("title", "Remove Relation");
     const $remove_icon = $('<i />').addClass(`fas fa-minus`);
 
@@ -1181,8 +1190,10 @@ $snapshot_graph_button.click(function() {
 function submit_task_token_graph(task_id) {
     console.log(`Called ${arguments.callee.name}(${Object.values(arguments).join(", ")});`);
 
-    if (!$task_4_form[0].checkValidity()) {
-        $task_4_form[0].reportValidity();
+    const $token_graph_form = $(`#token-graph-form-${task_id}`);
+
+    if (!$token_graph_form[0].checkValidity()) {
+        $token_graph_form[0].reportValidity();
         return;
     }
 
