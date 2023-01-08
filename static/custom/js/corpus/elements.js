@@ -51,12 +51,6 @@ const add_token_feature_input_selector = ".add-token-feature-input";
 
 /* ***************** */
 
-// Task-3
-const $task_3_form = $("#token-classification-form");
-const $task_3_token_classification_table = $("#token-classification-table");
-const $task_3_token_null_class_table = $("#token-null-class-table");
-const task_3_sample_token_type = $("#sample-token-type");
-
 // Task-4
 const $task_4_form = $("#token-graph-form");
 

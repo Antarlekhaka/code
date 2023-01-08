@@ -1,16 +1,16 @@
 {% extends "task_base.html" %}
 {% block body %}
-<div id="token-classification-container">
-    <form id="token-classification-form" class="scroll-small">
-    <table id="token-classification-table" class="table"></table>
+<div id="token-classification-container-{{task.id}}">
+    <form id="token-classification-form-{{task.id}}" class="scroll-small">
+    <table id="token-classification-table-{{task.id}}" class="table"></table>
     </form>
     <hr class="border-secondary m-1">
     <div class="scroll-small">
-    <table id="token-null-class-table" class="table bg-light"></table>
+    <table id="token-null-class-table-{{task.id}}" class="table bg-light"></table>
     </div>
 </div>
 <div class="sample-input" hidden="true">
-    <select id="sample-token-type" title="Select Token Type" class="form-control selectpicker" data-show-subtext="true" data-live-search="true" data-container="body" required>
+    <select id="sample-token-type-{{task.id}}" title="Select Token Type" class="form-control selectpicker" data-show-subtext="true" data-live-search="true" data-container="body" required>
         {% for _id, _task_id, _label, _description in context_labels.token_labels %}
         {% if _task_id == task.id %}
         <option value="{{_id}}" data-subtext="{{_description}}">{{_label}}</option>

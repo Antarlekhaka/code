@@ -695,8 +695,12 @@ function setup_task_token_classification(task_id, verse_id) {
 
     const row = $corpus_table.bootstrapTable('getRowByUniqueId', verse_id);
 
-    $task_3_token_classification_table.html("");
-    $task_3_token_null_class_table.html("");
+    const $token_classification_table = $(`#token-classification-table-${task_id}`);
+    const $token_null_class_table = $(`#token-null-class-table-${task_id}`);
+    const $sample_token_classification_type = $(`#sample-token-type-${task_id}`);
+
+    $token_classification_table.html("");
+    $token_null_class_table.html("");
 
     var all_tokens = {};
     var used_tokens = [];
@@ -730,11 +734,11 @@ function setup_task_token_classification(task_id, verse_id) {
             var tokclf_label_id = null;
             const $tokclf_row = $("<tr />", {});
             if (existing_token_classification.includes(token.id)) {
-                $task_3_token_classification_table.append($tokclf_row);
+                $token_classification_table.append($tokclf_row);
                 has_token_class = true;
                 tokclf_label_id = existing_labels[token.id];
             } else {
-                $task_3_token_null_class_table.append($tokclf_row);
+                $token_null_class_table.append($tokclf_row);
             }
 
             const $tokclf_cell = $("<td />", {});
@@ -742,18 +746,18 @@ function setup_task_token_classification(task_id, verse_id) {
 
             const $tokclf = generate_token_button({
                 token: token,
-                id_prefix: "tokclf"
+                id_prefix: `tokclf-${task_id}`
             });
             $tokclf_cell.append($tokclf);
 
             const $token_type_cell = $("<td />");
             $tokclf_row.append($token_type_cell);
 
-            const $token_class_selector_element = task_3_sample_token_type.clone();
+            const $token_class_selector_element = $sample_token_classification_type.clone();
             $token_class_selector_element.data("boundary-id", boundary_id);
             $token_type_cell.append($token_class_selector_element);
 
-            const token_class_selector_id = `token-class-selector-${token.id}`;
+            const token_class_selector_id = `token-class-selector-${task_id}-${token.id}`;
             $token_class_selector_element.attr("id", token_class_selector_id);
 
             if (has_token_class) {
@@ -771,7 +775,7 @@ function setup_task_token_classification(task_id, verse_id) {
             const tokclf_html = (has_token_class) ? '<i class="fa fa-times"></i>' : '<i class="fa fa-plus"></i>';
 
             const $tokclf_toggle = $("<span />", {
-                id: `tokclf-toggle-${token.id}`,
+                id: `tokclf-toggle-${task_id}-${token.id}`,
                 name: "tokclf-toggle",
                 class: tokclf_class,
                 html: tokclf_html,
@@ -785,14 +789,14 @@ function setup_task_token_classification(task_id, verse_id) {
                             $(this).addClass("btn-secondary");
                             $(this).html('<i class="fa fa-times"></i>');
                             $(select_selector).selectpicker('show');
-                            $task_3_token_classification_table.append($(this).parents('tr'));
+                            $token_classification_table.append($(this).parents('tr'));
                         } else {
                             $(this).removeClass("btn-secondary");
                             $(this).addClass("btn-info");
                             $(this).addClass("include-tokclf");
                             $(this).html('<i class="fa fa-plus"></i>');
                             $(select_selector).selectpicker('hide');
-                            $task_3_token_null_class_table.append($(this).parents('tr'));
+                            $token_null_class_table.append($(this).parents('tr'));
                         }
                     }
                 }
@@ -809,8 +813,11 @@ function setup_task_token_classification(task_id, verse_id) {
 function submit_task_token_classification(task_id) {
     console.log(`Called ${arguments.callee.name}(${Object.values(arguments).join(", ")});`);
 
-    if (!$task_3_form[0].checkValidity()) {
-        $task_3_form[0].reportValidity();
+    const $token_classification_form = $(`#token-classification-form-${task_id}`);
+    const $token_classification_table = $(`#token-classification-table-${task_id}`);
+
+    if (!$token_classification_form[0].checkValidity()) {
+        $token_classification_form[0].reportValidity();
         return;
     }
 
@@ -818,7 +825,7 @@ function submit_task_token_classification(task_id) {
     const task_category = TASK_TOKEN_CLASSIFICATION;
 
     var token_classification_data = {}
-    $task_3_token_classification_table.find("select").each(function(select_index, select_element) {
+    $token_classification_table.find("select").each(function(select_index, select_element) {
         const token_id = select_element.id;
         const boundary_id = $(select_element).data("boundary-id");
         const token_label_id = $(select_element).selectpicker('val');

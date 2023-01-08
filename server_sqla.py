@@ -1096,7 +1096,7 @@ def api():
                     "label_id": int(v["label_id"])
                 }
                 for k, v in token_classification_data.items()
-                if re.match(r'token-class-selector-([0-9]+)$', k)
+                if re.match(r'token-class-selector-[0-9]+-([0-9]+)$', k)
             }
         except Exception:
             api_response["success"] = False
