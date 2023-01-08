@@ -1504,7 +1504,13 @@ function setup_task_sentence_classification(task_id, verse_id) {
 
     const row = $corpus_table.bootstrapTable('getRowByUniqueId', verse_id);
 
-    $task_6_sentence_classification_input_container.html("");
+    const $sentence_classification_container = $(`#sentence-classification-container-${task_id}`);
+    const $sentence_classification_input_container = $(`#sentence-classification-input-container-${task_id}`);
+
+    const $sample_sentence_classification_input_container = $(`#sample-sentence-classification-input-container-${task_id}`);
+    const $sample_sentence_classification_input = $(`#sample-sentence-classification-input-${task_id}`);
+
+    $sentence_classification_input_container.html("");
 
     var all_tokens = {};
     var boundary_tokens = {};
@@ -1540,16 +1546,16 @@ function setup_task_sentence_classification(task_id, verse_id) {
             header_html.push(token_text);
         }
         const header_text = header_html.join(" ");
-        const $sentence = $task_6_sample_sentence_classification_input.clone();
-        $sentence.attr("id", `sentence-classification-boundary-${boundary_id}`);
-        $sentence.appendTo($task_6_sentence_classification_input_container);
+        const $sentence = $sample_sentence_classification_input.clone();
+        $sentence.attr("id", `sentence-classification-boundary-${task_id}-${boundary_id}`);
+        $sentence.appendTo($sentence_classification_input_container);
 
         const $sentence_text = $sentence.find(".sentence-text");
         $sentence_text.html(header_text);
         $sentence_text.data("boundary-id", boundary_id);
 
         const $sentence_label_select = $sentence.find(".sentence-label");
-        $sentence_label_select.attr("id", `sentence-classification-select-${boundary_id}`);
+        $sentence_label_select.attr("id", `sentence-classification-select-${task_id}-${boundary_id}`);
 
         console.log(existing_sentence_classification);
         if (existing_sentence_classification.hasOwnProperty(boundary_id)) {
@@ -1567,8 +1573,11 @@ function setup_task_sentence_classification(task_id, verse_id) {
 function submit_task_sentence_classification(task_id) {
     console.log(`Called ${arguments.callee.name}(${Object.values(arguments).join(", ")});`);
 
-    if (!$task_6_form[0].checkValidity()) {
-        $task_6_form[0].reportValidity();
+    const $sentence_classification_form = $(`#sentence-classification-form-${task_id}`);
+    const $sentence_classification_input_container = $(`#sentence-classification-input-container-${task_id}`);
+
+    if (!$sentence_classification_form[0].checkValidity()) {
+        $sentence_classification_form[0].reportValidity();
         return;
     }
 
@@ -1577,10 +1586,10 @@ function submit_task_sentence_classification(task_id) {
 
     var sentence_classification_data = [];
 
-    $task_6_sentence_classification_input_container.find(".sentence-text").each(function (_index, _text_element) {
+    $sentence_classification_input_container.find(".sentence-text").each(function (_index, _text_element) {
         const $text_element = $(_text_element);
         const boundary_id = $text_element.data("boundary-id");
-        const $selector = $(`#sentence-classification-select-${boundary_id}`);
+        const $selector = $(`#sentence-classification-select-${task_id}-${boundary_id}`);
         const label_id = $selector.selectpicker("val");
         sentence_classification_data.push({
             boundary_id: boundary_id,

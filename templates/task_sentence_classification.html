@@ -1,13 +1,13 @@
 {% extends "task_base.html" %}
 {% block body %}
-<div id="sentence-classification-container">
-    <form id="sentence-classification-form">
-        <div id="sentence-classification-input-container"></div>
+<div id="sentence-classification-container-{{task.id}}">
+    <form id="sentence-classification-form-{{task.id}}">
+        <div id="sentence-classification-input-container-{{task.id}}"></div>
     </form>
 </div>
 <!-- Sample Elements (Hidden) -->
-<div id="sample-sentence-classification-input-container" hidden="true">
-    <div id="sample-sentence-classification-input" class="card border-secondary">
+<div id="sample-sentence-classification-input-container-{{task.id}}" hidden="true">
+    <div id="sample-sentence-classification-input-{{task.id}}" class="card border-secondary">
         <div class="card-body form-row">
             <div class="col-sm sentence-text lead">
                 Sentence text appears here.
@@ -24,4 +24,11 @@
         </div>
     </div>
 </div>
+<script>
+    // Setup Placeholder
+    const $placeholder = $("#sample-sentence-classification-input-{{task_id}}").clone();
+    $placeholder.removeAttr("id");
+    $placeholder.find(".sentence-label").selectpicker();
+    $placeholder.appendTo("#sentence-classification-input-container-{{task_id}}");
+</script>
 {% endblock %}

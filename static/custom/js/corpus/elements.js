@@ -63,15 +63,6 @@ const $graph = $("#graph");
 
 /* ******************* */
 
-// Task-6
-const $task_6_form = $("#sentence-classification-form");
-
-const $task_6_sentence_classification_container = $("#sentence-classification-container");
-const $task_6_sentence_classification_input_container = $("#sentence-classification-input-container");
-
-const $task_6_sample_sentence_classification_input_container = $("#sample-sentence-classification-input-container");
-const $task_6_sample_sentence_classification_input = $("#sample-sentence-classification-input");
-
 // Task-7
 const $task_7_form = $("#sentence-graph-form");
 const $task_7_sentence_graph_context_container = $("#sentence-graph-context-container");
