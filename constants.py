@@ -61,7 +61,7 @@ TASK_DEFAULT_INFORMATION = {
     },
     TASK_WORD_ORDER: {
         "category": "word_order",
-        "title": "Canonical Word Order",
+        "title": "Word Order",
         "short": "Word Order",
         "help": (
             "Arrange the words in the correct order. Optionally, "

@@ -262,27 +262,22 @@ def init_database():
     objects = []
 
     # Task
+    required_tasks = [TASK_SENTENCE_BOUNDARY, TASK_WORD_ORDER]
     if not Task.query.first():
-        task_data_file = os.path.join(app.tables_dir, "task.json")
-        if not os.path.isfile(task_data_file):
-            task_data_file = os.path.join(
-                app.tables_dir, "samples", "task.json"
-            )
+        for task_idx, task_category in enumerate(required_tasks, start=1):
+            task_information = TASK_DEFAULT_INFORMATION[task_category]
 
-        with open(task_data_file, encoding="utf-8") as f:
-            tasks_data = json.load(f)
-
-        for idx, task in enumerate(tasks_data, start=1):
             t = Task()
-            t.id = task["id"]
-            t.category = task["category"]
-            t.title = task["title"]
-            t.short = task["short"]
-            t.help = task["help"]
-            t.order = idx
+            t.id = task_idx
+            t.category = task_category
+            t.title = task_information["title"]
+            t.short = task_information["short"]
+            t.help = task_information["help"]
+            t.order = task_idx
+            t.is_deleted = True
             objects.append(t)
 
-        webapp.logger.info(f"Loaded {idx} tasks.")
+        webapp.logger.info(f"Loaded {task_idx} tasks.")
 
     # Save
     if objects:
@@ -1850,11 +1845,12 @@ def perform_action():
     # Task Update
 
     if action == 'task_update':
+        print(request.form)
         task_id = request.form["task_id"]
         task_category = request.form["task_category"]
         task_title = request.form["task_title"]
         task_short = request.form["task_short"]
-        task_help = request.form["task_order"]
+        task_help = request.form["task_help"]
 
         if task_id == "auto":
             task_count = Task.query.count()
@@ -1864,7 +1860,7 @@ def perform_action():
             task.short = task_short
             task.help = task_help
             task.order = task_count + 1
-            message = f"New '{task_category}' task added."
+            message = f"New task added. (Category: '{task_category}')"
         else:
             task = Task.query.get(task_id)
             if task is None:
@@ -1873,7 +1869,7 @@ def perform_action():
                 task.title = task_title
                 task.short = task_short
                 task.help = task_help
-                message = f"Task '{task_id}' updated."
+                message = f"Task {task_id} updated."
 
         if task is not None:
             db.session.add(task)

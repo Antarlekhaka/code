@@ -42,7 +42,7 @@
         <form method="POST" enctype="multipart/form-data" action="{{url_for('perform_action')}}">
             <input type="hidden" name="csrf_token" value={{csrf_token()}}>
             <div class="card-header lead">
-                Tasks
+                Manage Tasks
                 <button type="submit" name="action" value="task_collection_update" class="btn btn-sm btn-primary float-right">Update</button>
                 <button type="button" class="mx-1 btn btn-sm btn-primary float-right" data-toggle="modal" data-target="#task-modal" data-action="add">
                     <i class="fa fa-plus"></i>
@@ -61,7 +61,10 @@
                     </thead>
                     <tbody id="task-table-body">
                     {% for task_id, task in context_tasks.tasks.items() %}
-                    <tr data-target="#task-{{task.id}}-order">
+                    {% if task.category in (context_tasks.task_sentence_boundary, context_tasks.task_word_order) %}
+                        {% set unsortable = "unsortable bg-light" %}
+                    {% endif %}
+                    <tr data-target="#task-{{task.id}}-order" class="{{unsortable}} {{bg_inactive}}">
                         <input type="hidden" name="task-{{task.id}}-order" id="task-{{task.id}}-order" value="{{task.order}}">
                         <td class="pl-4">{{task.id}}</td>
                         <td>{{task.title}}</td>
@@ -76,7 +79,11 @@
                             data-on="Yes"
                             data-off="No">
                         </td>
-                        <td><i class="fa fa-up-down"></i></td>
+                        <td>
+                            {% if task.category not in (context_tasks.task_sentence_boundary, context_tasks.task_word_order) %}
+                            <i class="fa fa-up-down"></i>
+                            {% endif %}
+                        </td>
                     </tr>
                     {% endfor %}
                     </tbody>
@@ -85,10 +92,11 @@
                     const $task_table_body = $("#task-table-body");
                     $(function() {
                         $task_table_body.sortable({
+                            items: "tr:not(.unsortable)",
                             cursor: "move",
                             containment: "parent",
                             tolerance: "pointer",
-                            placeholder: 'tr bg-secondary',
+                            placeholder: "tr bg-secondary"
                         }).on("sortupdate", function(e, ui) {
                             // ui.item contains the current dragged element.
                             // Triggered when the user stopped sorting and the DOM position has changed.
@@ -452,7 +460,8 @@
                         <tr>
                             <td class="lead">Task ID</td>
                             <td>
-                                <input class="form-control col-sm-2" type="text" name="task_id" id="task-modal-input-task-id" value="auto" disabled>
+                                <input type="hidden" name="task_id" id="task-modal-input-task-id" value="auto">
+                                <span id="task-modal-span-task-id">auto</span>
                             </td>
                         </tr>
                         <tr>
@@ -514,6 +523,7 @@
     const $task_modal_submit_button = $("#task-modal-submit");
 
     const $input_task_id = $("#task-modal-input-task-id");
+    const $span_task_id = $("#task-modal-span-task-id");
     const $input_task_category = $("#task-modal-select-task-category");
     const $span_task_category = $("#task-modal-span-task-category");
     const $input_task_title = $("#task-modal-input-task-title");
@@ -531,6 +541,7 @@
             $modal.find(".modal-title").text("Add Task");
 
             $input_task_id.val("auto");
+            $span_task_id.html("auto");
 
             $span_task_category.addClass("d-none");
             $span_task_category.html("");
@@ -550,6 +561,7 @@
             const the_task = TASK_TASKS[task_id];
 
             $input_task_id.val(task_id);
+            $span_task_id.html(task_id);
 
             $input_task_category.selectpicker("hide");
             $input_task_category.prop("required", false);
@@ -572,7 +584,6 @@
 
     $task_modal_submit_button.on("click", function (event) {
         if ($task_form[0].checkValidity()) {
-            alert($task_form.serialize());
             $task_form.submit();
         } else {
             $task_form[0].reportValidity();
