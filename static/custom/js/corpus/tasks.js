@@ -1266,6 +1266,16 @@ function setup_task_token_connection(task_id, verse_id) {
     const row = $corpus_table.bootstrapTable('getRowByUniqueId', verse_id);
     const data = $corpus_table.bootstrapTable('getData');
 
+    const $token_connection_context_container = $(`#tokcon-context-container-${task_id}`);
+
+    const $token_connection_intermediate_row_container = $(`#tokcon-intermediate-row-container-${task_id}`);
+    const $token_connection_source_container = $(`#tokcon-source-token-container-${task_id}`);
+    const $token_connection_target_container = $(`#tokcon-target-token-container-${task_id}`);
+    const $token_connection_reset_button = $(`#tokcon-reset-button-${task_id}`);
+    const $token_connection_confirm_button = $(`#tokcon-confirm-button-${task_id}`);
+
+    const $token_connection_annotation_container = $(`#tokcon-annotation-container-${task_id}`);
+
     // calculate pre-context
     const current_index = data.findIndex(function(r) {
         return r.verse_id == verse_id;
@@ -1298,16 +1308,16 @@ function setup_task_token_connection(task_id, verse_id) {
     };
     console.log(existing_token_connections);
 
-    $task_5_token_connection_context_container.html("");
-    $task_5_token_connection_reset_button.click();
-    $task_5_token_connection_annotation_container.html("");
+    $token_connection_context_container.html("");
+    $token_connection_reset_button.click();
+    $token_connection_annotation_container.html("");
 
     for (const [boundary_id, used_tokens] of boundary_tokens) {
         const $boundary_container = $("<div />", {
-            id: `tokcon-boundary-container-${boundary_id}`,
+            id: `tokcon-boundary-container-${task_id}-${boundary_id}`,
             class: "border border-secondary rounded px-1 pt-1 pb-0 ml-1 mt-1 mb-0 boundary-container"
         });
-        $boundary_container.appendTo($task_5_token_connection_context_container);
+        $boundary_container.appendTo($token_connection_context_container);
         $boundary_container.data("boundary-id", boundary_id);
 
         for (const token_id of used_tokens) {
@@ -1315,7 +1325,7 @@ function setup_task_token_connection(task_id, verse_id) {
             const $token = generate_token_button({
                 token: token,
                 token_element: "<button />",
-                id_prefix: "tokcon-token",
+                id_prefix: `tokcon-token-${task_id}`,
                 token_data: {token_id: token_id, boundary_id: boundary_id},
                 onclick: function($element) {
                     const $annotation_token = $element.clone();
@@ -1323,15 +1333,15 @@ function setup_task_token_connection(task_id, verse_id) {
                     $annotation_token.data("token-id", token_id);
                     $annotation_token.data("boundary-id", boundary_id);
 
-                    if (!$task_5_token_connection_source_container.html().trim()) {
+                    if (!$token_connection_source_container.html().trim()) {
                         $annotation_token.addClass("tokcon-source-token");
-                        $annotation_token.appendTo($task_5_token_connection_source_container);
+                        $annotation_token.appendTo($token_connection_source_container);
                         $element.prop("disabled", true);
                     } else {
-                        if (!$task_5_token_connection_target_container.html().trim()) {
+                        if (!$token_connection_target_container.html().trim()) {
                             $annotation_token.addClass("tokcon-target-token");
-                            $annotation_token.appendTo($task_5_token_connection_target_container);
-                            $task_5_token_connection_confirm_button.prop("disabled", false);
+                            $annotation_token.appendTo($token_connection_target_container);
+                            $token_connection_confirm_button.prop("disabled", false);
                             $element.prop("disabled", true);
                         } else {
                             $.notify({
@@ -1340,7 +1350,7 @@ function setup_task_token_connection(task_id, verse_id) {
                                 type: "danger"
                             });
                         }
-                        $task_5_token_connection_confirm_button.focus();
+                        $token_connection_confirm_button.focus();
                     }
                 }
             });
@@ -1351,27 +1361,49 @@ function setup_task_token_connection(task_id, verse_id) {
 
     // add existing references
     for (const token_connection of existing_token_connections) {
-        const $source_token = $(`#tokcon-token-${token_connection.src_id}`).clone();
+        const $source_token = $(`#tokcon-token-${task_id}-${token_connection.src_id}`).clone();
         $source_token.removeAttr("id");
         $source_token.data("token-id", token_connection.src_id);
         $source_token.data("boundary-id", token_connection.boundary_id);
         $source_token.addClass("tokcon-source-token");
 
-        const $target_token = $(`#tokcon-token-${token_connection.dst_id}`).clone();
-        const target_token_boundary_id = $(`#tokcon-token-${token_connection.dst_id}`).data("boundary-id");
+        const $target_token = $(`#tokcon-token-${task_id}-${token_connection.dst_id}`).clone();
+        const target_token_boundary_id = $(`#tokcon-token-${task_id}-${token_connection.dst_id}`).data("boundary-id");
         $target_token.removeAttr("id");
         $target_token.data("token-id", token_connection.dst_id);
         $target_token.data("boundary-id", target_token_boundary_id);
         $target_token.addClass("tokcon-target-token");
 
-        add_token_connection_row($source_token, $target_token);
+        add_token_connection_row($token_connection_annotation_container, $source_token, $target_token);
     }
+
+    /* setup event listeners */
+    $token_connection_reset_button.unbind("click");
+    $token_connection_reset_button.click(function () {
+        // enable all buttons
+        $token_connection_context_container.find("button").prop("disabled", false);
+
+        $token_connection_source_container.html("");
+        $token_connection_target_container.html("");
+    });
+
+    $token_connection_confirm_button.unbind("click");
+    $token_connection_confirm_button.click(function () {
+        const $source_token = $token_connection_source_container.children(".tokcon-source-token");
+        const $target_token = $token_connection_target_container.children(".tokcon-target-token");
+
+        add_token_connection_row($token_connection_annotation_container, $source_token, $target_token);
+
+        // reset
+        $token_connection_reset_button.click();
+        $token_connection_confirm_button.prop("disabled", true);
+    });
 
 }
 
 
-function add_token_connection_row($source_token, $target_token) {
-    const $row = $('<div />').addClass("row").prependTo($task_5_token_connection_annotation_container);
+function add_token_connection_row($location, $source_token, $target_token) {
+    const $row = $('<div />').addClass("row").prependTo($location);
     $row.addClass('tokcon-annotation-row');
 
     // add source token
@@ -1404,25 +1436,6 @@ function add_token_connection_row($source_token, $target_token) {
     });
 }
 
-$task_5_token_connection_confirm_button.click(function () {
-    const $source_token = $task_5_token_connection_source_container.children(".tokcon-source-token");
-    const $target_token = $task_5_token_connection_target_container.children(".tokcon-target-token");
-
-    add_token_connection_row($source_token, $target_token);
-
-    // reset
-    $task_5_token_connection_reset_button.click();
-    $task_5_token_connection_confirm_button.prop("disabled", true);
-});
-
-$task_5_token_connection_reset_button.click(function () {
-    // enable all buttons
-    $task_5_token_connection_context_container.find("button").prop("disabled", false);
-
-    $task_5_token_connection_source_container.html("");
-    $task_5_token_connection_target_container.html("");
-});
-
 /* Task: Token Connection: Actions */
 
 // Submit: Token Connection
@@ -1433,13 +1446,16 @@ function submit_task_token_connection(task_id) {
     const task_category = TASK_TOKEN_CONNECTION;
     const verse_id = $verse_id_containers.html();
 
+    const $token_connection_context_container = $(`#tokcon-context-container-${task_id}`);
+    const $token_connection_annotation_container = $(`#tokcon-annotation-container-${task_id}`);
+
     var context_data = [];
     var token_connection_data = [];
-    $task_5_token_connection_context_container.find(".boundary-container").each(function (_index, _boundary_container) {
+    $token_connection_context_container.find(".boundary-container").each(function (_index, _boundary_container) {
         context_data.push($(_boundary_container).data("boundary-id"));
     });
 
-    const $tokcon_annotation_rows = $task_5_token_connection_annotation_container.find('.tokcon-annotation-row');
+    const $tokcon_annotation_rows = $token_connection_annotation_container.find('.tokcon-annotation-row');
     $tokcon_annotation_rows.each(function(tokcon_index, tokcon_row) {
         const $tokcon_row = $(tokcon_row);
         const $source_token = $tokcon_row.find(".tokcon-source-token");
