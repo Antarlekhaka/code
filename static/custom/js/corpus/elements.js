@@ -51,12 +51,6 @@ const add_token_feature_input_selector = ".add-token-feature-input";
 
 /* ***************** */
 
-// Task-8
-const $task_8_form = $("#token-text-annotation-form");
-const $task_8_token_text_annotation_table = $("#token-text-annotation-table");
-const $task_8_token_non_annotation_table = $("#token-non-annotation-table");
-const task_8_sample_token_text_annotation_text = $("#sample-token-text-annotation-text");
-
 // Task-3
 const $task_3_form = $("#token-classification-form");
 const $task_3_token_classification_table = $("#token-classification-table");

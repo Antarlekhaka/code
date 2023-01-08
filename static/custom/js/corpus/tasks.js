@@ -1996,8 +1996,12 @@ function setup_task_token_text_annotation(task_id, verse_id) {
 
     const row = $corpus_table.bootstrapTable('getRowByUniqueId', verse_id);
 
-    $task_8_token_text_annotation_table.html("");
-    $task_8_token_non_annotation_table.html("");
+    const $token_text_annotation_table = $(`#token-text-annotation-table-${task_id}`);
+    const $token_non_annotation_table = $(`#token-non-annotation-table-${task_id}`);
+    const $sample_token_text_annotation_text = $(`#sample-token-text-annotation-text-${task_id}`);
+
+    $token_text_annotation_table.html("");
+    $token_non_annotation_table.html("");
 
     var all_tokens = {};
     var used_tokens = [];
@@ -2031,11 +2035,11 @@ function setup_task_token_text_annotation(task_id, verse_id) {
             var token_text_annotation_text = null;
             const $token_text_annotation_row = $("<tr />", {});
             if (existing_token_text_annotations.includes(token.id)) {
-                $task_8_token_text_annotation_table.append($token_text_annotation_row);
+                $token_text_annotation_table.append($token_text_annotation_row);
                 has_text_annotation = true;
                 token_text_annotation_text = existing_texts[token.id];
             } else {
-                $task_8_token_non_annotation_table.append($token_text_annotation_row);
+                $token_non_annotation_table.append($token_text_annotation_row);
             }
 
             const $token_text_annotation_cell = $("<td />", {});
@@ -2043,18 +2047,18 @@ function setup_task_token_text_annotation(task_id, verse_id) {
 
             const $token_text_annotation = generate_token_button({
                 token: token,
-                id_prefix: "token-text-annotation"
+                id_prefix: `token-text-annotation-${task_id}`
             });
             $token_text_annotation_cell.append($token_text_annotation);
 
             const $token_text_annotation_text_cell = $("<td />");
             $token_text_annotation_row.append($token_text_annotation_text_cell);
 
-            const $token_text_annotation_input_element = task_8_sample_token_text_annotation_text.clone();
+            const $token_text_annotation_input_element = $sample_token_text_annotation_text.clone();
             $token_text_annotation_input_element.data("boundary-id", boundary_id);
             $token_text_annotation_text_cell.append($token_text_annotation_input_element);
 
-            const token_text_annotation_input_id = `token-text-annotation-input-${token.id}`;
+            const token_text_annotation_input_id = `token-text-annotation-input-${task_id}-${token.id}`;
             $token_text_annotation_input_element.attr("id", token_text_annotation_input_id);
 
             if (has_text_annotation) {
@@ -2072,7 +2076,7 @@ function setup_task_token_text_annotation(task_id, verse_id) {
             const token_text_annotation_html = (has_text_annotation) ? '<i class="fa fa-times"></i>' : '<i class="fa fa-plus"></i>';
 
             const $token_text_annotation_toggle = $("<span />", {
-                id: `token-text-annotation-toggle-${token.id}`,
+                id: `token-text-annotation-toggle-${task_id}-${token.id}`,
                 name: "token-text-annotation-toggle",
                 class: token_text_annotation_class,
                 html: token_text_annotation_html,
@@ -2086,14 +2090,14 @@ function setup_task_token_text_annotation(task_id, verse_id) {
                             $(this).addClass("btn-secondary");
                             $(this).html('<i class="fa fa-times"></i>');
                             $(input_selector).show();
-                            $task_8_token_text_annotation_table.append($(this).parents('tr'));
+                            $token_text_annotation_table.append($(this).parents('tr'));
                         } else {
                             $(this).removeClass("btn-secondary");
                             $(this).addClass("btn-info");
                             $(this).addClass("include-token-text-annotation");
                             $(this).html('<i class="fa fa-plus"></i>');
                             $(input_selector).hide();
-                            $task_8_token_non_annotation_table.append($(this).parents('tr'));
+                            $token_non_annotation_table.append($(this).parents('tr'));
                         }
                     }
                 }
@@ -2110,8 +2114,11 @@ function setup_task_token_text_annotation(task_id, verse_id) {
 function submit_task_token_text_annotation(task_id) {
     console.log(`Called ${arguments.callee.name}(${Object.values(arguments).join(", ")});`);
 
-    if (!$task_8_form[0].checkValidity()) {
-        $task_8_form[0].reportValidity();
+    const $token_text_annotation_form = $(`#token-text-annotation-form-${task_id}`);
+    const $token_text_annotation_table = $(`#token-text-annotation-table-${task_id}`);
+
+    if (!$token_text_annotation_form[0].checkValidity()) {
+        $token_text_annotation_form[0].reportValidity();
         return;
     }
 
@@ -2119,7 +2126,7 @@ function submit_task_token_text_annotation(task_id) {
     const verse_id = $verse_id_containers.html();
 
     var token_text_annotation_data = {}
-    $task_8_token_text_annotation_table.find("input").each(function(input_index, input_element) {
+    $token_text_annotation_table.find("input").each(function(input_index, input_element) {
         const token_id = input_element.id;
         const boundary_id = $(input_element).data("boundary-id");
         const token_text_annotation_text = $(input_element).val();

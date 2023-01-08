@@ -994,7 +994,7 @@ def api():
                     "text_annotation": v["text_annotation"]
                 }
                 for k, v in text_annotation_data.items()
-                if re.match(r'token-text-annotation-input-([0-9]+)$', k)
+                if re.match(r'token-text-annotation-input-[0-9]+-([0-9]+)$', k)
             }
         except Exception:
             api_response["success"] = False
