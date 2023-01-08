@@ -1147,9 +1147,10 @@ $show_graph_modal.on('shown.bs.modal', function(event) {
     // TODO: Maybe need to add task_id identifier in case of
     // multiple graph tasks from same category
     const $trigger_button = $(event.relatedTarget);
-    const source_task_category = $trigger_button.data("task-category");
+    const trigger_task_category = $trigger_button.data("task-category");
+    const trigger_task_id = $trigger_button.data("task-id");
 
-    if (source_task_category == TASK_TOKEN_GRAPH) {
+    if (trigger_task_category == TASK_TOKEN_GRAPH) {
         // triggered from token_graph task
         const $target_card = $trigger_button.parents(`.${sentence_token_graph_input_container_class}`);
         const $target_location = $target_card.find(".token-graph-input");
@@ -1160,9 +1161,10 @@ $show_graph_modal.on('shown.bs.modal', function(event) {
         const token_graph_data = prepare_token_graph_data($target_location);
         draw_graph(token_graph_data);
 
-    } else if (source_task_category == TASK_SENTENCE_GRAPH) {
+    } else if (trigger_task_category == TASK_SENTENCE_GRAPH) {
         // triggered from sentence_graph task
-        const sentence_graph_data = prepare_sentence_graph_data();
+        const $target_location = $(`#sentence-graph-annotation-container-${trigger_task_id}`);
+        const sentence_graph_data = prepare_sentence_graph_data($target_location);
         draw_graph(sentence_graph_data);
     }
 });
@@ -1635,6 +1637,17 @@ function setup_task_sentence_graph(task_id, verse_id) {
     const row = $corpus_table.bootstrapTable('getRowByUniqueId', verse_id);
     const data = $corpus_table.bootstrapTable('getData');
 
+    const $sentence_graph_context_container = $(`#sentence-graph-context-container-${task_id}`);
+
+    const $sentence_graph_intermediate_row_container = $(`#sentence-graph-intermediate-row-container-${task_id}`);
+    const $sentence_graph_source_container = $(`#sentence-graph-source-token-container-${task_id}`);
+    const $sentence_graph_relation_selector = $(`#sentence-graph-relation-selector-${task_id}`);
+    const $sentence_graph_target_container = $(`#sentence-graph-target-token-container-${task_id}`);
+    const $sentence_graph_reset_button = $(`#sentence-graph-reset-button-${task_id}`);
+    const $sentence_graph_confirm_button = $(`#sentence-graph-confirm-button-${task_id}`);
+
+    const $sentence_graph_annotation_container = $(`#sentence-graph-annotation-container-${task_id}`);
+
     // calculate pre-context
     const current_index = data.findIndex(function(r) {
         return r.verse_id == verse_id;
@@ -1670,16 +1683,16 @@ function setup_task_sentence_graph(task_id, verse_id) {
     console.log(boundary_marker_tokens);
     console.log(existing_sentence_graphs);
 
-    $task_7_sentence_graph_context_container.html("");
-    $task_7_sentence_graph_reset_button.click();
-    $task_7_sentence_graph_annotation_container.html("");
+    $sentence_graph_context_container.html("");
+    $sentence_graph_reset_button.click();
+    $sentence_graph_annotation_container.html("");
 
     for (const [boundary_id, used_tokens] of boundary_tokens) {
         const $boundary_container = $("<div />", {
-            id: `sentence-graph-boundary-container-${boundary_id}`,
+            id: `sentence-graph-boundary-container-${task_id}-${boundary_id}`,
             class: "border border-secondary rounded px-1 pt-1 pb-0 ml-1 mt-1 mb-0 boundary-container"
         });
-        $boundary_container.appendTo($task_7_sentence_graph_context_container);
+        $boundary_container.appendTo($sentence_graph_context_container);
         $boundary_container.data("boundary-id", boundary_id);
 
         var sentence_text = [];
@@ -1690,7 +1703,7 @@ function setup_task_sentence_graph(task_id, verse_id) {
             const $token = generate_token_button({
                 token: token,
                 token_element: "<button />",
-                id_prefix: "sentence-graph-token",
+                id_prefix: `sentence-graph-token-${task_id}`,
                 token_class_common: "btn sentence-graph-context-token",
                 token_data: {"token-id": token_id, "boundary-id": boundary_id},
                 onclick: function($element) {
@@ -1699,15 +1712,15 @@ function setup_task_sentence_graph(task_id, verse_id) {
                     $annotation_token.data("token-id", token_id);
                     $annotation_token.data("boundary-id", boundary_id);
 
-                    if (!$task_7_sentence_graph_source_container.html().trim()) {
+                    if (!$sentence_graph_source_container.html().trim()) {
                         $annotation_token.addClass("sentence-graph-source-token");
-                        $annotation_token.appendTo($task_7_sentence_graph_source_container);
+                        $annotation_token.appendTo($sentence_graph_source_container);
                         $element.parent().children("button").prop("disabled", true);
                     } else {
-                        if (!$task_7_sentence_graph_target_container.html().trim()) {
+                        if (!$sentence_graph_target_container.html().trim()) {
                             $annotation_token.addClass("sentence-graph-target-token");
-                            $annotation_token.appendTo($task_7_sentence_graph_target_container);
-                            $task_7_sentence_graph_confirm_button.prop("disabled", false);
+                            $annotation_token.appendTo($sentence_graph_target_container);
+                            $sentence_graph_confirm_button.prop("disabled", false);
                             $element.parent().children("button").prop("disabled", true);
                         } else {
                             $.notify({
@@ -1716,7 +1729,7 @@ function setup_task_sentence_graph(task_id, verse_id) {
                                 type: "danger"
                             });
                         }
-                        $task_7_sentence_graph_confirm_button.focus();
+                        $sentence_graph_confirm_button.focus();
                     }
                 }
             });
@@ -1751,9 +1764,9 @@ function setup_task_sentence_graph(task_id, verse_id) {
 
         var $source_token, $target_token;
         if ((relation_relation_type == 0) || (relation_relation_type == 1)) {
-            $source_token = $(`#sentence-graph-token-${sentrel.src_token_id}`).clone();
+            $source_token = $(`#sentence-graph-token-${task_id}-${sentrel.src_token_id}`).clone();
         } else {
-            $source_token = $(`#sentence-graph-sentence-token-${sentrel.src_token_id}`).clone();
+            $source_token = $(`#sentence-graph-sentence-token-${task_id}-${sentrel.src_token_id}`).clone();
         }
         $source_token.removeAttr("id");
         $source_token.data("token-id", sentrel.src_token_id);
@@ -1761,9 +1774,9 @@ function setup_task_sentence_graph(task_id, verse_id) {
         $source_token.addClass("sentence-graph-source-token");
 
         if ((relation_relation_type == 0) || (relation_relation_type == 2)) {
-            $target_token = $(`#sentence-graph-token-${sentrel.dst_token_id}`).clone();
+            $target_token = $(`#sentence-graph-token-${task_id}-${sentrel.dst_token_id}`).clone();
         } else {
-            $target_token = $(`#sentence-graph-sentence-token-${sentrel.dst_token_id}`).clone();
+            $target_token = $(`#sentence-graph-sentence-token-${task_id}-${sentrel.dst_token_id}`).clone();
         }
         $target_token.removeAttr("id");
         $target_token.data("token-id", sentrel.dst_token_id);
@@ -1772,12 +1785,52 @@ function setup_task_sentence_graph(task_id, verse_id) {
 
         const relation_label_id = sentrel.label_id;
 
-        add_sentence_graph_row($source_token, $target_token, relation_label_id);
+        add_sentence_graph_row(
+            $sentence_graph_annotation_container,
+            $sentence_graph_relation_selector,
+            $source_token,
+            $target_token,
+            relation_label_id
+        );
     }
+
+    /* setup event listeners */
+    $sentence_graph_reset_button.unbind("click");
+    $sentence_graph_reset_button.click(function () {
+        // enable all buttons
+        $sentence_graph_context_container.find("button").prop("disabled", false);
+
+        $sentence_graph_source_container.html("");
+        $sentence_graph_target_container.html("");
+    });
+
+    $sentence_graph_confirm_button.unbind("click");
+    $sentence_graph_confirm_button.click(function () {
+        const $source_token = $sentence_graph_source_container.children(".sentence-graph-source-token");
+        const $target_token = $sentence_graph_target_container.children(".sentence-graph-target-token");
+
+        const relation_label_id = $sentence_graph_relation_selector.selectpicker("val");
+        $sentence_graph_relation_selector.selectpicker("val", null);
+
+        add_sentence_graph_row(
+            $sentence_graph_annotation_container,
+            $sentence_graph_relation_selector,
+            $source_token,
+            $target_token,
+            relation_label_id
+        );
+
+        // reset
+        $sentence_graph_reset_button.click();
+        $sentence_graph_confirm_button.prop("disabled", true);
+    });
+
+
+
 }
 
-function add_sentence_graph_row($source_token, $target_token, relation_label_id) {
-    const $row = $('<div />').addClass("row").prependTo($task_7_sentence_graph_annotation_container);
+function add_sentence_graph_row($location, $selector, $source_token, $target_token, relation_label_id) {
+    const $row = $('<div />').addClass("row").prependTo($location);
     $row.addClass('sentence-graph-annotation-row');
 
     // add source token
@@ -1787,7 +1840,7 @@ function add_sentence_graph_row($source_token, $target_token, relation_label_id)
     $source_token.appendTo($column);
 
     // add relation
-    const $relation_selector = $task_7_sentence_graph_relation_selector.clone();
+    const $relation_selector = $selector.clone();
     $relation_selector.removeAttr("id");
     $relation_selector.addClass("sentence-graph-relation");
 
@@ -1828,7 +1881,7 @@ function prepare_sentence_graph_data($data_location) {
         return ++node_id;
     }
 
-    const $sentence_graph_annotation_rows = $task_7_sentence_graph_annotation_container.find('.sentence-graph-annotation-row');
+    const $sentence_graph_annotation_rows = $data_location.find('.sentence-graph-annotation-row');
     $sentence_graph_annotation_rows.each(function(_index, sentence_graph_row) {
         const $sentence_graph_row = $(sentence_graph_row);
         const $source_token = $sentence_graph_row.find(".sentence-graph-source-token");
@@ -1922,28 +1975,6 @@ function prepare_sentence_graph_data($data_location) {
     return data;
 }
 
-$task_7_sentence_graph_confirm_button.click(function () {
-    const $source_token = $task_7_sentence_graph_source_container.children(".sentence-graph-source-token");
-    const $target_token = $task_7_sentence_graph_target_container.children(".sentence-graph-target-token");
-
-    const relation_label_id = $task_7_sentence_graph_relation_selector.selectpicker("val");
-    $task_7_sentence_graph_relation_selector.selectpicker("val", null);
-
-    add_sentence_graph_row($source_token, $target_token, relation_label_id);
-
-    // reset
-    $task_7_sentence_graph_reset_button.click();
-    $task_7_sentence_graph_confirm_button.prop("disabled", true);
-});
-
-$task_7_sentence_graph_reset_button.click(function () {
-    // enable all buttons
-    $task_7_sentence_graph_context_container.find("button").prop("disabled", false);
-
-    $task_7_sentence_graph_source_container.html("");
-    $task_7_sentence_graph_target_container.html("");
-});
-
 /* Task: Sentence Graph: Actions */
 
 // Submit: Sentence Graph
@@ -1951,8 +1982,12 @@ $task_7_sentence_graph_reset_button.click(function () {
 function submit_task_sentence_graph(task_id) {
     console.log(`Called ${arguments.callee.name}(${Object.values(arguments).join(", ")});`);
 
-    if (!$task_7_form[0].checkValidity()) {
-        $task_7_form[0].reportValidity();
+    const $sentence_graph_form = $(`#sentence-graph-form-${task_id}`);
+    const $sentence_graph_context_container = $(`#sentence-graph-context-container-${task_id}`);
+    const $sentence_graph_annotation_container = $(`#sentence-graph-annotation-container-${task_id}`);
+
+    if (!$sentence_graph_form[0].checkValidity()) {
+        $sentence_graph_form[0].reportValidity();
         return;
     }
 
@@ -1961,11 +1996,11 @@ function submit_task_sentence_graph(task_id) {
 
     var context_data = [];
     var sentence_graph_data = [];
-    $task_7_sentence_graph_context_container.find(".boundary-container").each(function (_index, _boundary_container) {
+    $sentence_graph_context_container.find(".boundary-container").each(function (_index, _boundary_container) {
         context_data.push($(_boundary_container).data("boundary-id"));
     });
 
-    const $sentence_graph_annotation_rows = $task_7_sentence_graph_annotation_container.find('.sentence-graph-annotation-row');
+    const $sentence_graph_annotation_rows = $sentence_graph_annotation_container.find('.sentence-graph-annotation-row');
     $sentence_graph_annotation_rows.each(function(_index, sentence_graph_row) {
         const $sentence_graph_row = $(sentence_graph_row);
         const $source_token = $sentence_graph_row.find(".sentence-graph-source-token");

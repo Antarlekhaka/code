@@ -63,20 +63,5 @@ const $graph = $("#graph");
 
 /* ******************* */
 
-// Task-7
-const $task_7_form = $("#sentence-graph-form");
-const $task_7_sentence_graph_context_container = $("#sentence-graph-context-container");
-
-const $task_7_sentence_graph_intermediate_row_container = $("#sentence-graph-intermediate-row-container");
-const $task_7_sentence_graph_source_container = $("#sentence-graph-source-token-container");
-const $task_7_sentence_graph_relation_selector = $("#sentence-graph-relation-selector");
-const $task_7_sentence_graph_target_container = $("#sentence-graph-target-token-container");
-const $task_7_sentence_graph_reset_button = $("#sentence-graph-reset-button");
-const $task_7_sentence_graph_confirm_button = $("#sentence-graph-confirm-button");
-
-const $task_7_sentence_graph_annotation_container = $("#sentence-graph-annotation-container");
-
-const $show_graph_button_sentence_graph = $("#show-graph-sentence-graph");
-
 // Globals
 var storage = window.localStorage;
