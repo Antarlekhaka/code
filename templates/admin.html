@@ -203,11 +203,11 @@
                     </div>
                 </div>
                 <div class="card" style="border-top-left-radius: 0; border-top-right-radius: 0;">
-                    <div class="card-header" data-toggle="collapse" data-target="#download_container"
-                        aria-expanded="true" aria-controls="download_container">
+                    <div class="card-header collapsed" data-toggle="collapse" data-target="#download_container"
+                        aria-expanded="false" aria-controls="download_container">
                         Download Annotations
                     </div>
-                    <div id="download_container" role="tabpanel" class="collapse show" data-parent="#manage_data">
+                    <div id="download_container" role="tabpanel" class="collapse" data-parent="#manage_data">
                         <div class="card-body">
                             <form method=POST enctype=multipart/form-data action="{{url_for('perform_action')}}">
                                 <input type="hidden" name="csrf_token" value={{csrf_token()}}>
@@ -297,7 +297,7 @@
                     {% set aria_selected = "false" %}
                 {% endif %}
                     <li class="nav-item">
-                        <a class="nav-link {{active_status}}" id="{{label.name}}-{{label.task_id}}-label-tab" data-toggle="tab" href="#{{label.name}}-{{label.task_id}}-label-tab-content" role="tab" aria-controls="{{label.name}}-{{label.task_id}}-label-tab-content" aria-selected="{{aria_selected}}">{{label.title}}</a>
+                        <a class="nav-link {{active_status}} ontology-tab" id="{{label.name}}-{{label.task_id}}-label-tab" data-toggle="tab" href="#{{label.name}}-{{label.task_id}}-label-tab-content" role="tab" aria-controls="{{label.name}}-{{label.task_id}}-label-tab-content" aria-selected="{{aria_selected}}">{{label.title}}</a>
                     </li>
                 {% endfor %}
             </ul>
@@ -508,6 +508,42 @@
         </div>
     </div>
 </div>
+<script>
+    const storage = window.localStorage;
+
+    const KEY_DATA_COLLAPSIBLE_SHOW = "data_collapsible_show";
+    const KEY_ONTOLOGY_TAB_ACTIVE = "ontology_tab_active";
+
+    const DATA_COLLAPSIBLE_PARENT_ID = "manage_data";
+    const DATA_COLLAPSIBLE_DEFAULT_SHOW_ID = "corpus_container";
+
+    const ONTOLOGY_TAB_PARENT_ID = "labels-tab";
+
+    $(document).ready(function () {
+        const data_collapsible_show_id  = storage.getItem(KEY_DATA_COLLAPSIBLE_SHOW);
+        if (!data_collapsible_show_id) {
+            data_collapsible_show_id = DATA_COLLAPSIBLE_DEFAULT_SHOW_ID;
+        };
+        $(`#${data_collapsible_show_id}`).collapse('show');
+
+        const ontology_tab_active_id = storage.getItem(KEY_ONTOLOGY_TAB_ACTIVE);
+        if (ontology_tab_active_id) {
+            $(`#${ontology_tab_active_id}`).tab('show');
+        };
+    });
+
+    $(`#${DATA_COLLAPSIBLE_PARENT_ID} .collapse`).on('shown.bs.collapse', function (event) {
+        const target_element = event.target;
+        const target_id = target_element.id;
+        storage.setItem(KEY_DATA_COLLAPSIBLE_SHOW, target_id);
+    });
+
+    $(`#${ONTOLOGY_TAB_PARENT_ID} .ontology-tab`).on('shown.bs.tab', function (event) {
+        const target_element = event.target;
+        const target_id = target_element.id;
+        storage.setItem(KEY_ONTOLOGY_TAB_ACTIVE, target_id);
+    });
+</script>
 <script>
     $(document).ready(function () {
         bsCustomFileInput.init();
