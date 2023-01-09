@@ -1917,7 +1917,7 @@ def perform_action():
             'sentence_relation_label_remove',
             'sentence_relation_label_upload',
     ]:
-        action_parts = action.split('_')
+        action_parts = action.split('_label_')
 
         object_name = action_parts[0]
         target_action = action_parts[-1]
