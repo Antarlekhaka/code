@@ -16,7 +16,7 @@ const default_token_data = {};
 
 const sentence_token_graph_input_container_class = "sentence-token-graph-input-container";
 
-// Generic Functions
+/* *************************** Generic Functions *************************** */
 
 function generate_token_button(options) {
     const token = options.token;
@@ -88,6 +88,25 @@ function generate_token_button(options) {
     return $token;
 }
 
+function refresh_row_data(unique_id, _callback) {
+    console.log(`Called ${arguments.callee.name}(${Object.values(arguments).join(", ")});`);
+    const verse_data_url = SAMPLE_VERSE_DATA_URL.replace('0', unique_id);
+    $.get(verse_data_url, function (data) {
+        $corpus_table.bootstrapTable('updateByUniqueId', {
+            id: unique_id,
+            row: data[unique_id],
+            replace: true
+        });
+        $corpus_table.bootstrapTable('collapseRowByUniqueId', unique_id);
+        $corpus_table.bootstrapTable('check', storage.getItem('current_index'));
+
+        if (_callback) {
+            _callback(unique_id);
+        }
+    }, 'json');
+    console.log(`Verse data updated for ID: ${unique_id}`);
+}
+
 function draw_graph(data) {
     const container = $graph[0];
     const options = {
@@ -155,28 +174,27 @@ function draw_graph(data) {
     });
 }
 
-function refresh_row_data(unique_id, _callback) {
-    console.log(`Called ${arguments.callee.name}(${Object.values(arguments).join(", ")});`);
-    const verse_data_url = SAMPLE_VERSE_DATA_URL.replace('0', unique_id);
-    $.get(verse_data_url, function (data) {
-        $corpus_table.bootstrapTable('updateByUniqueId', {
-            id: unique_id,
-            row: data[unique_id],
-            replace: true
-        });
-        $corpus_table.bootstrapTable('collapseRowByUniqueId', unique_id);
-        $corpus_table.bootstrapTable('check', storage.getItem('current_index'));
-
-        if (_callback) {
-            _callback(unique_id);
-        }
-    }, 'json');
-    console.log(`Verse data updated for ID: ${unique_id}`);
-}
+/* **************************** Generic Events **************************** */
 
 $refresh_verse_buttons.click(function() {
     const verse_id = $verse_id_containers.html();
     refresh_row_data(verse_id);
+});
+
+// Capture Graph Snapshot
+/* Logic:
+    * Create a dummy 'anchor' (<a>) with 'href' as image data.
+    * Simulate a click on it.
+    * Remove the dummy  anchor.
+*/
+$snapshot_graph_button.click(function() {
+    const download_anchor = document.createElement('a');
+    download_anchor.href = $snapshot_graph_button.data('src');
+    /* TODO: name using verse_id / boundary_idx ? */
+    download_anchor.download = 'graph.png';
+    document.body.appendChild(download_anchor);
+    download_anchor.click();
+    document.body.removeChild(download_anchor);
 });
 
 
@@ -341,7 +359,6 @@ function setup_task_sentence_boundary(task_id, verse_id) {
 }
 
 // Submit: Sentence Boundary
-// $task_1_submit.click(function () {
 function submit_task_sentence_boundary(task_id) {
     console.log(`Called ${arguments.callee.name}(${Object.values(arguments).join(", ")});`);
 
@@ -644,7 +661,6 @@ $add_token_button.click(function() {
 });
 
 // Submit: Word Order
-// $task_2_submit.click(function () {
 function submit_task_word_order(task_id) {
     console.log(`Called ${arguments.callee.name}(${Object.values(arguments).join(", ")});`);
 
@@ -809,7 +825,6 @@ function setup_task_token_classification(task_id, verse_id) {
 /* Task: Token Classification: Actions */
 
 // Submit: Token Classification
-// $task_3_submit.click(function () {
 function submit_task_token_classification(task_id) {
     console.log(`Called ${arguments.callee.name}(${Object.values(arguments).join(", ")});`);
 
@@ -1172,24 +1187,7 @@ $show_graph_modal.on('shown.bs.modal', function(event) {
 
 /* Task: Token Graph: Actions */
 
-// Capture Graph Snapshot
-/* Logic:
-    * Create a dummy 'anchor' (<a>) with 'href' as image data.
-    * Simulate a click on it.
-    * Remove the dummy  anchor.
-*/
-$snapshot_graph_button.click(function() {
-    const download_anchor = document.createElement('a');
-    download_anchor.href = $snapshot_graph_button.data('src');
-    /* TODO: name using verse_id / boundary_idx ? */
-    download_anchor.download = 'graph.png';
-    document.body.appendChild(download_anchor);
-    download_anchor.click();
-    document.body.removeChild(download_anchor);
-});
-
 // Submit: Token Graph
-// $task_4_submit.click(function () {
 function submit_task_token_graph(task_id) {
     console.log(`Called ${arguments.callee.name}(${Object.values(arguments).join(", ")});`);
 
@@ -1442,7 +1440,6 @@ function add_token_connection_row($location, $source_token, $target_token) {
 /* Task: Token Connection: Actions */
 
 // Submit: Token Connection
-// $task_5_submit.click(function() {
 function submit_task_token_connection(task_id) {
     console.log(`Called ${arguments.callee.name}(${Object.values(arguments).join(", ")});`);
 
@@ -1572,7 +1569,6 @@ function setup_task_sentence_classification(task_id, verse_id) {
 /* Task: Sentence Classification: Actions */
 
 // Submit: Sentence Classification
-// $task_6_submit.click(function() {
 function submit_task_sentence_classification(task_id) {
     console.log(`Called ${arguments.callee.name}(${Object.values(arguments).join(", ")});`);
 
@@ -1979,7 +1975,6 @@ function prepare_sentence_graph_data($data_location) {
 /* Task: Sentence Graph: Actions */
 
 // Submit: Sentence Graph
-// $task_7_submit.click(function () {
 function submit_task_sentence_graph(task_id) {
     console.log(`Called ${arguments.callee.name}(${Object.values(arguments).join(", ")});`);
 
@@ -2189,7 +2184,6 @@ function setup_task_token_text_annotation(task_id, verse_id) {
 /* Task: Token Text Annotation: Actions */
 
 // Submit: Token Text Annotation
-// $task_8_submit.click(function () {
 function submit_task_token_text_annotation(task_id) {
     console.log(`Called ${arguments.callee.name}(${Object.values(arguments).join(", ")});`);
 

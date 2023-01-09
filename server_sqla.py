@@ -1845,7 +1845,6 @@ def perform_action():
     # Task Update
 
     if action == 'task_update':
-        print(request.form)
         task_id = request.form["task_id"]
         task_category = request.form["task_category"]
         task_title = request.form["task_title"]
@@ -1880,7 +1879,6 @@ def perform_action():
         return redirect(request.referrer)
 
     if action == 'task_collection_update':
-        print(request.form)
         tasks = Task.query.all()
         for task in tasks:
             task_active = request.form.get(f"task-{task.id}-status") == "on"

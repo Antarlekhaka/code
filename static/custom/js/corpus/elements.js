@@ -10,15 +10,6 @@ for (const [task_id, task] of Object.entries(TASK_ACTIVE_TASKS)) {
     $tabs[task_id] = $(`#task-${task_id}-tab`);
 }
 
-// const $task_1_submit = $("#task-1-submit");
-// const $task_2_submit = $("#task-2-submit");
-// const $task_3_submit = $("#task-3-submit");
-// const $task_4_submit = $("#task-4-submit");
-// const $task_5_submit = $("#task-5-submit");
-// const $task_6_submit = $("#task-6-submit");
-// const $task_7_submit = $("#task-7-submit");
-// const $task_8_submit = $("#task-8-submit");
-
 // Task-1
 const $task_1_input = $("#task-1-input");
 const $task_1_input_before = $("#task-1-input-before");
@@ -58,10 +49,10 @@ const add_token_feature_input_selector = ".add-token-feature-input";
 const $show_graph_modal_buttons = $(".show-graph-modal-button");
 const $show_graph_modal = $("#show-graph-modal");
 const $show_graph_modal_label = $("#show-graph-modal-label")
-const $snapshot_graph_button = $('#snapshot-graph-button');
+const $snapshot_graph_button = $("#snapshot-graph-button");
 const $graph = $("#graph");
 
 /* ******************* */
 
 // Globals
-var storage = window.localStorage;
+const storage = window.localStorage;
