@@ -84,6 +84,18 @@
     </div>
     {% if data.result %}
     <hr>
+    <script>
+        // Graphs are plotted separately for every graph task for every chapter.
+        // GRAPH_DATA contains `task_id`s as properties (keys)
+        // For every `task_id`, GRAPH_DATA[task_id] further contains objects,
+        // which, in turn, have `chapter_id`s as properties and node and edge data
+        // for the respective chapter as values
+        // GRAPH_NETWORK contains similar nesting to hold graph network objects
+        // for each task for each chapter
+
+        const GRAPH_DATA = {};      // Graph Data
+        const GRAPH_NETWORK = {};   // Graph Network
+    </script>
     <ul class="nav nav-pills my-3" id="pills-tab" role="tablist">
         {% for task_id, task in context_tasks.active_tasks.items() %}
         {% if loop.first %}
@@ -94,7 +106,9 @@
             {% set aria_selected = "false" %}
         {% endif %}
         <li class="nav-item" title="{{task.title}}">
-          <a class="nav-link {{active_class}} task-tab" id="task-{{task.id}}-tab" data-task-category="{{task.category}}" data-toggle="pill" href="#task-{{task.id}}-tab-content" role="tab" aria-controls="task-{{task.id}}-tab-content" aria-selected="{{aria_selected}}">{{task.short}}</a>
+            <a class="nav-link {{active_class}} task-tab" id="task-{{task.id}}-tab" data-task-id="{{task.id}}" data-task-category="{{task.category}}" data-toggle="pill" href="#task-{{task.id}}-tab-content" role="tab" aria-controls="task-{{task.id}}-tab-content" aria-selected="{{aria_selected}}">
+                {{task.short}}
+            </a>
         </li>
         {% endfor %}
     </ul>
@@ -112,41 +126,22 @@
         {% endfor %}
     </div>
 
+    <!-- Graph Plugin -->
+    <script src="{{url_for('static', filename='plugins/js/vis-network.min.js')}}"></script>
+
     <script>
-        $(".task-download").click(function() {
-            const task_id = $(this).data("task-id");
-            const task_category = $(this).data("task-category");
-            const target_id = $(this).data("target");
-            const chapter_id = $(this).data("chapter");
-            const text_to_write = document.getElementById(target_id).innerText;
-            const text_file_as_blob = new Blob([text_to_write], {type:'text/plain'});
-            const filename_to_save_as = `${task_category}_${task_id}_${chapter_id}.txt`;
-
-            const download_link = document.createElement("a");
-            download_link.download = filename_to_save_as;
-            download_link.innerHTML = "Download File";
-            if (window.webkitURL != null)
-            {
-                // Chrome allows the link to be clicked
-                // without actually adding it to the DOM.
-                download_link.href = window.webkitURL.createObjectURL(text_file_as_blob);
-            }
-            else
-            {
-                // Firefox requires the link to be added to the DOM
-                // before it can be clicked.
-                download_link.href = window.URL.createObjectURL(text_file_as_blob);
-                download_link.onclick = function(){
-                    document.body.removeChild(download_link);
-                };
-                download_link.style.display = "none";
-                document.body.appendChild(download_link);
-            }
-
-            download_link.click();
-        });
-
+        const TASK_SENTENCE_BOUNDARY = "{{context_tasks.task_sentence_boundary}}";
+        const TASK_WORD_ORDER = "{{context_tasks.task_word_order}}";
+        const TASK_TOKEN_TEXT_ANNOTATION = "{{context_tasks.task_token_text_annotation}}";
+        const TASK_TOKEN_CLASSIFICATION = "{{context_tasks.task_token_classification}}";
+        const TASK_TOKEN_GRAPH = "{{context_tasks.task_token_graph}}";
+        const TASK_TOKEN_CONNECTION = "{{context_tasks.task_token_connection}}";
+        const TASK_SENTENCE_CLASSIFICATION = "{{context_tasks.task_sentence_classification}}";
+        const TASK_SENTENCE_GRAPH = "{{context_tasks.task_sentence_graph}}";
     </script>
+
+    <!-- Export Related JS -->
+    <script src="{{url_for('static', filename='custom/js/export/export.js')}}"></script>
     {% endif %}
 </div>
 {% include "footer.html" %}
