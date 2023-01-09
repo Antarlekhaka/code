@@ -26,9 +26,11 @@
 </div>
 <script>
     // Setup Placeholder
-    const $placeholder = $("#sample-sentence-classification-input-{{task_id}}").clone();
-    $placeholder.removeAttr("id");
-    $placeholder.find(".sentence-label").selectpicker();
-    $placeholder.appendTo("#sentence-classification-input-container-{{task_id}}");
+    $(document).ready(function () {
+        var $placeholder = $("#sample-sentence-classification-input-{{task_id}}").clone();
+        $placeholder.removeAttr("id");
+        $placeholder.find(".sentence-label").selectpicker();
+        $placeholder.appendTo("#sentence-classification-input-container-{{task_id}}");
+    });
 </script>
 {% endblock %}
