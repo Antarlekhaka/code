@@ -311,8 +311,8 @@ class TokenTextAnnotation(db.Model):
         'User', backref=backref('annotations', lazy='dynamic')
     )
     __table_args__ = (
-         Index('token_text_annotation_token_id_annotator_id',
-               'token_id', 'annotator_id', unique=True),
+         Index('token_text_annotation_task_id_annotator_id_token_id',
+               'task_id', 'annotator_id', 'token_id', unique=True),
     )
 
 
@@ -348,8 +348,8 @@ class TokenClassification(db.Model):
         'User', backref=backref('tokclf', lazy='dynamic')
     )
     __table_args__ = (
-         Index('token_classification_token_id_annotator_id',
-               'token_id', 'annotator_id', unique=True),
+         Index('token_classification_task_id_annotator_id_token_id',
+               'task_id', 'annotator_id', 'token_id', unique=True),
     )
 
 
@@ -393,8 +393,8 @@ class TokenGraph(db.Model):
     )
 
     __table_args__ = (
-         Index('token_graph_annotator_id_src_id_dst_id',
-               'annotator_id', 'src_id', 'dst_id', unique=True),
+         Index('token_graph_task_id_annotator_id_src_id_dst_id',
+               'task_id', 'annotator_id', 'src_id', 'dst_id', unique=True),
     )
     # the above will not allow multiple edges between same two token ids
     # if that is to be allowed, we would need something like the below
@@ -440,8 +440,8 @@ class TokenConnection(db.Model):
     )
 
     __table_args__ = (
-         Index('token_connection_annotator_id_src_id_dst_id',
-               'annotator_id', 'src_id', 'dst_id', unique=True),
+         Index('token_connection_task_id_annotator_id_src_id_dst_id',
+               'task_id', 'annotator_id', 'src_id', 'dst_id', unique=True),
     )
 
 
@@ -475,8 +475,8 @@ class SentenceClassification(db.Model):
     )
 
     __table_args__ = (
-         Index('sentence_classification_annotator_id_boundary_id',
-               'annotator_id', 'boundary_id', unique=True),
+         Index('sentence_classification_task_id_annotator_id_boundary_id',
+               'task_id', 'annotator_id', 'boundary_id', unique=True),
     )
 
 
@@ -536,9 +536,10 @@ class SentenceGraph(db.Model):
 
     __table_args__ = (
          Index(
-            ('sentence_graph_annotator_id_src_boundary_id_dst_boundary_id_'
+            ('sentence_graph_task_id_annotator_id_'
+             'src_boundary_id_dst_boundary_id_'
              'src_token_id_dst_token_id_relation_type'),
-            'annotator_id',
+            'task_id', 'annotator_id',
             'src_boundary_id', 'dst_boundary_id',
             'src_token_id', 'dst_token_id', 'relation_type',
             unique=True),
