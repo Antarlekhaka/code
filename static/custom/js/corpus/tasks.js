@@ -876,9 +876,6 @@ function setup_task_token_graph(task_id, verse_id) {
 
     const $sample_token_graph_input_container = $(`#sample-token-graph-input-container-${task_id}`);
     const $sample_token_graph_input = $(`#sample-token-graph-input-${task_id}`);
-    const $sample_token_graph_source_entity = $(`#sample-token-graph-source-entity-${task_id}`);
-    const $sample_token_graph_target_entity = $(`#sample-token-graph-target-entity-${task_id}`);
-    const $sample_token_graph_relation_label = $(`#sample-token-graph-relation-label-${task_id}`);
 
     $token_graph_input_container.html("");
 
@@ -968,6 +965,10 @@ function add_token_graph_row($location, task_id) {
     const source_entity_options = $location.data("source-options");
     const target_entity_options = $location.data("target-options");
 
+    const $sample_token_graph_source_entity = $(`#sample-token-graph-source-entity-${task_id}`);
+    const $sample_token_graph_target_entity = $(`#sample-token-graph-target-entity-${task_id}`);
+    const $sample_token_graph_relation_label = $(`#sample-token-graph-relation-label-${task_id}`);
+
     // Create and Insert Triplet Row Element
     const $row = $('<div />').addClass(`form-row mt-1 px-0`).appendTo($location);
     $row.addClass('triplet-row');
@@ -976,7 +977,7 @@ function add_token_graph_row($location, task_id) {
     $location.data("triplet-count", triplet_count);
 
     // Create Action Entity Input Element
-    const $input_source_entity = $task_4_sample_source_entity.clone();
+    const $input_source_entity = $sample_token_graph_source_entity.clone();
     $input_source_entity.attr("id", `element-source-entity-${task_id}-${triplet_count}`);
     var current_value = $input_source_entity.attr("title");
     var updated_value = current_value.replace(
@@ -1003,7 +1004,7 @@ function add_token_graph_row($location, task_id) {
     // $input_source_entity.autoComplete();
 
     // Create Actor Label Selector Element
-    const $input_relation_label = $task_4_sample_relation_label.clone();
+    const $input_relation_label = $sample_token_graph_relation_label.clone();
     $input_relation_label.attr("id", `element-relation-label-${task_id}-${triplet_count}`);
     var current_value = $input_relation_label.attr("title");
     var updated_value = current_value.replace(
@@ -1018,7 +1019,7 @@ function add_token_graph_row($location, task_id) {
     $input_relation_label.appendTo($column);
 
     // Create Target Entity Input Element
-    const $input_target_entity = $task_4_sample_target_entity.clone();
+    const $input_target_entity = $sample_token_graph_target_entity.clone();
     $input_target_entity.attr("id", `element-target-entity-${task_id}-${triplet_count}`);
     var current_value = $input_target_entity.attr("title");
     var updated_value = current_value.replace(
