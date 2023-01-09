@@ -39,8 +39,6 @@ def get_token_text(token: dict, key_preference: List[str]):
 
 
 def simple_format(data):
-    token_graph_node_ids = {}
-    sentence_graph_node_ids = {}
     simple_data = {}
 
     for chpater_id, chapter_data in data["chapter"].items():
@@ -208,6 +206,7 @@ def simple_format(data):
             preference = ["lemma", "misc.Unsandhied", "form"]
 
             token_graph_data = {}
+            token_graph_node_ids = {}
 
             for tokrel in annotation_data["token_graph"]:
                 task_id = tokrel["task_id"]
@@ -216,6 +215,7 @@ def simple_format(data):
                         "nodes": [],
                         "edges": []
                     }
+                    token_graph_node_ids[task_id] = {}
 
                 from_id = None
                 to_id = None
@@ -224,20 +224,20 @@ def simple_format(data):
                     token = chapter_data["tokens"][token_id]
                     token_text = get_token_text(token, preference)
 
-                    if token_text not in token_graph_node_ids:
-                        token_graph_node_ids[token_text] = get_unique_id()
+                    if token_text not in token_graph_node_ids[task_id]:
+                        token_graph_node_ids[task_id][token_text] = get_unique_id()
 
                         token_graph_data[task_id]["nodes"].append({
-                            "id": token_graph_node_ids[token_text],
+                            "id": token_graph_node_ids[task_id][token_text],
                             "label": token_text,
                             "value": 3,
                             "group": None
                         })
 
                     if token_id == tokrel["src_id"]:
-                        from_id = token_graph_node_ids[token_text]
+                        from_id = token_graph_node_ids[task_id][token_text]
                     if token_id == tokrel["dst_id"]:
-                        to_id = token_graph_node_ids[token_text]
+                        to_id = token_graph_node_ids[task_id][token_text]
 
                 token_graph_data[task_id]["edges"].append({
                     "from": from_id,
@@ -329,6 +329,7 @@ def simple_format(data):
             preference = ["lemma", "misc.Unsandhied", "form"]
 
             sentence_graph_data = {}
+            sentence_graph_node_ids = {}
 
             for sentrel in annotation_data["sentence_graph"]:
                 task_id = sentrel["task_id"]
@@ -337,6 +338,7 @@ def simple_format(data):
                         "nodes": [],
                         "edges": []
                     }
+                    sentence_graph_node_ids[task_id] = {}
 
                 from_id = None
                 to_id = None
@@ -362,22 +364,22 @@ def simple_format(data):
                     dst_token_text = get_token_text(dst_token, preference)
                     dst_group = 0
 
-                if src_token_text not in sentence_graph_node_ids:
-                    sentence_graph_node_ids[src_token_text] = get_unique_id()
+                if src_token_text not in sentence_graph_node_ids[task_id]:
+                    sentence_graph_node_ids[task_id][src_token_text] = get_unique_id()
 
                     sentence_graph_data[task_id]["nodes"].append({
-                        "id": sentence_graph_node_ids[src_token_text],
+                        "id": sentence_graph_node_ids[task_id][src_token_text],
                         "label": src_token_text,
                         "title": src_title,
                         "value": 3,
                         "group": src_group
                     })
 
-                if dst_token_text not in sentence_graph_node_ids:
-                    sentence_graph_node_ids[dst_token_text] = get_unique_id()
+                if dst_token_text not in sentence_graph_node_ids[task_id]:
+                    sentence_graph_node_ids[task_id][dst_token_text] = get_unique_id()
 
                     sentence_graph_data[task_id]["nodes"].append({
-                        "id": sentence_graph_node_ids[dst_token_text],
+                        "id": sentence_graph_node_ids[task_id][dst_token_text],
                         "label": dst_token_text,
                         "title": dst_title,
                         "value": 3,
@@ -385,8 +387,8 @@ def simple_format(data):
                     })
 
                 sentence_graph_data[task_id]["edges"].append({
-                    "from": sentence_graph_node_ids[src_token_text],
-                    "to": sentence_graph_node_ids[dst_token_text],
+                    "from": sentence_graph_node_ids[task_id][src_token_text],
+                    "to": sentence_graph_node_ids[task_id][dst_token_text],
                     "label": sentrel["label_label"],
                     "title": sentrel["label_description"],
                     "arrows": {
