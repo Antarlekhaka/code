@@ -50,7 +50,7 @@ $corpus_table.on('expand-row.bs.table', function (e, index, row, $detail) {
     // individually anyway.
     // Instead, simply locate the active tab and setup the corresponding task
 
-    const $active_tab = $('a[aria-selected="true"]');
+    const $active_tab = $('.task-tab[aria-selected="true"]');
     const active_task_category = $active_tab.data('task-category');
     const active_task_id = $active_tab.data('task-id');
     setup_task(active_task_category, active_task_id, verse_id);
@@ -58,7 +58,7 @@ $corpus_table.on('expand-row.bs.table', function (e, index, row, $detail) {
 
 
 // Tab Change
-$('a[data-toggle="pill"]').on('shown.bs.tab', function (event) {
+$('.task-tab[data-toggle="pill"]').on('shown.bs.tab', function (event) {
     const verse_id = $verse_id_containers.html();
     if (verse_id == "None") {
         $.notify({
