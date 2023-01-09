@@ -37,7 +37,7 @@ $corpus_table.on('expand-row.bs.table', function (e, index, row, $detail) {
 
     $verse_id_containers.html(verse_id);
     $add_token_modal_button.prop('disabled', false);
-    $show_graph_button_sentence_graph.prop('disabled', false);
+    $show_graph_modal_buttons.prop('disabled', false);
     $refresh_verse_buttons.prop('disabled', false);
 
     storage.setItem("current_verse_id", parseInt(verse_id));
@@ -88,7 +88,7 @@ $task_submit_buttons.click(function () {
 $corpus_table.on('page-change.bs.table', function (e, number, size) {
     $verse_id_containers.html("None");
     $add_token_modal_button.prop('disabled', true);
-    $show_graph_button_sentence_graph.prop('disabled', true);
+    $show_graph_modal_buttons.prop('disabled', true);
     $refresh_verse_buttons.prop('disabled', true);
     $("textarea").prop('disabled', true).removeClass('text-info').addClass('text-muted');
 
