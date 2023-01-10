@@ -96,8 +96,8 @@ def simple_format(data):
 
             SENTENCES = {}
             display_text = [
-                ["", "Verse", "Word Order"],
-                ["", "-----", "----------"]
+                ["#", "Verse", "Word Order"],
+                ["-", "-----", "----------"]
             ]
 
             sent_idx = 0
@@ -298,20 +298,21 @@ def simple_format(data):
             # --------------------------------------------------------------- #
 
             display_text_header = [
-                ["", "Verse", "Sentence", "Label", "Description"],
-                ["", "-----", "--------", "-----", "-----------"]
+                ["#", "Verse", "Sentence", "Label", "Description"],
+                ["-", "-----", "--------", "-----", "-----------"]
             ]
             display_text = defaultdict(list)
+            snclf_idx = {}
 
-            for snclf_idx, snclf in enumerate(
-                annotation_data["sentence_classification"], 1
-            ):
+            for snclf in annotation_data["sentence_classification"]:
                 task_id = snclf["task_id"]
                 if task_id not in display_text:
                     display_text[task_id].extend(display_text_header)
+                    snclf_idx[task_id] = 0
 
+                snclf_idx[task_id] += 1
                 display_text[task_id].append([
-                    str(snclf_idx),
+                    str(snclf_idx[task_id]),
                     str(snclf["verse_id"]),
                     SENTENCES[snclf["boundary_id"]],
                     snclf["label_label"],
