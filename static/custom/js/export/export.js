@@ -81,7 +81,7 @@ $(document).ready(function () {
     }
 });
 
-/* *************************** Tan Change Events *************************** */
+/* *************************** Tab Change Events *************************** */
 
 $('.task-tab[data-toggle="pill"]').on('shown.bs.tab', function (event) {
     const $active_tab = $(event.target);
