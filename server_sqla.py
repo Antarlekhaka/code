@@ -61,6 +61,19 @@ from flask_migrate import Migrate
 # from indic_transliteration.sanscript import transliterate
 
 from constants import (
+    ROLE_OWNER,
+    ROLE_ADMIN,
+    ROLE_CURATOR,
+    ROLE_ANNOTATOR,
+    ROLE_MEMBER,
+    ROLE_GUEST,
+    ROLE_DEFINITIONS,
+
+    PERMISSION_VIEW_ACP,
+    PERMISSION_ANNOTATE,
+    PERMISSION_VIEW_UCP,
+    PERMISSION_VIEW_CORPUS,
+
     # Task Category Names
     TASK_SENTENCE_BOUNDARY,
     TASK_WORD_ORDER,
@@ -232,9 +245,9 @@ def record_submit(verse_id: int, annotator_id: int, task_id: int):
 def init_database():
     """Initiate database and create admin user"""
     db.create_all()
-    role_definitions = sorted(app.role_definitions,
-                              key=lambda x: x['level'],
-                              reverse=True)
+    role_definitions = sorted(
+        ROLE_DEFINITIONS, key=lambda x: x['level'], reverse=True
+    )
     for role_definition in role_definitions:
         name = role_definition['name']
         description = role_definition['description']
@@ -252,8 +265,13 @@ def init_database():
             username=app.admin['username'],
             email=app.admin['email'],
             password=hash_password(app.admin['password']),
-            roles=['owner', 'admin', 'curator',
-                   'annotator', 'member']
+            roles=[
+                ROLE_OWNER,
+                ROLE_ADMIN,
+                ROLE_CURATOR,
+                ROLE_ANNOTATOR,
+                ROLE_MEMBER
+            ]
         )
 
     # ----------------------------------------------------------------------- #
@@ -293,7 +311,7 @@ def init_database():
 @user_registered.connect_via(webapp)
 def assign_default_roles(sender, user, **extra):
     """Assign member role to users after successful registration"""
-    user_datastore.add_role_to_user(user, 'member')
+    user_datastore.add_role_to_user(user, ROLE_MEMBER)
     db.session.commit()
 
 
@@ -322,6 +340,15 @@ def inject_global_context():
             os.path.basename(theme).split('.')[1]
             for theme in theme_js_files
         ])
+    }
+
+    ROLES = {
+        "owner": ROLE_OWNER,
+        "admin": ROLE_ADMIN,
+        "curator": ROLE_CURATOR,
+        "annotator": ROLE_ANNOTATOR,
+        "member": ROLE_MEMBER,
+        "guest": ROLE_GUEST
     }
 
     # NOTE: do we really need to have these in global context?
@@ -450,6 +477,7 @@ def inject_global_context():
     return {
         'title': app.title,
         'now': datetime.datetime.utcnow(),
+        'context_roles': ROLES,
         'context_tasks': TASKS,
         'context_labels': LABELS,
         'context_themes': THEMES,
@@ -462,13 +490,13 @@ def inject_global_context():
 
 @webapp.route("/admin")
 @auth_required()
-@permissions_required('view_acp')
+@permissions_required(PERMISSION_VIEW_ACP)
 def show_admin():
     data = {}
     data['title'] = 'Admin'
 
     user_level = max([role.level for role in current_user.roles])
-    annotator_role = user_datastore.find_role('annotator')
+    annotator_role = user_datastore.find_role(ROLE_ANNOTATOR)
 
     user_model = user_datastore.user_model
     role_model = user_datastore.role_model
@@ -519,12 +547,12 @@ def show_admin():
 
 @webapp.route("/export", methods=["GET", "POST"])
 @auth_required()
-@permissions_required('annotate')
+@permissions_required(PERMISSION_ANNOTATE)
 def show_export():
     data = {}
     data['title'] = 'Export'
 
-    if current_user.has_role("curator"):
+    if current_user.has_role(ROLE_CURATOR):
         user_model = user_datastore.user_model
         user_query = user_model.query
         data['users'] = [
@@ -552,7 +580,7 @@ def show_export():
 
     if request.method == "POST":
         annotator_id = None
-        if current_user.has_role("curator"):
+        if current_user.has_role(ROLE_CURATOR):
             annotator_id = request.form.get('annotator_id', '').strip()
 
         if not annotator_id:
@@ -581,7 +609,7 @@ def show_export():
 
 @webapp.route("/settings")
 @auth_required()
-@permissions_required('view_ucp')
+@permissions_required(PERMISSION_VIEW_UCP)
 def show_settings():
     data = {}
     data['title'] = 'Settings'
@@ -591,7 +619,7 @@ def show_settings():
 @webapp.route("/corpus")
 @webapp.route("/corpus/<string:chapter_id>")
 @auth_required()
-@permissions_required('view_corpus')
+@permissions_required(PERMISSION_VIEW_CORPUS)
 def show_corpus(chapter_id=None):
     if chapter_id is None:
         flash("Please select a corpus to view.")
@@ -709,10 +737,9 @@ def api():
     annotator_actions = task_update_actions + ["add_token"]
 
     role_actions = {
-        "admin": [],
-        "annotator": annotator_actions,
-        "curator": [],
-        "querier": []
+        ROLE_ADMIN: [],
+        ROLE_ANNOTATOR: annotator_actions,
+        ROLE_CURATOR: [],
     }
     valid_actions = [
         action for actions in role_actions.values() for action in actions
@@ -1669,7 +1696,7 @@ def api_verse(verse_id):
         return jsonify({})
 
     annotator_ids = []
-    if current_user.has_permission('annotate'):
+    if current_user.has_permission(PERMISSION_ANNOTATE):
         annotator_ids = [current_user.id]
 
     data = get_verse_data([verse_id], annotator_ids=annotator_ids)
@@ -1694,10 +1721,10 @@ def perform_action():
     # Admin Actions
 
     role_actions = {
-        'owner': [
+        ROLE_OWNER: [
             'application_info', 'application_update', 'application_reload'
         ],
-        'admin': [
+        ROLE_ADMIN: [
             'user_role_add', 'user_role_remove',
 
             # Task Order/Status Update
@@ -1732,9 +1759,9 @@ def perform_action():
             # Export
             'annotation_download',
         ],
-        'curator': [],
-        'annotator': ['show_user_annotation'],
-        'member': ['update_settings']
+        ROLE_CURATOR: [],
+        ROLE_ANNOTATOR: [],
+        ROLE_MEMBER: ['update_settings']
     }
     valid_actions = [
         action for actions in role_actions.values() for action in actions
@@ -2122,7 +2149,6 @@ def perform_action():
         flash("Work in progress")
         print(request.form)
         return redirect(request.referrer)
-
 
     # ----------------------------------------------------------------------- #
     # Update Settings

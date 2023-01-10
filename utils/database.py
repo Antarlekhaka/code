@@ -30,7 +30,11 @@ from models_sqla import (
     SentenceGraph,
     SubmitLog
 )
-
+from constants import (
+    ROLE_ADMIN,
+    PERMISSION_CURATE,
+    PERMISSION_ANNOTATE
+)
 from utils.heuristic import get_word_order
 
 ###############################################################################
@@ -469,10 +473,11 @@ def get_chapter_data(chapter_id: int, user: User, all: bool = False) -> dict:
         Chapter ID
     user : User
         User object for the user associated with the request
-        If the user has `annotate` permissions, annotations will be fetched
+        If the user has `PERMISSION_ANNOTATE` permissions,
+        annotations will be fetched
     all : bool
-        If True, and the user has `curate` permission or `admin` role,
-        annotations by all the users will be fetched.
+        If True, and the user has `PERMISSION_CURATE` permission
+        or `ROLE_ADMIN` role, annotations by all the users will be fetched.
         The default is False
 
     Returns
@@ -488,10 +493,10 @@ def get_chapter_data(chapter_id: int, user: User, all: bool = False) -> dict:
     ]
     annotator_ids = []
 
-    if user.has_permission("annotate"):
+    if user.has_permission(PERMISSION_ANNOTATE):
         annotator_ids = [user.id]
 
-    if user.has_permission("curate") or user.has_role("admin"):
+    if user.has_permission(PERMISSION_CURATE) or user.has_role(ROLE_ADMIN):
         annotator_ids = None if all else [user.id]
 
     return get_verse_data(verse_ids, annotator_ids=annotator_ids)
