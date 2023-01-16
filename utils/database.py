@@ -31,9 +31,20 @@ from models_sqla import (
     SubmitLog
 )
 from constants import (
+    AUTO_ANNOTATION_USER_ID,
+
     ROLE_ADMIN,
     PERMISSION_CURATE,
-    PERMISSION_ANNOTATE
+    PERMISSION_ANNOTATE,
+
+    TASK_SENTENCE_BOUNDARY,
+    TASK_WORD_ORDER,
+    TASK_TOKEN_TEXT_ANNOTATION,
+    TASK_TOKEN_CLASSIFICATION,
+    TASK_TOKEN_GRAPH,
+    TASK_TOKEN_CONNECTION,
+    TASK_SENTENCE_CLASSIFICATION,
+    TASK_SENTENCE_GRAPH
 )
 from utils.heuristic import get_word_order
 
@@ -154,6 +165,18 @@ def add_chapter(
                     if isinstance(_token_id, (list, tuple)):
                         is_subtoken = True
                         end_id = _token_id[-1]
+
+            # NOTE: SentenceBoundary task is auto created at the start
+            # * Insert verse boundary as sentence boundary
+            # * Use AUTO_ANNOTATOR_USER_ID as `annotator_id`
+            # * SentenceBoundary task_id is hard-coded (1)
+            # * Auto-boundary is used if the sentence boundary task is not active
+            boundary = Boundary()
+            boundary.task_id = 1
+            boundary.token = token
+            boundary.verse = verse
+            boundary.annotator_id = AUTO_ANNOTATION_USER_ID
+            db.session.add(boundary)
 
     except Exception as e:
         result["message"] = "An error occurred while inserting data."
@@ -525,10 +548,20 @@ def get_verse_data(
     Returns
     -------
     dict
-        Line data, keyed by line IDs
+        Verse data, keyed by verse IDs
     """
     annotator_ids = annotator_ids or []
     line_object_query = Line.query.filter(Line.verse_id.in_(verse_ids))
+
+    sentence_boundary_task_active = Task.query.filter(
+        Task.category == TASK_SENTENCE_BOUNDARY,
+        Task.is_deleted == False  # noqa
+    ).one_or_none()
+    word_order_task_active = Task.query.filter(
+        Task.category == TASK_WORD_ORDER,
+        Task.is_deleted == False  # noqa
+    ).one_or_none()
+
     data = {}
 
     # TODO: Consider rewriting with a focus on Verse instead of Line
@@ -633,14 +666,15 @@ def get_verse_data(
                 )
             ])
 
-    if annotator_ids is None:
+    if sentence_boundary_task_active:
         boundary_query = Boundary.query.filter(
-            Boundary.verse_id.in_(verse_ids)
+            Boundary.verse_id.in_(verse_ids),
+            Boundary.annotator_id.in_(annotator_ids)
         ).order_by(Boundary.token_id)
     else:
         boundary_query = Boundary.query.filter(
             Boundary.verse_id.in_(verse_ids),
-            Boundary.annotator_id.in_(annotator_ids)
+            Boundary.annotator_id == AUTO_ANNOTATION_USER_ID
         ).order_by(Boundary.token_id)
 
     # ----------------------------------------------------------------------- #
@@ -655,9 +689,14 @@ def get_verse_data(
             "annotator_id": boundary.annotator_id,
             "annotator": boundary.annotator.username,
         }
-        data[verse_id]["sentences"] = get_sentences(
-            verse_id, boundary.annotator_id
-        )
+        if sentence_boundary_task_active:
+            data[verse_id]["sentences"] = get_sentences(
+                verse_id, boundary.annotator_id
+            )
+        else:
+            data[verse_id]["sentences"] = get_sentences(
+                verse_id, AUTO_ANNOTATION_USER_ID
+            )
 
         # NOTE: Currently there is no support for multiple word order tasks.
         # Further, since the word order is used in other tasks to display
@@ -672,9 +711,14 @@ def get_verse_data(
         ]
         # if word_order doesn't exist, apply heuristic
         if not sentence_word_order:
-            sentence_word_order = get_word_order(
-                data[verse_id]["sentences"][boundary.id]
-            )
+            if word_order_task_active:
+                sentence_word_order = get_word_order(
+                    data[verse_id]["sentences"][boundary.id]
+                )
+            else:
+                sentence_word_order = list(
+                    data[verse_id]["sentences"][boundary.id]
+                )
 
         data[verse_id]["word_order"][boundary.id] = sentence_word_order
         # TODO: consider if we should provide predicted word_order separately
