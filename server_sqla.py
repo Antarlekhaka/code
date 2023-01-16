@@ -74,6 +74,12 @@ from constants import (
     PERMISSION_VIEW_UCP,
     PERMISSION_VIEW_CORPUS,
 
+    # Auto Annotation User
+    AUTO_ANNOTATION_USER_ID,
+    AUTO_ANNOTATION_USER_USERNAME,
+    AUTO_ANNOTATION_USER_EMAIL,
+    AUTO_ANNOTATION_USER_PASS,
+
     # Task Category Names
     TASK_SENTENCE_BOUNDARY,
     TASK_WORD_ORDER,
@@ -258,6 +264,16 @@ def init_database():
             description=description,
             level=level,
             permissions=permissions
+        )
+
+    # special user
+    if not user_datastore.find_user(id=AUTO_ANNOTATION_USER_ID):
+        user_datastore.create_user(
+            id=AUTO_ANNOTATION_USER_ID,
+            username=AUTO_ANNOTATION_USER_USERNAME,
+            email=AUTO_ANNOTATION_USER_EMAIL,
+            password=hash_password(AUTO_ANNOTATION_USER_PASS),
+            roles=[ROLE_ANNOTATOR, ROLE_MEMBER]
         )
 
     if not user_datastore.find_user(username=app.admin['username']):

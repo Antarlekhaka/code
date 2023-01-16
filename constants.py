@@ -67,6 +67,14 @@ ROLE_DEFINITIONS = [
 ]
 
 ###############################################################################
+# Default Annotation User Details
+
+AUTO_ANNOTATION_USER_ID = 0
+AUTO_ANNOTATION_USER_USERNAME = "auto"
+AUTO_ANNOTATION_USER_EMAIL = "auto"
+AUTO_ANNOTATION_USER_PASS = "auto"
+
+###############################################################################
 # Task Categories
 
 TASK_SENTENCE_BOUNDARY = "sentence_boundary"
