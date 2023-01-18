@@ -1,7 +1,7 @@
 /* ********************************** */
 // Task Related Constants, Functions, Events etc.
 /* ********************************** */
-// Note: Constants/Variables in capital are declared in the HTML template.
+// NOTE: Constants/Variables in capital are declared in the HTML template.
 
 // Constants
 
@@ -16,7 +16,7 @@ const default_token_data = {};
 
 const sentence_token_graph_input_container_class = "sentence-token-graph-input-container";
 
-// Generic Functions
+/* *************************** Generic Functions *************************** */
 
 function generate_token_button(options) {
     const token = options.token;
@@ -88,6 +88,25 @@ function generate_token_button(options) {
     return $token;
 }
 
+function refresh_row_data(unique_id, _callback) {
+    console.log(`Called ${arguments.callee.name}(${Object.values(arguments).join(", ")});`);
+    const verse_data_url = SAMPLE_VERSE_DATA_URL.replace('0', unique_id);
+    $.get(verse_data_url, function (data) {
+        $corpus_table.bootstrapTable('updateByUniqueId', {
+            id: unique_id,
+            row: data[unique_id],
+            replace: true
+        });
+        $corpus_table.bootstrapTable('collapseRowByUniqueId', unique_id);
+        $corpus_table.bootstrapTable('check', storage.getItem('current_index'));
+
+        if (_callback) {
+            _callback(unique_id);
+        }
+    }, 'json');
+    console.log(`Verse data updated for ID: ${unique_id}`);
+}
+
 function draw_graph(data) {
     const container = $graph[0];
     const options = {
@@ -155,58 +174,57 @@ function draw_graph(data) {
     });
 }
 
-function refresh_row_data(unique_id, _callback) {
-    console.log(`Called ${arguments.callee.name}(${Object.values(arguments).join(", ")});`);
-    const verse_data_url = SAMPLE_VERSE_DATA_URL.replace('0', unique_id);
-    $.get(verse_data_url, function (data) {
-        $corpus_table.bootstrapTable('updateByUniqueId', {
-            id: unique_id,
-            row: data[unique_id],
-            replace: true
-        });
-        $corpus_table.bootstrapTable('collapseRowByUniqueId', unique_id);
-        $corpus_table.bootstrapTable('check', storage.getItem('current_index'));
-
-        if (_callback) {
-            _callback(unique_id);
-        }
-    }, 'json');
-    console.log(`Verse data updated for ID: ${unique_id}`);
-}
+/* **************************** Generic Events **************************** */
 
 $refresh_verse_buttons.click(function() {
     const verse_id = $verse_id_containers.html();
     refresh_row_data(verse_id);
 });
 
+// Capture Graph Snapshot
+/* Logic:
+    * Create a dummy 'anchor' (<a>) with 'href' as image data.
+    * Simulate a click on it.
+    * Remove the dummy  anchor.
+*/
+$snapshot_graph_button.click(function() {
+    const download_anchor = document.createElement('a');
+    download_anchor.href = $snapshot_graph_button.data('src');
+    /* TODO: name using verse_id / boundary_idx ? */
+    download_anchor.download = 'graph.png';
+    document.body.appendChild(download_anchor);
+    download_anchor.click();
+    document.body.removeChild(download_anchor);
+});
 
-/* ****************************** Generic Task Setup ****************************** */
 
-function setup_task(task_category, verse_id) {
+/* ************************** Generic Task Setup ************************** */
+
+function setup_task(task_category, task_id, verse_id) {
     switch (task_category) {
-        case "sentence_boundary":
-            setup_sentence_boundary(verse_id);
+        case TASK_SENTENCE_BOUNDARY:
+            setup_task_sentence_boundary(task_id, verse_id);
             break;
-        case "word_order":
-            setup_word_order(verse_id);
+        case TASK_WORD_ORDER:
+            setup_task_word_order(task_id, verse_id);
             break;
-        case "token_text_annotation":
-            setup_token_text_annotation(verse_id);
+        case TASK_TOKEN_TEXT_ANNOTATION:
+            setup_task_token_text_annotation(task_id, verse_id);
             break;
-        case "token_classification":
-            setup_token_classification(verse_id);
+        case TASK_TOKEN_CLASSIFICATION:
+            setup_task_token_classification(task_id, verse_id);
             break;
-        case "token_graph":
-            setup_token_graph(verse_id);
+        case TASK_TOKEN_GRAPH:
+            setup_task_token_graph(task_id, verse_id);
             break;
-        case "token_connection":
-            setup_token_connection(verse_id);
+        case TASK_TOKEN_CONNECTION:
+            setup_task_token_connection(task_id, verse_id);
             break;
-        case "sentence_classification":
-            setup_sentence_classification(verse_id);
+        case TASK_SENTENCE_CLASSIFICATION:
+            setup_task_sentence_classification(task_id, verse_id);
             break;
-        case "sentence_graph":
-            setup_sentence_graph(verse_id);
+        case TASK_SENTENCE_GRAPH:
+            setup_task_sentence_graph(task_id, verse_id);
             break;
 
         default:
@@ -214,11 +232,45 @@ function setup_task(task_category, verse_id) {
     }
 }
 
-/* ********************************** BEGIN Task 1 ********************************** */
-// Task 1: Sentence Boundary
+/* ************************** Generic Task Submit ************************** */
 
-// Setup-1
-function setup_sentence_boundary(verse_id) {
+function submit_task(task_category, task_id) {
+    switch (task_category) {
+        case TASK_SENTENCE_BOUNDARY:
+            submit_task_sentence_boundary(task_id);
+            break;
+        case TASK_WORD_ORDER:
+            submit_task_word_order(task_id);
+            break;
+        case TASK_TOKEN_TEXT_ANNOTATION:
+            submit_task_token_text_annotation(task_id);
+            break;
+        case TASK_TOKEN_CLASSIFICATION:
+            submit_task_token_classification(task_id);
+            break;
+        case TASK_TOKEN_GRAPH:
+            submit_task_token_graph(task_id);
+            break;
+        case TASK_TOKEN_CONNECTION:
+            submit_task_token_connection(task_id);
+            break;
+        case TASK_SENTENCE_CLASSIFICATION:
+            submit_task_sentence_classification(task_id);
+            break;
+        case TASK_SENTENCE_GRAPH:
+            submit_task_sentence_graph(task_id);
+            break;
+
+        default:
+            break;
+    }
+}
+
+/* ********************* BEGIN Task: Sentence Boundary ********************* */
+// Task: Sentence Boundary
+
+// Setup: Sentence Boundary
+function setup_task_sentence_boundary(task_id, verse_id) {
     console.log(`Called ${arguments.callee.name}(${Object.values(arguments).join(", ")});`);
 
     const row = $corpus_table.bootstrapTable('getRowByUniqueId', verse_id);
@@ -247,12 +299,12 @@ function setup_sentence_boundary(verse_id) {
         // console.log("Verse Tokens:");
         // console.log(verse.tokens);
         // console.log("Verse Boundary:");
-        // console.log(verse.boundary);
+        // console.log(verse[TASK_SENTENCE_BOUNDARY]);
 
         var verse_text = [`${verse_data.verse_id}`];
         var boundary_tokens = new Set();
 
-        for (const [boundary_id, boundary] of Object.entries(verse_data.boundary)) {
+        for (const [boundary_id, boundary] of Object.entries(verse_data[TASK_SENTENCE_BOUNDARY])) {
             boundary_tokens.add(boundary.token_id);
         };
         $.each(verse_data.tokens, function(verse_index, line_tokens) {
@@ -306,11 +358,12 @@ function setup_sentence_boundary(verse_id) {
     $task_1_input.prop('disabled', false).removeClass('text-muted').addClass('text-info').focus();
 }
 
-// Submit-1
-$task_1_submit.click(function () {
+// Submit: Sentence Boundary
+function submit_task_sentence_boundary(task_id) {
+    console.log(`Called ${arguments.callee.name}(${Object.values(arguments).join(", ")});`);
+
+    const task_category = TASK_SENTENCE_BOUNDARY;
     const verse_id = $verse_id_containers.html();
-    const task_id = $(this).data("task-id");
-    const task_category = $(this).data("task-category");
 
     // Identify Boundary Token IDs
     const marker_positions = $task_1_input.data('marker_positions');
@@ -352,14 +405,14 @@ $task_1_submit.click(function () {
         }
     },
     'json');
-});
+};
 
-/* *********************************** END Task 1 *********************************** */
+/* ********************** END Task: Sentence Boundary ********************** */
 
-/* ********************************** BEGIN Task 2 ********************************** */
-// Task 2: Canonical Word Order
+/* ************************ BEGIN Task: Word Order ************************ */
+// Task: Word Order
 
-// Setup-2
+// Setup: Word Order
 function setup_sortable() {
     console.log(`Called ${arguments.callee.name}(${Object.values(arguments).join(", ")});`);
 
@@ -392,7 +445,7 @@ function setup_sortable() {
     });
 }
 
-function setup_word_order(verse_id) {
+function setup_task_word_order(task_id, verse_id) {
     console.log(`Called ${arguments.callee.name}(${Object.values(arguments).join(", ")});`);
 
     const row = $corpus_table.bootstrapTable('getRowByUniqueId', verse_id);
@@ -416,7 +469,7 @@ function setup_word_order(verse_id) {
         // console.log("Boundary ID: " + boundary_id);
         // console.log("Tokens:")
         // console.log(sentence_tokens);
-        for (const token_id of row.word_order[boundary_id]) {
+        for (const token_id of row[TASK_WORD_ORDER][boundary_id]) {
             if (extra_tokens.hasOwnProperty(token_id)) {
                 used_extra_tokens.push(token_id);
             }
@@ -426,13 +479,13 @@ function setup_word_order(verse_id) {
         var token_order = [];
         var unused_tokens = [];
         if (boundary_id !== "extra") {
-            token_order = row.word_order[boundary_id];
+            token_order = row[TASK_WORD_ORDER][boundary_id];
             for (const [_token_id_string, _token] of Object.entries(sentence_tokens)) {
                 if (!token_order.includes(_token.id)) {
                     unused_tokens.push(_token.id);
                 }
             }
-            // ensure in server_sqla.py that row.word_order isn't empty
+            // ensure in server_sqla.py that row[TASK_WORD_ORDER] isn't empty
             // either it is annotated word_order, or it's obtained via heuristic
         } else {
             // order doesn't really matter, just need extra tokens
@@ -549,7 +602,7 @@ function setup_word_order(verse_id) {
     setup_sortable();
 }
 
-/* Task-2 Actions */
+/* Task: Word Order: Actions */
 
 // Add Token
 $add_token_button.click(function() {
@@ -607,11 +660,12 @@ $add_token_button.click(function() {
     });
 });
 
-// Submit-2
-$task_2_submit.click(function () {
+// Submit: Word Order
+function submit_task_word_order(task_id) {
+    console.log(`Called ${arguments.callee.name}(${Object.values(arguments).join(", ")});`);
+
     const verse_id = $verse_id_containers.html();
-    const task_id = $(this).data("task-id");
-    const task_category = $(this).data("task-category");
+    const task_category = TASK_WORD_ORDER;
 
     var word_order_data = {}
     $('.sortable').each(function(sentence_index, sentence_element) {
@@ -644,21 +698,25 @@ $task_2_submit.click(function () {
             }
         }
     });
-});
+};
 
-/* *********************************** END Task 2 *********************************** */
+/* ************************* END Task: Word Order ************************* */
 
-/* ********************************** BEGIN Task 3 ********************************** */
-// Task 3: Token Classification
+/* ******************* BEGIN Task: Token Classification ******************* */
+// Task: Token Classification
 
-// Setup-3
-function setup_token_classification(verse_id) {
+// Setup: Token Classification
+function setup_task_token_classification(task_id, verse_id) {
     console.log(`Called ${arguments.callee.name}(${Object.values(arguments).join(", ")});`);
 
     const row = $corpus_table.bootstrapTable('getRowByUniqueId', verse_id);
 
-    $task_3_token_classification_table.html("");
-    $task_3_token_null_class_table.html("");
+    const $token_classification_table = $(`#token-classification-table-${task_id}`);
+    const $token_null_class_table = $(`#token-null-class-table-${task_id}`);
+    const $sample_token_classification_type = $(`#sample-token-type-${task_id}`);
+
+    $token_classification_table.html("");
+    $token_null_class_table.html("");
 
     var all_tokens = {};
     var used_tokens = [];
@@ -667,8 +725,8 @@ function setup_token_classification(verse_id) {
     for (const [boundary_id, sentence_tokens] of Object.entries(row.sentences)) {
         $.extend(all_tokens, sentence_tokens);
         if (boundary_id !== "extra") {
-            [].push.apply(used_tokens, row.word_order[boundary_id]);
-            boundary_tokens[boundary_id] = row.word_order[boundary_id];
+            [].push.apply(used_tokens, row[TASK_WORD_ORDER][boundary_id]);
+            boundary_tokens[boundary_id] = row[TASK_WORD_ORDER][boundary_id];
         }
     }
 
@@ -677,8 +735,8 @@ function setup_token_classification(verse_id) {
     // in that case, .includes() can be replaced with .hasOwnProperty() check
     var existing_token_classification = [];
     var existing_labels = {};
-    for (const tokclf of row.token_classification) {
-        if (tokclf.is_deleted) {
+    for (const tokclf of row[TASK_TOKEN_CLASSIFICATION]) {
+        if (tokclf.is_deleted || tokclf.task_id != task_id) {
             continue;
         }
         existing_token_classification.push(tokclf.token_id);
@@ -692,11 +750,11 @@ function setup_token_classification(verse_id) {
             var tokclf_label_id = null;
             const $tokclf_row = $("<tr />", {});
             if (existing_token_classification.includes(token.id)) {
-                $task_3_token_classification_table.append($tokclf_row);
+                $token_classification_table.append($tokclf_row);
                 has_token_class = true;
                 tokclf_label_id = existing_labels[token.id];
             } else {
-                $task_3_token_null_class_table.append($tokclf_row);
+                $token_null_class_table.append($tokclf_row);
             }
 
             const $tokclf_cell = $("<td />", {});
@@ -704,18 +762,18 @@ function setup_token_classification(verse_id) {
 
             const $tokclf = generate_token_button({
                 token: token,
-                id_prefix: "tokclf"
+                id_prefix: `tokclf-${task_id}`
             });
             $tokclf_cell.append($tokclf);
 
             const $token_type_cell = $("<td />");
             $tokclf_row.append($token_type_cell);
 
-            const $token_class_selector_element = task_3_sample_token_type.clone();
+            const $token_class_selector_element = $sample_token_classification_type.clone();
             $token_class_selector_element.data("boundary-id", boundary_id);
             $token_type_cell.append($token_class_selector_element);
 
-            const token_class_selector_id = `token-class-selector-${token.id}`;
+            const token_class_selector_id = `token-class-selector-${task_id}-${token.id}`;
             $token_class_selector_element.attr("id", token_class_selector_id);
 
             if (has_token_class) {
@@ -733,7 +791,7 @@ function setup_token_classification(verse_id) {
             const tokclf_html = (has_token_class) ? '<i class="fa fa-times"></i>' : '<i class="fa fa-plus"></i>';
 
             const $tokclf_toggle = $("<span />", {
-                id: `tokclf-toggle-${token.id}`,
+                id: `tokclf-toggle-${task_id}-${token.id}`,
                 name: "tokclf-toggle",
                 class: tokclf_class,
                 html: tokclf_html,
@@ -747,14 +805,14 @@ function setup_token_classification(verse_id) {
                             $(this).addClass("btn-secondary");
                             $(this).html('<i class="fa fa-times"></i>');
                             $(select_selector).selectpicker('show');
-                            $task_3_token_classification_table.append($(this).parents('tr'));
+                            $token_classification_table.append($(this).parents('tr'));
                         } else {
                             $(this).removeClass("btn-secondary");
                             $(this).addClass("btn-info");
                             $(this).addClass("include-tokclf");
                             $(this).html('<i class="fa fa-plus"></i>');
                             $(select_selector).selectpicker('hide');
-                            $task_3_token_null_class_table.append($(this).parents('tr'));
+                            $token_null_class_table.append($(this).parents('tr'));
                         }
                     }
                 }
@@ -764,21 +822,25 @@ function setup_token_classification(verse_id) {
     }
 }
 
-/* Task-3 Actions */
+/* Task: Token Classification: Actions */
 
-// Submit-3
-$task_3_submit.click(function () {
-    if (!$task_3_form[0].checkValidity()) {
-        $task_3_form[0].reportValidity();
+// Submit: Token Classification
+function submit_task_token_classification(task_id) {
+    console.log(`Called ${arguments.callee.name}(${Object.values(arguments).join(", ")});`);
+
+    const $token_classification_form = $(`#token-classification-form-${task_id}`);
+    const $token_classification_table = $(`#token-classification-table-${task_id}`);
+
+    if (!$token_classification_form[0].checkValidity()) {
+        $token_classification_form[0].reportValidity();
         return;
     }
 
     const verse_id = $verse_id_containers.html();
-    const task_id = $(this).data("task-id");
-    const task_category = $(this).data("task-category");
+    const task_category = TASK_TOKEN_CLASSIFICATION;
 
     var token_classification_data = {}
-    $task_3_token_classification_table.find("select").each(function(select_index, select_element) {
+    $token_classification_table.find("select").each(function(select_index, select_element) {
         const token_id = select_element.id;
         const boundary_id = $(select_element).data("boundary-id");
         const token_label_id = $(select_element).selectpicker('val');
@@ -811,20 +873,26 @@ $task_3_submit.click(function () {
             }
         }
     });
-});
+};
 
-/* *********************************** END Task 3 *********************************** */
+/* ******************** END Task: Token Classification ******************** */
 
-/* ********************************** BEGIN Task 4 ********************************** */
-// Task 4: Token Graph (e.g. Action Graph)
-// Setup-4
+/* ************************ BEGIN Task: Token Graph ************************ */
+// Task: Token Graph (e.g. Action Graph)
+// Setup: Token Graph
 
-function setup_token_graph(verse_id) {
+function setup_task_token_graph(task_id, verse_id) {
     console.log(`Called ${arguments.callee.name}(${Object.values(arguments).join(", ")});`);
 
     const row = $corpus_table.bootstrapTable('getRowByUniqueId', verse_id);
 
-    $task_4_token_graph_input_container.html("");
+    const $token_graph_container = $(`#token-graph-container-${task_id}`);
+    const $token_graph_input_container = $(`#token-graph-input-container-${task_id}`);
+
+    const $sample_token_graph_input_container = $(`#sample-token-graph-input-container-${task_id}`);
+    const $sample_token_graph_input = $(`#sample-token-graph-input-${task_id}`);
+
+    $token_graph_input_container.html("");
 
     var all_tokens = {};
     var boundary_tokens = {};
@@ -832,33 +900,33 @@ function setup_token_graph(verse_id) {
     for (const [boundary_id, sentence_tokens] of Object.entries(row.sentences)) {
         $.extend(all_tokens, sentence_tokens);
         if (boundary_id != "extra") {
-            boundary_tokens[boundary_id] = row.word_order[boundary_id];
+            boundary_tokens[boundary_id] = row[TASK_WORD_ORDER][boundary_id];
         }
     }
 
     // record existing relations
     var existing_relations = {};
-    for (const relation of row.relation) {
-        if (relation.is_deleted) {
+    for (const tokrel of row[TASK_TOKEN_GRAPH]) {
+        if (tokrel.is_deleted || tokrel.task_id != task_id) {
             continue;
         }
-        if (!existing_relations.hasOwnProperty(relation.boundary_id)) {
-            existing_relations[relation.boundary_id] = [];
+        if (!existing_relations.hasOwnProperty(tokrel.boundary_id)) {
+            existing_relations[tokrel.boundary_id] = [];
         }
-        existing_relations[relation.boundary_id].push([
-            relation.src_id,
-            relation.label_id,
-            relation.dst_id
+        existing_relations[tokrel.boundary_id].push([
+            tokrel.src_id,
+            tokrel.label_id,
+            tokrel.dst_id
         ]);
     }
     console.log(existing_relations);
 
     for (const [boundary_id, used_token_ids] of Object.entries(boundary_tokens)) {
-        const $graph_input = $task_4_sample_token_graph_input.clone();
-        $graph_input.prop("id", `token-graph-input-${boundary_id}`);
+        const $graph_input = $sample_token_graph_input.clone();
+        $graph_input.prop("id", `token-graph-input-${task_id}-${boundary_id}`);
         $graph_input.addClass(sentence_token_graph_input_container_class);
         $graph_input.data("boundary-id", boundary_id);
-        $graph_input.appendTo($task_4_token_graph_input_container);
+        $graph_input.appendTo($token_graph_input_container);
 
         const $graph_input_header = $graph_input.find(".boundary-token-graph-header");
 
@@ -892,12 +960,12 @@ function setup_token_graph(verse_id) {
 
         $add_triplet_button.off("click");
         $add_triplet_button.click(function () {
-            add_triplet_row($triplet_location);
+            add_token_graph_row($triplet_location, task_id);
         });
 
         if (existing_relations.hasOwnProperty(boundary_id)) {
             for (const [_src_id, _label_id, _dst_id] of existing_relations[boundary_id]) {
-                const $triple_row = add_triplet_row($triplet_location);
+                const $triple_row = add_token_graph_row($triplet_location, task_id);
                 $triple_row.find(".source-entity").selectpicker('val', _src_id);
                 $triple_row.find(".relation-label").selectpicker('val', _label_id);
                 $triple_row.find(".target-entity").selectpicker('val', _dst_id);
@@ -908,9 +976,13 @@ function setup_token_graph(verse_id) {
     }
 }
 
-function add_triplet_row($location) {
+function add_token_graph_row($location, task_id) {
     const source_entity_options = $location.data("source-options");
     const target_entity_options = $location.data("target-options");
+
+    const $sample_token_graph_source_entity = $(`#sample-token-graph-source-entity-${task_id}`);
+    const $sample_token_graph_target_entity = $(`#sample-token-graph-target-entity-${task_id}`);
+    const $sample_token_graph_relation_label = $(`#sample-token-graph-relation-label-${task_id}`);
 
     // Create and Insert Triplet Row Element
     const $row = $('<div />').addClass(`form-row mt-1 px-0`).appendTo($location);
@@ -920,8 +992,8 @@ function add_triplet_row($location) {
     $location.data("triplet-count", triplet_count);
 
     // Create Action Entity Input Element
-    const $input_source_entity = $task_4_sample_source_entity.clone();
-    $input_source_entity.attr("id", `element-source-entity-${triplet_count}`);
+    const $input_source_entity = $sample_token_graph_source_entity.clone();
+    $input_source_entity.attr("id", `element-source-entity-${task_id}-${triplet_count}`);
     var current_value = $input_source_entity.attr("title");
     var updated_value = current_value.replace(
         "{}",
@@ -947,8 +1019,8 @@ function add_triplet_row($location) {
     // $input_source_entity.autoComplete();
 
     // Create Actor Label Selector Element
-    const $input_relation_label = $task_4_sample_relation_label.clone();
-    $input_relation_label.attr("id", `element-relation-label-${triplet_count}`);
+    const $input_relation_label = $sample_token_graph_relation_label.clone();
+    $input_relation_label.attr("id", `element-relation-label-${task_id}-${triplet_count}`);
     var current_value = $input_relation_label.attr("title");
     var updated_value = current_value.replace(
         "{}",
@@ -962,8 +1034,8 @@ function add_triplet_row($location) {
     $input_relation_label.appendTo($column);
 
     // Create Target Entity Input Element
-    const $input_target_entity = $task_4_sample_target_entity.clone();
-    $input_target_entity.attr("id", `element-target-entity-${triplet_count}`);
+    const $input_target_entity = $sample_token_graph_target_entity.clone();
+    $input_target_entity.attr("id", `element-target-entity-${task_id}-${triplet_count}`);
     var current_value = $input_target_entity.attr("title");
     var updated_value = current_value.replace(
         "{}",
@@ -990,7 +1062,7 @@ function add_triplet_row($location) {
 
     // Create Remove Triplet Button
     const $remove_triplet_button = $('<button />').addClass("btn btn-danger");
-    $remove_triplet_button.attr("id", `remove-triplet-button-${triplet_count}`);
+    $remove_triplet_button.attr("id", `remove-triplet-button-${task_id}-${triplet_count}`);
     $remove_triplet_button.attr("title", "Remove Relation");
     const $remove_icon = $('<i />').addClass(`fas fa-minus`);
 
@@ -1091,9 +1163,10 @@ $show_graph_modal.on('shown.bs.modal', function(event) {
     // TODO: Maybe need to add task_id identifier in case of
     // multiple graph tasks from same category
     const $trigger_button = $(event.relatedTarget);
-    const source_task = $trigger_button.data("task-category");
+    const trigger_task_category = $trigger_button.data("task-category");
+    const trigger_task_id = $trigger_button.data("task-id");
 
-    if (source_task == "token_graph") {
+    if (trigger_task_category == TASK_TOKEN_GRAPH) {
         // triggered from token_graph task
         const $target_card = $trigger_button.parents(`.${sentence_token_graph_input_container_class}`);
         const $target_location = $target_card.find(".token-graph-input");
@@ -1104,41 +1177,29 @@ $show_graph_modal.on('shown.bs.modal', function(event) {
         const token_graph_data = prepare_token_graph_data($target_location);
         draw_graph(token_graph_data);
 
-    } else if (source_task == "sentence_graph") {
+    } else if (trigger_task_category == TASK_SENTENCE_GRAPH) {
         // triggered from sentence_graph task
-        const sentence_graph_data = prepare_sentence_graph_data();
+        const $target_location = $(`#sentence-graph-annotation-container-${trigger_task_id}`);
+        const sentence_graph_data = prepare_sentence_graph_data($target_location);
         draw_graph(sentence_graph_data);
     }
 });
 
-/* Task-4 Actions */
+/* Task: Token Graph: Actions */
 
-// Capture Graph Snapshot
-/* Logic:
-    * Create a dummy 'anchor' (<a>) with 'href' as image data.
-    * Simulate a click on it.
-    * Remove the dummy  anchor.
-*/
-$snapshot_graph_button.click(function() {
-    const download_anchor = document.createElement('a');
-    download_anchor.href = $snapshot_graph_button.data('src');
-    /* TODO: name using verse_id / boundary_idx ? */
-    download_anchor.download = 'graph.png';
-    document.body.appendChild(download_anchor);
-    download_anchor.click();
-    document.body.removeChild(download_anchor);
-});
+// Submit: Token Graph
+function submit_task_token_graph(task_id) {
+    console.log(`Called ${arguments.callee.name}(${Object.values(arguments).join(", ")});`);
 
-// Submit-4
-$task_4_submit.click(function () {
-    if (!$task_4_form[0].checkValidity()) {
-        $task_4_form[0].reportValidity();
+    const $token_graph_form = $(`#token-graph-form-${task_id}`);
+
+    if (!$token_graph_form[0].checkValidity()) {
+        $token_graph_form[0].reportValidity();
         return;
     }
 
+    const task_category = TASK_TOKEN_GRAPH;
     const verse_id = $verse_id_containers.html();
-    const task_id = $(this).data("task-id");
-    const task_category = $(this).data("task-category");
 
     var token_graph_data = [];
 
@@ -1190,21 +1251,31 @@ $task_4_submit.click(function () {
             }
         }
     });
-});
+};
 
-/* *********************************** END Task 4 *********************************** */
+/* ************************* END Task: Token Graph ************************* */
 
-/* ********************************** BEGIN Task 5 ********************************** */
-// Task 5: Co-reference Resolution
+/* ********************* BEGIN Task: Token Connection ********************* */
+// Task: Token Connection (e.g. Co-reference Resolution)
 
-// Setup-5
+// Setup: Token Connection
 
 
-function setup_token_connection(verse_id) {
+function setup_task_token_connection(task_id, verse_id) {
     console.log(`Called ${arguments.callee.name}(${Object.values(arguments).join(", ")});`);
 
     const row = $corpus_table.bootstrapTable('getRowByUniqueId', verse_id);
     const data = $corpus_table.bootstrapTable('getData');
+
+    const $token_connection_context_container = $(`#tokcon-context-container-${task_id}`);
+
+    const $token_connection_intermediate_row_container = $(`#tokcon-intermediate-row-container-${task_id}`);
+    const $token_connection_source_container = $(`#tokcon-source-token-container-${task_id}`);
+    const $token_connection_target_container = $(`#tokcon-target-token-container-${task_id}`);
+    const $token_connection_reset_button = $(`#tokcon-reset-button-${task_id}`);
+    const $token_connection_confirm_button = $(`#tokcon-confirm-button-${task_id}`);
+
+    const $token_connection_annotation_container = $(`#tokcon-annotation-container-${task_id}`);
 
     // calculate pre-context
     const current_index = data.findIndex(function(r) {
@@ -1224,13 +1295,13 @@ function setup_token_connection(verse_id) {
         for (const [boundary_id, sentence_tokens] of Object.entries(verse_data.sentences)) {
             $.extend(all_tokens, sentence_tokens);
             if (boundary_id != "extra") {
-                boundary_tokens.push([boundary_id, verse_data.word_order[boundary_id]]);
+                boundary_tokens.push([boundary_id, verse_data[TASK_WORD_ORDER][boundary_id]]);
             }
             // ensure that every boundary in the previous n verses has word_order
             // if one is doing word_order in order, this won't be an issue
         }
-        for (const token_connection of verse_data.token_connection) {
-            if (token_connection.is_deleted) {
+        for (const token_connection of verse_data[TASK_TOKEN_CONNECTION]) {
+            if (token_connection.is_deleted || token_connection.task_id != task_id) {
                 continue;
             }
             existing_token_connections.push(token_connection);
@@ -1238,16 +1309,16 @@ function setup_token_connection(verse_id) {
     };
     console.log(existing_token_connections);
 
-    $task_5_token_connection_context_container.html("");
-    $task_5_token_connection_reset_button.click();
-    $task_5_token_connection_annotation_container.html("");
+    $token_connection_context_container.html("");
+    $token_connection_reset_button.click();
+    $token_connection_annotation_container.html("");
 
     for (const [boundary_id, used_tokens] of boundary_tokens) {
         const $boundary_container = $("<div />", {
-            id: `tokcon-boundary-container-${boundary_id}`,
+            id: `tokcon-boundary-container-${task_id}-${boundary_id}`,
             class: "border border-secondary rounded px-1 pt-1 pb-0 ml-1 mt-1 mb-0 boundary-container"
         });
-        $boundary_container.appendTo($task_5_token_connection_context_container);
+        $boundary_container.appendTo($token_connection_context_container);
         $boundary_container.data("boundary-id", boundary_id);
 
         for (const token_id of used_tokens) {
@@ -1255,7 +1326,7 @@ function setup_token_connection(verse_id) {
             const $token = generate_token_button({
                 token: token,
                 token_element: "<button />",
-                id_prefix: "tokcon-token",
+                id_prefix: `tokcon-token-${task_id}`,
                 token_data: {token_id: token_id, boundary_id: boundary_id},
                 onclick: function($element) {
                     const $annotation_token = $element.clone();
@@ -1263,15 +1334,15 @@ function setup_token_connection(verse_id) {
                     $annotation_token.data("token-id", token_id);
                     $annotation_token.data("boundary-id", boundary_id);
 
-                    if (!$task_5_token_connection_source_container.html().trim()) {
+                    if (!$token_connection_source_container.html().trim()) {
                         $annotation_token.addClass("tokcon-source-token");
-                        $annotation_token.appendTo($task_5_token_connection_source_container);
+                        $annotation_token.appendTo($token_connection_source_container);
                         $element.prop("disabled", true);
                     } else {
-                        if (!$task_5_token_connection_target_container.html().trim()) {
+                        if (!$token_connection_target_container.html().trim()) {
                             $annotation_token.addClass("tokcon-target-token");
-                            $annotation_token.appendTo($task_5_token_connection_target_container);
-                            $task_5_token_connection_confirm_button.prop("disabled", false);
+                            $annotation_token.appendTo($token_connection_target_container);
+                            $token_connection_confirm_button.prop("disabled", false);
                             $element.prop("disabled", true);
                         } else {
                             $.notify({
@@ -1280,7 +1351,7 @@ function setup_token_connection(verse_id) {
                                 type: "danger"
                             });
                         }
-                        $task_5_token_connection_confirm_button.focus();
+                        $token_connection_confirm_button.focus();
                     }
                 }
             });
@@ -1291,27 +1362,49 @@ function setup_token_connection(verse_id) {
 
     // add existing references
     for (const token_connection of existing_token_connections) {
-        const $source_token = $(`#tokcon-token-${token_connection.src_id}`).clone();
+        const $source_token = $(`#tokcon-token-${task_id}-${token_connection.src_id}`).clone();
         $source_token.removeAttr("id");
         $source_token.data("token-id", token_connection.src_id);
         $source_token.data("boundary-id", token_connection.boundary_id);
         $source_token.addClass("tokcon-source-token");
 
-        const $target_token = $(`#tokcon-token-${token_connection.dst_id}`).clone();
-        const target_token_boundary_id = $(`#tokcon-token-${token_connection.dst_id}`).data("boundary-id");
+        const $target_token = $(`#tokcon-token-${task_id}-${token_connection.dst_id}`).clone();
+        const target_token_boundary_id = $(`#tokcon-token-${task_id}-${token_connection.dst_id}`).data("boundary-id");
         $target_token.removeAttr("id");
         $target_token.data("token-id", token_connection.dst_id);
         $target_token.data("boundary-id", target_token_boundary_id);
         $target_token.addClass("tokcon-target-token");
 
-        add_token_connection_row($source_token, $target_token);
+        add_token_connection_row($token_connection_annotation_container, $source_token, $target_token);
     }
+
+    /* setup event listeners */
+    $token_connection_reset_button.unbind("click");
+    $token_connection_reset_button.click(function () {
+        // enable all buttons
+        $token_connection_context_container.find("button").prop("disabled", false);
+
+        $token_connection_source_container.html("");
+        $token_connection_target_container.html("");
+    });
+
+    $token_connection_confirm_button.unbind("click");
+    $token_connection_confirm_button.click(function () {
+        const $source_token = $token_connection_source_container.children(".tokcon-source-token");
+        const $target_token = $token_connection_target_container.children(".tokcon-target-token");
+
+        add_token_connection_row($token_connection_annotation_container, $source_token, $target_token);
+
+        // reset
+        $token_connection_reset_button.click();
+        $token_connection_confirm_button.prop("disabled", true);
+    });
 
 }
 
 
-function add_token_connection_row($source_token, $target_token) {
-    const $row = $('<div />').addClass("row").prependTo($task_5_token_connection_annotation_container);
+function add_token_connection_row($location, $source_token, $target_token) {
+    const $row = $('<div />').addClass("row").prependTo($location);
     $row.addClass('tokcon-annotation-row');
 
     // add source token
@@ -1344,40 +1437,25 @@ function add_token_connection_row($source_token, $target_token) {
     });
 }
 
-$task_5_token_connection_confirm_button.click(function () {
-    const $source_token = $task_5_token_connection_source_container.children(".tokcon-source-token");
-    const $target_token = $task_5_token_connection_target_container.children(".tokcon-target-token");
+/* Task: Token Connection: Actions */
 
-    add_token_connection_row($source_token, $target_token);
+// Submit: Token Connection
+function submit_task_token_connection(task_id) {
+    console.log(`Called ${arguments.callee.name}(${Object.values(arguments).join(", ")});`);
 
-    // reset
-    $task_5_token_connection_reset_button.click();
-    $task_5_token_connection_confirm_button.prop("disabled", true);
-});
-
-$task_5_token_connection_reset_button.click(function () {
-    // enable all buttons
-    $task_5_token_connection_context_container.find("button").prop("disabled", false);
-
-    $task_5_token_connection_source_container.html("");
-    $task_5_token_connection_target_container.html("");
-});
-
-/* Task-5 Actions */
-
-// Submit-5
-$task_5_submit.click(function() {
+    const task_category = TASK_TOKEN_CONNECTION;
     const verse_id = $verse_id_containers.html();
-    const task_id = $(this).data("task-id");
-    const task_category = $(this).data("task-category");
+
+    const $token_connection_context_container = $(`#tokcon-context-container-${task_id}`);
+    const $token_connection_annotation_container = $(`#tokcon-annotation-container-${task_id}`);
 
     var context_data = [];
     var token_connection_data = [];
-    $task_5_token_connection_context_container.find(".boundary-container").each(function (_index, _boundary_container) {
+    $token_connection_context_container.find(".boundary-container").each(function (_index, _boundary_container) {
         context_data.push($(_boundary_container).data("boundary-id"));
     });
 
-    const $tokcon_annotation_rows = $task_5_token_connection_annotation_container.find('.tokcon-annotation-row');
+    const $tokcon_annotation_rows = $token_connection_annotation_container.find('.tokcon-annotation-row');
     $tokcon_annotation_rows.each(function(tokcon_index, tokcon_row) {
         const $tokcon_row = $(tokcon_row);
         const $source_token = $tokcon_row.find(".tokcon-source-token");
@@ -1412,21 +1490,27 @@ $task_5_submit.click(function() {
             }
         }
     });
-});
+};
 
-/* *********************************** END Task 5 *********************************** */
+/* ********************** END Task: Token Connection ********************** */
 
-/* ********************************** BEGIN Task 6 ********************************** */
-// Task 6: Sentence Classification
+/* ****************** BEGIN Task: Sentence Classification ****************** */
+// Task: Sentence Classification
 
-// Setup-6
+// Setup: Sentence Classification
 
-function setup_sentence_classification(verse_id) {
+function setup_task_sentence_classification(task_id, verse_id) {
     console.log(`Called ${arguments.callee.name}(${Object.values(arguments).join(", ")});`);
 
     const row = $corpus_table.bootstrapTable('getRowByUniqueId', verse_id);
 
-    $task_6_sentence_classification_input_container.html("");
+    const $sentence_classification_container = $(`#sentence-classification-container-${task_id}`);
+    const $sentence_classification_input_container = $(`#sentence-classification-input-container-${task_id}`);
+
+    const $sample_sentence_classification_input_container = $(`#sample-sentence-classification-input-container-${task_id}`);
+    const $sample_sentence_classification_input = $(`#sample-sentence-classification-input-${task_id}`);
+
+    $sentence_classification_input_container.html("");
 
     var all_tokens = {};
     var boundary_tokens = {};
@@ -1434,17 +1518,20 @@ function setup_sentence_classification(verse_id) {
     for (const [boundary_id, sentence_tokens] of Object.entries(row.sentences)) {
         $.extend(all_tokens, sentence_tokens);
         if (boundary_id != "extra") {
-            boundary_tokens[boundary_id] = row.word_order[boundary_id];
+            boundary_tokens[boundary_id] = row[TASK_WORD_ORDER][boundary_id];
         }
     }
 
     // record existing sentence classification
     var existing_sentence_classification = {};
-    for (const sentence of row.sentence_classification) {
-        if (!existing_sentence_classification.hasOwnProperty(sentence.boundary_id)) {
-            existing_sentence_classification[sentence.boundary_id] = [];
+    for (const sentclf of row[TASK_SENTENCE_CLASSIFICATION]) {
+        if (sentclf.task_id != task_id) {
+            continue;
         }
-        existing_sentence_classification[sentence.boundary_id] = sentence.label_id;
+        if (!existing_sentence_classification.hasOwnProperty(sentclf.boundary_id)) {
+            existing_sentence_classification[sentclf.boundary_id] = [];
+        }
+        existing_sentence_classification[sentclf.boundary_id] = sentclf.label_id;
     }
 
     for (const [boundary_id, used_token_ids] of Object.entries(boundary_tokens)) {
@@ -1459,16 +1546,16 @@ function setup_sentence_classification(verse_id) {
             header_html.push(token_text);
         }
         const header_text = header_html.join(" ");
-        const $sentence = $task_6_sample_sentence_classification_input.clone();
-        $sentence.attr("id", `sentence-classification-boundary-${boundary_id}`);
-        $sentence.appendTo($task_6_sentence_classification_input_container);
+        const $sentence = $sample_sentence_classification_input.clone();
+        $sentence.attr("id", `sentence-classification-boundary-${task_id}-${boundary_id}`);
+        $sentence.appendTo($sentence_classification_input_container);
 
         const $sentence_text = $sentence.find(".sentence-text");
         $sentence_text.html(header_text);
         $sentence_text.data("boundary-id", boundary_id);
 
         const $sentence_label_select = $sentence.find(".sentence-label");
-        $sentence_label_select.attr("id", `sentence-classification-select-${boundary_id}`);
+        $sentence_label_select.attr("id", `sentence-classification-select-${task_id}-${boundary_id}`);
 
         console.log(existing_sentence_classification);
         if (existing_sentence_classification.hasOwnProperty(boundary_id)) {
@@ -1479,25 +1566,29 @@ function setup_sentence_classification(verse_id) {
     }
 }
 
-/* Task-6 Actions */
+/* Task: Sentence Classification: Actions */
 
-// Submit-6
-$task_6_submit.click(function() {
-    if (!$task_6_form[0].checkValidity()) {
-        $task_6_form[0].reportValidity();
+// Submit: Sentence Classification
+function submit_task_sentence_classification(task_id) {
+    console.log(`Called ${arguments.callee.name}(${Object.values(arguments).join(", ")});`);
+
+    const $sentence_classification_form = $(`#sentence-classification-form-${task_id}`);
+    const $sentence_classification_input_container = $(`#sentence-classification-input-container-${task_id}`);
+
+    if (!$sentence_classification_form[0].checkValidity()) {
+        $sentence_classification_form[0].reportValidity();
         return;
     }
 
+    const task_category = TASK_SENTENCE_CLASSIFICATION;
     const verse_id = $verse_id_containers.html();
-    const task_id = $(this).data("task-id");
-    const task_category = $(this).data("task-category");
 
     var sentence_classification_data = [];
 
-    $task_6_sentence_classification_input_container.find(".sentence-text").each(function (_index, _text_element) {
+    $sentence_classification_input_container.find(".sentence-text").each(function (_index, _text_element) {
         const $text_element = $(_text_element);
         const boundary_id = $text_element.data("boundary-id");
-        const $selector = $(`#sentence-classification-select-${boundary_id}`);
+        const $selector = $(`#sentence-classification-select-${task_id}-${boundary_id}`);
         const label_id = $selector.selectpicker("val");
         sentence_classification_data.push({
             boundary_id: boundary_id,
@@ -1529,19 +1620,30 @@ $task_6_submit.click(function() {
             }
         }
     });
-});
+};
 
-/* *********************************** END Task 6 *********************************** */
+/* ******************* END Task: Sentence Classification ******************* */
 
-/* ********************************** BEGIN Task 7 ********************************** */
-// Task 7: Sentence Graph (e.g. Discourse Graph)
+/* ********************** BEGIN Task: Sentence Graphs ********************** */
+// Task: Sentence Graph (e.g. Discourse Graph)
 
-// Setup-7
-function setup_sentence_graph(verse_id) {
+// Setup: Sentence Graph
+function setup_task_sentence_graph(task_id, verse_id) {
     console.log(`Called ${arguments.callee.name}(${Object.values(arguments).join(", ")});`);
 
     const row = $corpus_table.bootstrapTable('getRowByUniqueId', verse_id);
     const data = $corpus_table.bootstrapTable('getData');
+
+    const $sentence_graph_context_container = $(`#sentence-graph-context-container-${task_id}`);
+
+    const $sentence_graph_intermediate_row_container = $(`#sentence-graph-intermediate-row-container-${task_id}`);
+    const $sentence_graph_source_container = $(`#sentence-graph-source-token-container-${task_id}`);
+    const $sentence_graph_relation_selector = $(`#sentence-graph-relation-selector-${task_id}`);
+    const $sentence_graph_target_container = $(`#sentence-graph-target-token-container-${task_id}`);
+    const $sentence_graph_reset_button = $(`#sentence-graph-reset-button-${task_id}`);
+    const $sentence_graph_confirm_button = $(`#sentence-graph-confirm-button-${task_id}`);
+
+    const $sentence_graph_annotation_container = $(`#sentence-graph-annotation-container-${task_id}`);
 
     // calculate pre-context
     const current_index = data.findIndex(function(r) {
@@ -1559,35 +1661,35 @@ function setup_sentence_graph(verse_id) {
 
     for (const verse_data of context) {
         // verse_data
-        $.extend(boundary_marker_tokens, verse_data.boundary);
+        $.extend(boundary_marker_tokens, verse_data[TASK_SENTENCE_BOUNDARY]);
         for (const [boundary_id, sentence_tokens] of Object.entries(verse_data.sentences)) {
             $.extend(all_tokens, sentence_tokens);
             if (boundary_id != "extra") {
-                boundary_tokens.push([boundary_id, verse_data.word_order[boundary_id]]);
+                boundary_tokens.push([boundary_id, verse_data[TASK_WORD_ORDER][boundary_id]]);
             }
             // ensure that every boundary in the previous n verses has word_order
             // if one is doing word_order in order, this won't be an issue
         }
-        for (const sentence_graph of verse_data.sentence_graph) {
-            if (sentence_graph.is_deleted) {
+        for (const sentrel of verse_data[TASK_SENTENCE_GRAPH]) {
+            if (sentrel.is_deleted || sentrel.task_id != task_id) {
                 continue;
             }
-            existing_sentence_graphs.push(sentence_graph);
+            existing_sentence_graphs.push(sentrel);
         }
     };
     console.log(boundary_marker_tokens);
     console.log(existing_sentence_graphs);
 
-    $task_7_sentence_graph_context_container.html("");
-    $task_7_sentence_graph_reset_button.click();
-    $task_7_sentence_graph_annotation_container.html("");
+    $sentence_graph_context_container.html("");
+    $sentence_graph_reset_button.click();
+    $sentence_graph_annotation_container.html("");
 
     for (const [boundary_id, used_tokens] of boundary_tokens) {
         const $boundary_container = $("<div />", {
-            id: `sentence-graph-boundary-container-${boundary_id}`,
+            id: `sentence-graph-boundary-container-${task_id}-${boundary_id}`,
             class: "border border-secondary rounded px-1 pt-1 pb-0 ml-1 mt-1 mb-0 boundary-container"
         });
-        $boundary_container.appendTo($task_7_sentence_graph_context_container);
+        $boundary_container.appendTo($sentence_graph_context_container);
         $boundary_container.data("boundary-id", boundary_id);
 
         var sentence_text = [];
@@ -1598,7 +1700,7 @@ function setup_sentence_graph(verse_id) {
             const $token = generate_token_button({
                 token: token,
                 token_element: "<button />",
-                id_prefix: "sentence-graph-token",
+                id_prefix: `sentence-graph-token-${task_id}`,
                 token_class_common: "btn sentence-graph-context-token",
                 token_data: {"token-id": token_id, "boundary-id": boundary_id},
                 onclick: function($element) {
@@ -1607,15 +1709,15 @@ function setup_sentence_graph(verse_id) {
                     $annotation_token.data("token-id", token_id);
                     $annotation_token.data("boundary-id", boundary_id);
 
-                    if (!$task_7_sentence_graph_source_container.html().trim()) {
+                    if (!$sentence_graph_source_container.html().trim()) {
                         $annotation_token.addClass("sentence-graph-source-token");
-                        $annotation_token.appendTo($task_7_sentence_graph_source_container);
+                        $annotation_token.appendTo($sentence_graph_source_container);
                         $element.parent().children("button").prop("disabled", true);
                     } else {
-                        if (!$task_7_sentence_graph_target_container.html().trim()) {
+                        if (!$sentence_graph_target_container.html().trim()) {
                             $annotation_token.addClass("sentence-graph-target-token");
-                            $annotation_token.appendTo($task_7_sentence_graph_target_container);
-                            $task_7_sentence_graph_confirm_button.prop("disabled", false);
+                            $annotation_token.appendTo($sentence_graph_target_container);
+                            $sentence_graph_confirm_button.prop("disabled", false);
                             $element.parent().children("button").prop("disabled", true);
                         } else {
                             $.notify({
@@ -1624,7 +1726,7 @@ function setup_sentence_graph(verse_id) {
                                 type: "danger"
                             });
                         }
-                        $task_7_sentence_graph_confirm_button.focus();
+                        $sentence_graph_confirm_button.focus();
                     }
                 }
             });
@@ -1649,8 +1751,8 @@ function setup_sentence_graph(verse_id) {
     }
 
     // add existing references
-    for (const sentence_graph of existing_sentence_graphs) {
-        const relation_relation_type = sentence_graph.relation_type;
+    for (const sentrel of existing_sentence_graphs) {
+        const relation_relation_type = sentrel.relation_type;
 
         // type == 0: token-token connection
         // type == 1: token-sentence connection
@@ -1659,33 +1761,73 @@ function setup_sentence_graph(verse_id) {
 
         var $source_token, $target_token;
         if ((relation_relation_type == 0) || (relation_relation_type == 1)) {
-            $source_token = $(`#sentence-graph-token-${sentence_graph.src_token_id}`).clone();
+            $source_token = $(`#sentence-graph-token-${task_id}-${sentrel.src_token_id}`).clone();
         } else {
-            $source_token = $(`#sentence-graph-sentence-token-${sentence_graph.src_token_id}`).clone();
+            $source_token = $(`#sentence-graph-sentence-token-${task_id}-${sentrel.src_token_id}`).clone();
         }
         $source_token.removeAttr("id");
-        $source_token.data("token-id", sentence_graph.src_token_id);
-        $source_token.data("boundary-id", sentence_graph.src_boundary_id);
+        $source_token.data("token-id", sentrel.src_token_id);
+        $source_token.data("boundary-id", sentrel.src_boundary_id);
         $source_token.addClass("sentence-graph-source-token");
 
         if ((relation_relation_type == 0) || (relation_relation_type == 2)) {
-            $target_token = $(`#sentence-graph-token-${sentence_graph.dst_token_id}`).clone();
+            $target_token = $(`#sentence-graph-token-${task_id}-${sentrel.dst_token_id}`).clone();
         } else {
-            $target_token = $(`#sentence-graph-sentence-token-${sentence_graph.dst_token_id}`).clone();
+            $target_token = $(`#sentence-graph-sentence-token-${task_id}-${sentrel.dst_token_id}`).clone();
         }
         $target_token.removeAttr("id");
-        $target_token.data("token-id", sentence_graph.dst_token_id);
-        $target_token.data("boundary-id", sentence_graph.dst_boundary_id);
+        $target_token.data("token-id", sentrel.dst_token_id);
+        $target_token.data("boundary-id", sentrel.dst_boundary_id);
         $target_token.addClass("sentence-graph-target-token");
 
-        const relation_label_id = sentence_graph.label_id;
+        const relation_label_id = sentrel.label_id;
 
-        add_sentence_graph_row($source_token, $target_token, relation_label_id);
+        add_sentence_graph_row(
+            $sentence_graph_annotation_container,
+            $sentence_graph_relation_selector,
+            $source_token,
+            $target_token,
+            relation_label_id
+        );
     }
+
+    /* setup event listeners */
+    $sentence_graph_reset_button.unbind("click");
+    $sentence_graph_reset_button.click(function () {
+        // enable all buttons
+        $sentence_graph_context_container.find("button").prop("disabled", false);
+
+        $sentence_graph_source_container.html("");
+        $sentence_graph_target_container.html("");
+    });
+
+    $sentence_graph_confirm_button.unbind("click");
+    $sentence_graph_confirm_button.click(function () {
+        const $source_token = $sentence_graph_source_container.children(".sentence-graph-source-token");
+        const $target_token = $sentence_graph_target_container.children(".sentence-graph-target-token");
+
+        const relation_label_id = $sentence_graph_relation_selector.selectpicker("val");
+        $sentence_graph_relation_selector.selectpicker("val", null);
+
+        add_sentence_graph_row(
+            $sentence_graph_annotation_container,
+            $sentence_graph_relation_selector,
+            $source_token,
+            $target_token,
+            relation_label_id
+        );
+
+        // reset
+        $sentence_graph_reset_button.click();
+        $sentence_graph_confirm_button.prop("disabled", true);
+    });
+
+
+
 }
 
-function add_sentence_graph_row($source_token, $target_token, relation_label_id) {
-    const $row = $('<div />').addClass("row").prependTo($task_7_sentence_graph_annotation_container);
+function add_sentence_graph_row($location, $selector, $source_token, $target_token, relation_label_id) {
+    const $row = $('<div />').addClass("row").prependTo($location);
     $row.addClass('sentence-graph-annotation-row');
 
     // add source token
@@ -1695,7 +1837,7 @@ function add_sentence_graph_row($source_token, $target_token, relation_label_id)
     $source_token.appendTo($column);
 
     // add relation
-    const $relation_selector = $task_7_sentence_graph_relation_selector.clone();
+    const $relation_selector = $selector.clone();
     $relation_selector.removeAttr("id");
     $relation_selector.addClass("sentence-graph-relation");
 
@@ -1736,7 +1878,7 @@ function prepare_sentence_graph_data($data_location) {
         return ++node_id;
     }
 
-    const $sentence_graph_annotation_rows = $task_7_sentence_graph_annotation_container.find('.sentence-graph-annotation-row');
+    const $sentence_graph_annotation_rows = $data_location.find('.sentence-graph-annotation-row');
     $sentence_graph_annotation_rows.each(function(_index, sentence_graph_row) {
         const $sentence_graph_row = $(sentence_graph_row);
         const $source_token = $sentence_graph_row.find(".sentence-graph-source-token");
@@ -1830,48 +1972,31 @@ function prepare_sentence_graph_data($data_location) {
     return data;
 }
 
-$task_7_sentence_graph_confirm_button.click(function () {
-    const $source_token = $task_7_sentence_graph_source_container.children(".sentence-graph-source-token");
-    const $target_token = $task_7_sentence_graph_target_container.children(".sentence-graph-target-token");
+/* Task: Sentence Graph: Actions */
 
-    const relation_label_id = $task_7_sentence_graph_relation_selector.selectpicker("val");
-    $task_7_sentence_graph_relation_selector.selectpicker("val", null);
+// Submit: Sentence Graph
+function submit_task_sentence_graph(task_id) {
+    console.log(`Called ${arguments.callee.name}(${Object.values(arguments).join(", ")});`);
 
-    add_sentence_graph_row($source_token, $target_token, relation_label_id);
+    const $sentence_graph_form = $(`#sentence-graph-form-${task_id}`);
+    const $sentence_graph_context_container = $(`#sentence-graph-context-container-${task_id}`);
+    const $sentence_graph_annotation_container = $(`#sentence-graph-annotation-container-${task_id}`);
 
-    // reset
-    $task_7_sentence_graph_reset_button.click();
-    $task_7_sentence_graph_confirm_button.prop("disabled", true);
-});
-
-$task_7_sentence_graph_reset_button.click(function () {
-    // enable all buttons
-    $task_7_sentence_graph_context_container.find("button").prop("disabled", false);
-
-    $task_7_sentence_graph_source_container.html("");
-    $task_7_sentence_graph_target_container.html("");
-});
-
-/* Task-7 Actions */
-
-// Submit-7
-$task_7_submit.click(function () {
-    if (!$task_7_form[0].checkValidity()) {
-        $task_7_form[0].reportValidity();
+    if (!$sentence_graph_form[0].checkValidity()) {
+        $sentence_graph_form[0].reportValidity();
         return;
     }
 
+    const task_category = TASK_SENTENCE_GRAPH;
     const verse_id = $verse_id_containers.html();
-    const task_id = $(this).data("task-id");
-    const task_category = $(this).data("task-category");
 
     var context_data = [];
     var sentence_graph_data = [];
-    $task_7_sentence_graph_context_container.find(".boundary-container").each(function (_index, _boundary_container) {
+    $sentence_graph_context_container.find(".boundary-container").each(function (_index, _boundary_container) {
         context_data.push($(_boundary_container).data("boundary-id"));
     });
 
-    const $sentence_graph_annotation_rows = $task_7_sentence_graph_annotation_container.find('.sentence-graph-annotation-row');
+    const $sentence_graph_annotation_rows = $sentence_graph_annotation_container.find('.sentence-graph-annotation-row');
     $sentence_graph_annotation_rows.each(function(_index, sentence_graph_row) {
         const $sentence_graph_row = $(sentence_graph_row);
         const $source_token = $sentence_graph_row.find(".sentence-graph-source-token");
@@ -1932,21 +2057,25 @@ $task_7_submit.click(function () {
         }
     },
     'json');
-});
+};
 
-/* *********************************** END Task 7 *********************************** */
+/* *********************** END Task: Sentence Graph *********************** */
 
-/* ********************************** BEGIN Task 8 ********************************** */
-// Task 8: Token Text Annotation
+/* ******************* BEGIN Task: Token Text Annotation ******************* */
+// Task: Token Text Annotation
 
-// Setup-8
-function setup_token_text_annotation(verse_id) {
+// Setup: Token Text Annotation
+function setup_task_token_text_annotation(task_id, verse_id) {
     console.log(`Called ${arguments.callee.name}(${Object.values(arguments).join(", ")});`);
 
     const row = $corpus_table.bootstrapTable('getRowByUniqueId', verse_id);
 
-    $task_8_token_text_annotation_table.html("");
-    $task_8_token_non_annotation_table.html("");
+    const $token_text_annotation_table = $(`#token-text-annotation-table-${task_id}`);
+    const $token_non_annotation_table = $(`#token-non-annotation-table-${task_id}`);
+    const $sample_token_text_annotation_text = $(`#sample-token-text-annotation-text-${task_id}`);
+
+    $token_text_annotation_table.html("");
+    $token_non_annotation_table.html("");
 
     var all_tokens = {};
     var used_tokens = [];
@@ -1955,8 +2084,8 @@ function setup_token_text_annotation(verse_id) {
     for (const [boundary_id, sentence_tokens] of Object.entries(row.sentences)) {
         $.extend(all_tokens, sentence_tokens);
         if (boundary_id !== "extra") {
-            [].push.apply(used_tokens, row.word_order[boundary_id]);
-            boundary_tokens[boundary_id] = row.word_order[boundary_id];
+            [].push.apply(used_tokens, row[TASK_WORD_ORDER][boundary_id]);
+            boundary_tokens[boundary_id] = row[TASK_WORD_ORDER][boundary_id];
         }
     }
 
@@ -1965,8 +2094,8 @@ function setup_token_text_annotation(verse_id) {
     // in that case, .includes() can be replaced with .hasOwnProperty() check
     var existing_token_text_annotations = [];
     var existing_texts = {};
-    for (const token_text_annotation of row.token_text_annotation) {
-        if (token_text_annotation.is_deleted) {
+    for (const token_text_annotation of row[TASK_TOKEN_TEXT_ANNOTATION]) {
+        if (token_text_annotation.is_deleted || token_text_annotation.task_id != task_id) {
             continue;
         }
         existing_token_text_annotations.push(token_text_annotation.token_id);
@@ -1980,11 +2109,11 @@ function setup_token_text_annotation(verse_id) {
             var token_text_annotation_text = null;
             const $token_text_annotation_row = $("<tr />", {});
             if (existing_token_text_annotations.includes(token.id)) {
-                $task_8_token_text_annotation_table.append($token_text_annotation_row);
+                $token_text_annotation_table.append($token_text_annotation_row);
                 has_text_annotation = true;
                 token_text_annotation_text = existing_texts[token.id];
             } else {
-                $task_8_token_non_annotation_table.append($token_text_annotation_row);
+                $token_non_annotation_table.append($token_text_annotation_row);
             }
 
             const $token_text_annotation_cell = $("<td />", {});
@@ -1992,18 +2121,18 @@ function setup_token_text_annotation(verse_id) {
 
             const $token_text_annotation = generate_token_button({
                 token: token,
-                id_prefix: "token-text-annotation"
+                id_prefix: `token-text-annotation-${task_id}`
             });
             $token_text_annotation_cell.append($token_text_annotation);
 
             const $token_text_annotation_text_cell = $("<td />");
             $token_text_annotation_row.append($token_text_annotation_text_cell);
 
-            const $token_text_annotation_input_element = task_8_sample_token_text_annotation_text.clone();
+            const $token_text_annotation_input_element = $sample_token_text_annotation_text.clone();
             $token_text_annotation_input_element.data("boundary-id", boundary_id);
             $token_text_annotation_text_cell.append($token_text_annotation_input_element);
 
-            const token_text_annotation_input_id = `token-text-annotation-input-${token.id}`;
+            const token_text_annotation_input_id = `token-text-annotation-input-${task_id}-${token.id}`;
             $token_text_annotation_input_element.attr("id", token_text_annotation_input_id);
 
             if (has_text_annotation) {
@@ -2021,7 +2150,7 @@ function setup_token_text_annotation(verse_id) {
             const token_text_annotation_html = (has_text_annotation) ? '<i class="fa fa-times"></i>' : '<i class="fa fa-plus"></i>';
 
             const $token_text_annotation_toggle = $("<span />", {
-                id: `token-text-annotation-toggle-${token.id}`,
+                id: `token-text-annotation-toggle-${task_id}-${token.id}`,
                 name: "token-text-annotation-toggle",
                 class: token_text_annotation_class,
                 html: token_text_annotation_html,
@@ -2035,14 +2164,14 @@ function setup_token_text_annotation(verse_id) {
                             $(this).addClass("btn-secondary");
                             $(this).html('<i class="fa fa-times"></i>');
                             $(input_selector).show();
-                            $task_8_token_text_annotation_table.append($(this).parents('tr'));
+                            $token_text_annotation_table.append($(this).parents('tr'));
                         } else {
                             $(this).removeClass("btn-secondary");
                             $(this).addClass("btn-info");
                             $(this).addClass("include-token-text-annotation");
                             $(this).html('<i class="fa fa-plus"></i>');
                             $(input_selector).hide();
-                            $task_8_token_non_annotation_table.append($(this).parents('tr'));
+                            $token_non_annotation_table.append($(this).parents('tr'));
                         }
                     }
                 }
@@ -2052,21 +2181,25 @@ function setup_token_text_annotation(verse_id) {
     }
 }
 
-/* Task-8 Actions */
+/* Task: Token Text Annotation: Actions */
 
-// Submit-8
-$task_8_submit.click(function () {
-    if (!$task_8_form[0].checkValidity()) {
-        $task_8_form[0].reportValidity();
+// Submit: Token Text Annotation
+function submit_task_token_text_annotation(task_id) {
+    console.log(`Called ${arguments.callee.name}(${Object.values(arguments).join(", ")});`);
+
+    const $token_text_annotation_form = $(`#token-text-annotation-form-${task_id}`);
+    const $token_text_annotation_table = $(`#token-text-annotation-table-${task_id}`);
+
+    if (!$token_text_annotation_form[0].checkValidity()) {
+        $token_text_annotation_form[0].reportValidity();
         return;
     }
 
+    const task_category = TASK_TOKEN_TEXT_ANNOTATION;
     const verse_id = $verse_id_containers.html();
-    const task_id = $(this).data("task-id");
-    const task_category = $(this).data("task-category");
 
     var token_text_annotation_data = {}
-    $task_8_token_text_annotation_table.find("input").each(function(input_index, input_element) {
+    $token_text_annotation_table.find("input").each(function(input_index, input_element) {
         const token_id = input_element.id;
         const boundary_id = $(input_element).data("boundary-id");
         const token_text_annotation_text = $(input_element).val();
@@ -2099,6 +2232,6 @@ $task_8_submit.click(function () {
             }
         }
     });
-});
+};
 
-/* *********************************** END Task 8 *********************************** */
+/* ******************** END Task: Token Text Annotation ******************** */

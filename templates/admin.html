@@ -42,8 +42,11 @@
         <form method="POST" enctype="multipart/form-data" action="{{url_for('perform_action')}}">
             <input type="hidden" name="csrf_token" value={{csrf_token()}}>
             <div class="card-header lead">
-                Tasks
-                <button type="submit" name="action" value="task_update" class="btn btn-sm btn-primary float-right">Update</button>
+                Manage Tasks
+                <button type="submit" name="action" value="task_collection_update" class="btn btn-sm btn-primary float-right">Update</button>
+                <button type="button" class="mx-1 btn btn-sm btn-primary float-right" data-toggle="modal" data-target="#task-modal" data-action="add">
+                    <i class="fa fa-plus"></i>
+                </button>
             </div>
             <div class="card-body p-0 m-0">
                 <table id="task-table" class="table table-hover">
@@ -51,23 +54,36 @@
                         <tr>
                             <th class="pl-4">ID</th>
                             <th>Title</th>
+                            <th>Edit</th>
                             <th>Active</th>
                             <th></th>
                         </tr>
                     </thead>
                     <tbody id="task-table-body">
-                    {% for task in data.tasks %}
-                    <tr data-target="#task-{{task.id}}-order">
+                    {% for task_id, task in context_tasks.tasks.items() %}
+                    {% if task.category in (context_tasks.task_sentence_boundary, context_tasks.task_word_order) %}
+                        {% set unsortable = "unsortable bg-light" %}
+                    {% endif %}
+                    <tr data-target="#task-{{task.id}}-order" class="{{unsortable}} {{bg_inactive}}">
                         <input type="hidden" name="task-{{task.id}}-order" id="task-{{task.id}}-order" value="{{task.order}}">
                         <td class="pl-4">{{task.id}}</td>
                         <td>{{task.title}}</td>
+                        <td>
+                            <button type="button" class="btn btn-secondary" data-toggle="modal" data-target="#task-modal" data-action="edit" data-task-id="{{task.id}}">
+                                <i class="fa fa-edit"></i>
+                            </button>
+                        </td>
                         <td>
                             <input type="checkbox" name="task-{{task.id}}-status" id="task-{{task.id}}-toggle"
                             {% if not task.is_deleted %}checked{% endif %} data-toggle="toggle"
                             data-on="Yes"
                             data-off="No">
                         </td>
-                        <td><i class="fa fa-up-down"></i></td>
+                        <td>
+                            {% if task.category not in (context_tasks.task_sentence_boundary, context_tasks.task_word_order) %}
+                            <i class="fa fa-up-down"></i>
+                            {% endif %}
+                        </td>
                     </tr>
                     {% endfor %}
                     </tbody>
@@ -76,10 +92,11 @@
                     const $task_table_body = $("#task-table-body");
                     $(function() {
                         $task_table_body.sortable({
+                            items: "tr:not(.unsortable)",
                             cursor: "move",
                             containment: "parent",
                             tolerance: "pointer",
-                            placeholder: 'tr bg-secondary',
+                            placeholder: "tr bg-secondary"
                         }).on("sortupdate", function(e, ui) {
                             // ui.item contains the current dragged element.
                             // Triggered when the user stopped sorting and the DOM position has changed.
@@ -178,11 +195,6 @@
                                         <label class="custom-file-label" for="chapter_file">Choose chapter file</label>
                                     </div>
                                 </div>
-                                <script>
-                                    $(document).ready(function () {
-                                        bsCustomFileInput.init();
-                                    })
-                                </script>
                                 <button type="submit" name="action" value="chapter_add" class="btn btn-success m-1">
                                     Add
                                 </button>
@@ -191,11 +203,11 @@
                     </div>
                 </div>
                 <div class="card" style="border-top-left-radius: 0; border-top-right-radius: 0;">
-                    <div class="card-header" data-toggle="collapse" data-target="#download_container"
-                        aria-expanded="true" aria-controls="download_container">
+                    <div class="card-header collapsed" data-toggle="collapse" data-target="#download_container"
+                        aria-expanded="false" aria-controls="download_container">
                         Download Annotations
                     </div>
-                    <div id="download_container" role="tabpanel" class="collapse show" data-parent="#manage_data">
+                    <div id="download_container" role="tabpanel" class="collapse" data-parent="#manage_data">
                         <div class="card-body">
                             <form method=POST enctype=multipart/form-data action="{{url_for('perform_action')}}">
                                 <input type="hidden" name="csrf_token" value={{csrf_token()}}>
@@ -277,7 +289,7 @@
         <div class="card-body p-0">
             <ul class="nav nav-tabs mb-3" id="labels-tab" role="tablist">
                 {% for label in context_labels.admin_labels %}
-                {% if label.is_active %}
+                {% if loop.first %}
                     {% set active_status = "active" %}
                     {% set aria_selected = "true" %}
                 {% else %}
@@ -285,34 +297,41 @@
                     {% set aria_selected = "false" %}
                 {% endif %}
                     <li class="nav-item">
-                        <a class="nav-link {{active_status}}" id="{{label.name}}-label-tab" data-toggle="tab" href="#{{label.name}}-label-tab-content" role="tab" aria-controls="{{label.name}}-label-tab-content" aria-selected="{{aria_selected}}">{{label.title}}</a>
+                        <a class="nav-link {{active_status}} ontology-tab" id="{{label.name}}-{{label.task_id}}-label-tab" data-toggle="tab" href="#{{label.name}}-{{label.task_id}}-label-tab-content" role="tab" aria-controls="{{label.name}}-{{label.task_id}}-label-tab-content" aria-selected="{{aria_selected}}">{{label.title}}</a>
                     </li>
                 {% endfor %}
             </ul>
             <div class="tab-content m-3" id="labels-tab-content">
                 {% for label in context_labels.admin_labels %}
-                {% if label.is_active %}
+                {% if loop.first %}
                     {% set active_status = "active" %}
                 {% else %}
                     {% set active_status = "" %}
                 {% endif %}
-                <div class="tab-pane {{active_status}}" id="{{label.name}}-label-tab-content" role="tabpanel" aria-labelledby="{{label.name}}-label-tab">
+                <div class="tab-pane {{active_status}}" id="{{label.name}}-{{label.task_id}}-label-tab-content" role="tabpanel" aria-labelledby="{{label.name}}-{{label.task_id}}-label-tab">
                     <div class="container">
                         <form class="form " method=POST enctype=multipart/form-data action="{{url_for('perform_action')}}">
                             <input type="hidden" name="csrf_token" value={{csrf_token()}}>
-                            <div class="form-group">
-                                <label for="{{label.name}}-label-text">
-                                    Label
-                                    <small class="text-muted">{{label.title}} Label</small>
+                            <input type="hidden" name="{{label.name}}_label_task_id" value="{{label.task_id}}">
+                            <div class="form-group form-row">
+                                <label class="col-sm-2">
+                                    Task ID
                                 </label>
-                                <input class="form-control" type="text" name="{{label.name}}_label_text" id="{{label.name}}-label-text" required>
+                                <span class="col-sm-2">{{label.task_id}}</span>
                             </div>
-                            <div class="form-group">
-                                <label for="{{label.name}}-label-desc">
-                                    Description
-                                    <small class="text-muted">{{label.title}} Label</small>
+                            <div class="form-group form-row">
+                                <label class="col-sm-2" for="{{label.name}}-{{label.task_id}}-label-text">
+                                    Label
+                                    <!-- <small class="text-muted">{{label.title}} Label</small> -->
                                 </label>
-                                <input class="form-control" type="text" name="{{label.name}}_label_desc" id="{{label.name}}-label-desc" required>
+                                <input class="form-control col-sm" type="text" name="{{label.name}}_label_text" id="{{label.name}}-{{label.task_id}}-label-text" required>
+                            </div>
+                            <div class="form-group form-row">
+                                <label class="col-sm-2" for="{{label.name}}-{{label.task_id}}-label-desc">
+                                    Description
+                                    <!-- <small class="text-muted">{{label.title}} Label</small> -->
+                                </label>
+                                <input class="form-control col-sm" type="text" name="{{label.name}}_label_desc" id="{{label.name}}-{{label.task_id}}-label-desc" required>
                             </div>
                             <button type="submit" name="action" value="{{label.name}}_label_add" class="btn btn-success m-1">
                                 Add
@@ -321,14 +340,47 @@
                         <hr>
                         <form class="form" method=POST enctype=multipart/form-data action="{{url_for('perform_action')}}">
                             <input type="hidden" name="csrf_token" value={{csrf_token()}}>
+                            <input type="hidden" name="{{label.name}}_label_task_id" value="{{label.task_id}}">
+                            <div class="input-group my-2">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text" id="{{label.name}}_{{label.task_id}}_label_file_upload">Upload</span>
+                                </div>
+                                <div class="custom-file">
+                                    <input type="file" class="custom-file-input" id="{{label.name}}-{{label.task_id}}-label-file" name="label_file" aria-describedby="{{label.name}}_{{label.task_id}}_label_file_upload" required>
+                                    <label class="custom-file-label" for="{{label.name}}-{{label.task_id}}-label-file">Choose label file</label>
+                                </div>
+                            </div>
+                            <div class="form-group form-row">
+                                <div class="mt-2 col-sm">
+                                    <div class="custom-control custom-radio custom-control-inline">
+                                        <input class="custom-control-input" type="radio" name="upload_format" id="{{label.name}}-{{label.task_id}}-upload-format-json" value="json" checked>
+                                        <label class="custom-control-label" for="{{label.name}}-{{label.task_id}}-upload-format-json">JSON</label>
+                                    </div>
+                                    <div class="custom-control custom-radio custom-control-inline">
+                                        <input class="custom-control-input" type="radio" name="upload_format" id="{{label.name}}-{{label.task_id}}-upload-format-csv" value="csv">
+                                        <label class="custom-control-label" for="{{label.name}}-{{label.task_id}}-upload-format-csv">CSV</label>
+                                    </div>
+                                </div>
+                                <div class="col-sm">
+                                    <button type="submit" name="action" value="{{label.name}}_label_upload" class="btn btn-primary m-1 float-right">
+                                        Upload
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                        <hr>
+                        <form class="form" method=POST enctype=multipart/form-data action="{{url_for('perform_action')}}">
+                            <input type="hidden" name="csrf_token" value={{csrf_token()}}>
                             <div class="form-group">
-                                <label for="{{label.name}}-label-select">Label</label>
-                                <select class="lead m-1 selectpicker" name="{{label.name}}_label_text" id="{{label.name}}-label-select" data-live-search="true" required>
-                                    {% for _id, _label, _description in context_labels[label.object_name] %}
+                                <label for="{{label.name}}-{{label.id}}-label-select">Label</label>
+                                <select class="lead m-1 selectpicker" name="{{label.name}}_label_text" id="{{label.name}}-{{label.id}}-label-select" data-live-search="true" required>
+                                    {% for _id, _task_id, _label, _description in context_labels[label.object_name] %}
+                                    {% if _task_id == label.task_id %}
                                     <option value="{{_label}}">{{_description}}</option>
+                                    {% endif %}
                                     {% endfor %}
                                 </select>
-                                <button type="submit" name="action" value="{{label.name}}_type_remove" class="btn btn-danger m-1">
+                                <button type="submit" name="action" value="{{label.name}}_label_remove" class="btn btn-danger m-1">
                                     Remove
                                 </button>
                             </div>
@@ -340,7 +392,7 @@
         </div>
     </div>
 
-    {% if current_user.has_role('owner') and data.pa %}
+    {% if current_user.has_role(context_roles.owner) and data.pa %}
     <!-- PythonAnywhere -->
     <div class="card mt-2">
         <div class="card-header lead">
@@ -391,4 +443,74 @@
     {% endif %}
     {% endif %}
 </div>
+<div class="modal fade" id="task-modal" tabindex="-1" aria-labelledby="task-modal-label" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="task-modal-label">Task</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="task-update-form" method=POST enctype=multipart/form-data action="{{url_for('perform_action')}}">
+                    <input type="hidden" name="csrf_token" value={{csrf_token()}}>
+                    <input type="hidden" name="action" id="task-modal-action" value="task_update">
+                    <table class="table">
+                        <tr>
+                            <td class="lead">Task ID</td>
+                            <td>
+                                <input type="hidden" name="task_id" id="task-modal-input-task-id" value="auto">
+                                <span id="task-modal-span-task-id">auto</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="lead">Category</td>
+                            <td>
+                                <select title="Select task category" class="lead m-1 form-control selectpicker" name="task_category" id="task-modal-select-task-category" data-live-search="true" required>
+                                    {% for task_category, task_default_information in context_tasks.default.items() %}
+                                    {% if task_category in (context_tasks.task_sentence_boundary, context_tasks.task_word_order) %}
+                                        {% set option_disabled = "disabled" %}
+                                    {% else %}
+                                        {% set option_disabled = "" %}
+                                    {% endif %}
+                                    <option value="{{task_category}}" {{option_disabled}}>{{task_default_information.title}}</option>
+                                    {% endfor %}
+                                </select>
+                                <span class="d-none" id="task-modal-span-task-category"></span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="lead">Title</td>
+                            <td>
+                                <input class="form-control" type="text" name="task_title" id="task-modal-input-task-title" placeholder="Name of the task" required>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="lead">Short</td>
+                            <td>
+                                <input class="form-control" type="text" name="task_short" id="task-modal-input-task-short" placeholder="Name of the task in short" required>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="lead">Help</td>
+                            <td>
+                                <textarea class="form-control" name="task_help" id="task-modal-textarea-task-help" rows="5" placeholder="Help message shown in the annotation area"></textarea>
+                            </td>
+                        </tr>
+                    </table>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" id="task-modal-submit" class="btn btn-primary">Submit</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    const TASK_TASKS = JSON.parse('{{context_tasks.tasks | tojson() }}');
+    const TASK_DEFAULT = JSON.parse('{{context_tasks.default | tojson() }}');
+</script>
+<script src="{{url_for('static', filename='custom/js/admin/admin.js')}}"></script>
 {% include "footer.html" %}

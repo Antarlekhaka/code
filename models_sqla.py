@@ -168,6 +168,7 @@ class RolesUsers(db.Model):
 class Task(db.Model):
     id = Column(Integer, primary_key=True)
     category = Column(Enum(*TASK_CATEGORY_LIST), nullable=False)
+    # name = Column(String(255), nullable=False, unique=True)
     title = Column(String(255), nullable=False)
     short = Column(String(255), nullable=False)
     help = Column(String(255), nullable=False)
@@ -204,6 +205,8 @@ class SubmitLog(db.Model):
 class Boundary(db.Model):
     id = Column(Integer, primary_key=True)
     # ----------------------------------------------------------------------- #
+    task_id = Column(Integer, ForeignKey('task.id', ondelete='CASCADE'),
+                     nullable=False, index=True)
     verse_id = Column(Integer, ForeignKey('verse.id', ondelete='CASCADE'),
                       nullable=False, index=True)
     token_id = Column(Integer, ForeignKey('token.id'), nullable=False)
@@ -211,6 +214,12 @@ class Boundary(db.Model):
     annotator_id = Column(Integer, ForeignKey('user.id'), nullable=False)
     updated_at = Column(DateTime, default=dt.utcnow, onupdate=dt.utcnow)
 
+    task = relationship(
+        'Task',
+        backref=backref(
+            'boundaries', cascade='all,delete-orphan', lazy='dynamic'
+        )
+    )
     verse = relationship(
         'Verse',
         backref=backref(
@@ -232,6 +241,8 @@ class Boundary(db.Model):
 class WordOrder(db.Model):
     id = Column(Integer, primary_key=True)
     # ----------------------------------------------------------------------- #
+    task_id = Column(Integer, ForeignKey('task.id', ondelete='CASCADE'),
+                     nullable=False, index=True)
     boundary_id = Column(
         Integer, ForeignKey('boundary.id', ondelete='CASCADE'), nullable=False
     )
@@ -241,6 +252,12 @@ class WordOrder(db.Model):
     annotator_id = Column(Integer, ForeignKey('user.id'), nullable=False)
     updated_at = Column(DateTime, default=dt.utcnow, onupdate=dt.utcnow)
 
+    task = relationship(
+        'Task',
+        backref=backref(
+            'word_order', cascade='all,delete-orphan', lazy='dynamic'
+        )
+    )
     boundary = relationship(
         'Boundary',
         backref=backref(
@@ -263,6 +280,8 @@ class WordOrder(db.Model):
 class TokenTextAnnotation(db.Model):
     id = Column(Integer, primary_key=True)
     # ----------------------------------------------------------------------- #
+    task_id = Column(Integer, ForeignKey('task.id', ondelete='CASCADE'),
+                     nullable=False, index=True)
     boundary_id = Column(
         Integer, ForeignKey('boundary.id', ondelete='CASCADE'), nullable=False
     )
@@ -273,6 +292,12 @@ class TokenTextAnnotation(db.Model):
     is_deleted = Column(Boolean, default=False, nullable=False)
     updated_at = Column(DateTime, default=dt.utcnow, onupdate=dt.utcnow)
 
+    task = relationship(
+        'Task',
+        backref=backref(
+            'annotations', cascade='all,delete-orphan', lazy='dynamic'
+        )
+    )
     boundary = relationship(
         'Boundary',
         backref=backref(
@@ -286,14 +311,16 @@ class TokenTextAnnotation(db.Model):
         'User', backref=backref('annotations', lazy='dynamic')
     )
     __table_args__ = (
-         Index('token_text_annotation_token_id_annotator_id',
-               'token_id', 'annotator_id', unique=True),
+         Index('token_text_annotation_task_id_annotator_id_token_id',
+               'task_id', 'annotator_id', 'token_id', unique=True),
     )
 
 
 class TokenClassification(db.Model):
     id = Column(Integer, primary_key=True)
     # ----------------------------------------------------------------------- #
+    task_id = Column(Integer, ForeignKey('task.id', ondelete='CASCADE'),
+                     nullable=False, index=True)
     boundary_id = Column(
         Integer, ForeignKey('boundary.id', ondelete='CASCADE'), nullable=False
     )
@@ -304,6 +331,10 @@ class TokenClassification(db.Model):
     is_deleted = Column(Boolean, default=False, nullable=False)
     updated_at = Column(DateTime, default=dt.utcnow, onupdate=dt.utcnow)
 
+    task = relationship(
+        'Task',
+        backref=backref('tokclf', cascade='all,delete-orphan', lazy='dynamic')
+    )
     boundary = relationship(
         'Boundary',
         backref=backref('tokclf', cascade='all,delete-orphan', lazy='dynamic')
@@ -317,14 +348,16 @@ class TokenClassification(db.Model):
         'User', backref=backref('tokclf', lazy='dynamic')
     )
     __table_args__ = (
-         Index('token_classification_token_id_annotator_id',
-               'token_id', 'annotator_id', unique=True),
+         Index('token_classification_task_id_annotator_id_token_id',
+               'task_id', 'annotator_id', 'token_id', unique=True),
     )
 
 
 class TokenGraph(db.Model):
     id = Column(Integer, primary_key=True)
     # ----------------------------------------------------------------------- #
+    task_id = Column(Integer, ForeignKey('task.id', ondelete='CASCADE'),
+                     nullable=False, index=True)
     boundary_id = Column(
         Integer, ForeignKey('boundary.id', ondelete='CASCADE'), nullable=False
     )
@@ -338,6 +371,12 @@ class TokenGraph(db.Model):
     is_deleted = Column(Boolean, default=False, nullable=False)
     updated_at = Column(DateTime, default=dt.utcnow, onupdate=dt.utcnow)
 
+    task = relationship(
+        'Task',
+        backref=backref(
+            'token_graphs', cascade='all,delete-orphan', lazy='dynamic'
+        )
+    )
     src_token = relationship('Token', foreign_keys=[src_id])
     dst_token = relationship('Token', foreign_keys=[dst_id])
     label = relationship(
@@ -354,8 +393,8 @@ class TokenGraph(db.Model):
     )
 
     __table_args__ = (
-         Index('token_graph_annotator_id_src_id_dst_id',
-               'annotator_id', 'src_id', 'dst_id', unique=True),
+         Index('token_graph_task_id_annotator_id_src_id_dst_id',
+               'task_id', 'annotator_id', 'src_id', 'dst_id', unique=True),
     )
     # the above will not allow multiple edges between same two token ids
     # if that is to be allowed, we would need something like the below
@@ -370,6 +409,8 @@ class TokenGraph(db.Model):
 class TokenConnection(db.Model):
     id = Column(Integer, primary_key=True)
     # ----------------------------------------------------------------------- #
+    task_id = Column(Integer, ForeignKey('task.id', ondelete='CASCADE'),
+                     nullable=False, index=True)
     boundary_id = Column(
         Integer, ForeignKey('boundary.id', ondelete='CASCADE'), nullable=False
     )
@@ -380,6 +421,12 @@ class TokenConnection(db.Model):
     is_deleted = Column(Boolean, default=False, nullable=False)
     updated_at = Column(DateTime, default=dt.utcnow, onupdate=dt.utcnow)
 
+    task = relationship(
+        'Task',
+        backref=backref(
+            'token_connections', cascade='all,delete-orphan', lazy='dynamic'
+        )
+    )
     src_token = relationship('Token', foreign_keys=[src_id])
     dst_token = relationship('Token', foreign_keys=[dst_id])
     boundary = relationship(
@@ -393,14 +440,16 @@ class TokenConnection(db.Model):
     )
 
     __table_args__ = (
-         Index('token_connection_annotator_id_src_id_dst_id',
-               'annotator_id', 'src_id', 'dst_id', unique=True),
+         Index('token_connection_task_id_annotator_id_src_id_dst_id',
+               'task_id', 'annotator_id', 'src_id', 'dst_id', unique=True),
     )
 
 
 class SentenceClassification(db.Model):
     id = Column(Integer, primary_key=True)
     # ----------------------------------------------------------------------- #
+    task_id = Column(Integer, ForeignKey('task.id', ondelete='CASCADE'),
+                     nullable=False, index=True)
     boundary_id = Column(
         Integer, ForeignKey('boundary.id', ondelete='CASCADE'), nullable=False
     )
@@ -410,6 +459,10 @@ class SentenceClassification(db.Model):
     is_deleted = Column(Boolean, default=False, nullable=False)
     updated_at = Column(DateTime, default=dt.utcnow, onupdate=dt.utcnow)
 
+    task = relationship(
+        'Task',
+        backref=backref('sentclf', cascade='all,delete-orphan', lazy='dynamic')
+    )
     label = relationship(
         'SentenceLabel', backref=backref('sentclf', lazy='dynamic')
     )
@@ -422,14 +475,16 @@ class SentenceClassification(db.Model):
     )
 
     __table_args__ = (
-         Index('sentence_classification_annotator_id_boundary_id',
-               'annotator_id', 'boundary_id', unique=True),
+         Index('sentence_classification_task_id_annotator_id_boundary_id',
+               'task_id', 'annotator_id', 'boundary_id', unique=True),
     )
 
 
 class SentenceGraph(db.Model):
     id = Column(Integer, primary_key=True)
     # ----------------------------------------------------------------------- #
+    task_id = Column(Integer, ForeignKey('task.id', ondelete='CASCADE'),
+                     nullable=False, index=True)
     src_boundary_id = Column(
         Integer, ForeignKey('boundary.id', ondelete='CASCADE'), nullable=False
     )
@@ -451,6 +506,12 @@ class SentenceGraph(db.Model):
     is_deleted = Column(Boolean, default=False, nullable=False)
     updated_at = Column(DateTime, default=dt.utcnow, onupdate=dt.utcnow)
 
+    task = relationship(
+        'Task',
+        backref=backref(
+            'sentence_graphs', cascade='all,delete-orphan', lazy='dynamic'
+        )
+    )
     label = relationship(
         'SentenceRelationLabel',
         backref=backref('sentence_graphs', lazy='dynamic')
@@ -475,9 +536,10 @@ class SentenceGraph(db.Model):
 
     __table_args__ = (
          Index(
-            ('sentence_graph_annotator_id_src_boundary_id_dst_boundary_id_'
+            ('sentence_graph_task_id_annotator_id_'
+             'src_boundary_id_dst_boundary_id_'
              'src_token_id_dst_token_id_relation_type'),
-            'annotator_id',
+            'task_id', 'annotator_id',
             'src_boundary_id', 'dst_boundary_id',
             'src_token_id', 'dst_token_id', 'relation_type',
             unique=True),
@@ -490,30 +552,62 @@ class SentenceGraph(db.Model):
 
 class TokenLabel(db.Model):
     id = Column(Integer, primary_key=True)
+    task_id = Column(Integer, ForeignKey('task.id'), nullable=False)
     label = Column(String(255), nullable=False)
     description = Column(String(255))
     is_deleted = Column(Boolean, default=False, nullable=False)
+    task = relationship(
+        'Task',
+        backref=backref(
+            'token_labels',
+            cascade='all,delete-orphan', lazy='dynamic'
+        )
+    )
 
 
 class TokenRelationLabel(db.Model):
     id = Column(Integer, primary_key=True)
+    task_id = Column(Integer, ForeignKey('task.id'), nullable=False)
     label = Column(String(255), nullable=False)
     description = Column(String(255))
     is_deleted = Column(Boolean, default=False, nullable=False)
+    task = relationship(
+        'Task',
+        backref=backref(
+            'token_relation_labels',
+            cascade='all,delete-orphan', lazy='dynamic'
+        )
+    )
 
 
 class SentenceLabel(db.Model):
     id = Column(Integer, primary_key=True)
+    task_id = Column(Integer, ForeignKey('task.id'), nullable=False)
     label = Column(String(255), nullable=False)
     description = Column(String(255))
     is_deleted = Column(Boolean, default=False, nullable=False)
+    task = relationship(
+        'Task',
+        backref=backref(
+            'sentence_labels',
+            cascade='all,delete-orphan', lazy='dynamic'
+        )
+    )
 
 
 class SentenceRelationLabel(db.Model):
     id = Column(Integer, primary_key=True)
+    task_id = Column(Integer, ForeignKey('task.id'), nullable=False)
     label = Column(String(255), nullable=False)
     description = Column(String(255))
     is_deleted = Column(Boolean, default=False, nullable=False)
+    task = relationship(
+        'Task',
+        backref=backref(
+            'sentence_relation_labels',
+            cascade='all,delete-orphan', lazy='dynamic'
+        )
+    )
 
 
 ###############################################################################

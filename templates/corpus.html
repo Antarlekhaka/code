@@ -167,6 +167,7 @@
 </div>
 <!-- Show Graph Modal -- END -->
 
+<script src="{{url_for('static', filename='plugins/js/vis-network.min.js')}}"></script>
 <script>
     // constants used in individual tasks
     const API_URL = "{{url_for('api')}}";
@@ -182,6 +183,8 @@
     const TASK_SENTENCE_CLASSIFICATION = "{{context_tasks.task_sentence_classification}}";
     const TASK_SENTENCE_GRAPH = "{{context_tasks.task_sentence_graph}}";
 
+    const TASK_ACTIVE_TASK_COUNT = "{{context_tasks.active_tasks | length}}";
+
     // CAUTION:
     // JSON generated from tojson() filter would have double quotes ("),
     // so must use single quotes (') in JSON.parse()
@@ -189,6 +192,14 @@
     const TASK_ACTIVE_TASKS = JSON.parse('{{context_tasks.active_tasks | tojson() }}');
     const TASK_UPDATE_ACTIONS = JSON.parse('{{context_tasks.update_actions | tojson() }}');
     const TASK_NEXT = JSON.parse('{{context_tasks.next_task | tojson() }}');
+
+    // Graph Related
+    // Reference: https://visjs.github.io/vis-network/docs/network/
+    var NETWORK;
+
+    // used in Token Graph Task
+    const VARIABLE_PREFIX = "{{config.var_prefix}}";
+    const VARIABLE_SUFFIX = "{{config.var_suffix}}";
 </script>
 <script src="{{url_for('static', filename='custom/js/corpus/elements.js')}}"></script>
 <script src="{{url_for('static', filename='custom/js/corpus/functions.js')}}"></script>

@@ -1,14 +1,14 @@
 {% extends "task_base.html" %}
 
 {% block body %}
-<div id="token-graph-input">
-    <form id="token-graph-form">
-        <div id="token-graph-input-container"></div>
+<div id="token-graph-input-{{task.id}}">
+    <form id="token-graph-form-{{task.id}}">
+        <div id="token-graph-input-container-{{task.id}}"></div>
     </form>
 </div>
 <!-- Sample Elements (Hidden) -->
-<div id="sample-token-graph-input-container" hidden="true">
-    <div id="sample-token-graph-input" class="card border-secondary mb-1">
+<div id="sample-token-graph-input-container-{{task.id}}" hidden="true">
+    <div id="sample-token-graph-input-{{task.id}}" class="card border-secondary mb-1">
         <div class="card-header lead bg-white border-bottom-0">
             <div class="row">
                 <span class="col-sm boundary-token-graph-header"></span>
@@ -24,25 +24,15 @@
         </div>
         <div class="card-body token-graph-input"></div>
     </div>
-    <select id="sample-source-entity" title="Action {}" class="form-control" data-width="false" data-live-search="true" required></select>
-    <select id="sample-relation-label" title="Relation Label {}" class="form-control" data-width="false" data-live-search="true" required>
-        {% for _id, _label, _description in context_labels.token_relation_labels %}
+    <select id="sample-token-graph-source-entity-{{task.id}}" title="Source {}" class="form-control" data-width="false" data-live-search="true" required></select>
+    <select id="sample-token-graph-relation-label-{{task.id}}" title="Relation Label {}" class="form-control" data-width="false" data-live-search="true" required>
+        {% for _id, _task_id, _label, _description in context_labels.token_relation_labels %}
+        {% if _task_id == task.id %}
         <option value="{{_id}}" data-subtext="{{_description}}" data-content='<span class="btn-sm">{{_description}}</span>'></option>
+        {% endif %}
         {% endfor %}
     </select>
-    <select id="sample-target-entity" title="Entity {}" class="form-control" data-width="false" data-live-search="true" required></select>
+    <select id="sample-token-graph-target-entity-{{task.id}}" title="Target {}" class="form-control" data-width="false" data-live-search="true" required></select>
 </div>
-<script>
-    const VARIABLE_PREFIX = "{{config.var_prefix}}";
-    const VARIABLE_SUFFIX = "{{config.var_suffix}}";
-</script>
-
-<script src="{{url_for('static', filename='plugins/js/vis-network.min.js')}}"></script>
-<script>
-    // Graph Related
-    // Reference: https://visjs.github.io/vis-network/docs/network/
-
-    var NETWORK;
-</script>
 
 {% endblock %}

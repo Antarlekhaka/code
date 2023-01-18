@@ -4,7 +4,7 @@
     <button id="download_{{task.id}}_{{chapter_id}}" data-chapter="{{chapter_id}}" data-task-id="{{task.id}}" data-task-category="{{task.category}}" data-target="pre_{{task.id}}_{{chapter_id}}" class="btn btn-secondary float-right task-download">
         <i class="fa fa-download"></i>
     </button>
-    <pre id="pre_{{task.id}}_{{chapter_id}}" class="pre-scrollable p-3 text-info">{{chapter_result[task.category]}}</pre>
+    <pre id="pre_{{task.id}}_{{chapter_id}}" class="pre-scrollable p-3 text-info">{{chapter_result[task.category][task.id]}}</pre>
 </div>
 <hr>
 

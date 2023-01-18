@@ -12,6 +12,17 @@ from collections import defaultdict
 
 import networkx as nx
 
+from constants import (
+    TASK_SENTENCE_BOUNDARY,
+    TASK_WORD_ORDER,
+    TASK_TOKEN_TEXT_ANNOTATION,
+    TASK_TOKEN_CLASSIFICATION,
+    TASK_TOKEN_GRAPH,
+    TASK_TOKEN_CONNECTION,
+    TASK_SENTENCE_CLASSIFICATION,
+    TASK_SENTENCE_GRAPH
+)
+
 ###############################################################################
 
 
@@ -39,21 +50,22 @@ def get_token_text(token: dict, key_preference: List[str]):
 
 
 def simple_format(data):
-    token_graph_node_ids = {}
-    sentence_graph_node_ids = {}
     simple_data = {}
 
     for chpater_id, chapter_data in data["chapter"].items():
 
         for annotation_id, annotation_data in data["annotation"].items():
 
-            task_data = defaultdict(dict)
+            task_data = defaultdict(lambda: defaultdict(dict))
 
             # --------------------------------------------------------------- #
+            # NOTE: Assumption is that there's only one SentenceBoundary task
+            # TODO: Obtain Task ID of SentenceBoundary Task
+            task_id = 1
 
             boundary_tokens = [
                 boundary["token_id"]
-                for boundary in annotation_data["sentence_boundary"].values()
+                for boundary in annotation_data[TASK_SENTENCE_BOUNDARY].values()
             ]
             next_boundary = boundary_tokens[0] if boundary_tokens else None
 
@@ -81,19 +93,22 @@ def simple_format(data):
                 display_text[-1].extend(["//", str(verse_id)])
                 display_text.append([])
 
-            task_data["sentence_boundary"] = "\n".join(
+            task_data[TASK_SENTENCE_BOUNDARY][task_id] = "\n".join(
                 " ".join(line_text)
                 for line_text in display_text
             )
 
             # --------------------------------------------------------------- #
+            # NOTE: Assumption is that there's only one WordOrder task
+            # TODO: Obtain Task ID of WordOrder Task
+            task_id = 2
 
             preference = ["misc.Unsandhied", "form", "lemma"]
 
-            sentences = {}
+            SENTENCES = {}
             display_text = [
-                ["", "Verse", "Word Order"],
-                ["", "-----", "----------"]
+                ["#", "Verse", "Word Order"],
+                ["-", "-----", "----------"]
             ]
 
             sent_idx = 0
@@ -101,7 +116,7 @@ def simple_format(data):
             current_verse_id = None
             sentence_tokens = []
 
-            for word_order in annotation_data["word_order"]:
+            for word_order in annotation_data[TASK_WORD_ORDER]:
                 if current_boundary_id is None:
                     current_boundary_id = word_order["boundary_id"]
                     current_verse_id = word_order["verse_id"]
@@ -109,7 +124,7 @@ def simple_format(data):
                 if current_boundary_id != word_order["boundary_id"]:
                     sent_idx += 1
                     sentence_text = " ".join(sentence_tokens)
-                    sentences[current_boundary_id] = sentence_text
+                    SENTENCES[current_boundary_id] = sentence_text
                     display_text.append(
                         [str(sent_idx), str(current_verse_id), sentence_text]
                     )
@@ -125,12 +140,12 @@ def simple_format(data):
             else:
                 sent_idx += 1
                 sentence_text = " ".join(sentence_tokens)
-                sentences[current_boundary_id] = sentence_text
+                SENTENCES[current_boundary_id] = sentence_text
                 display_text.append(
                     [str(sent_idx), str(current_verse_id), sentence_text]
                 )
 
-            task_data["word_order"] = "\n".join(
+            task_data[TASK_WORD_ORDER][task_id] = "\n".join(
                 "\t".join(sentence_row)
                 for sentence_row in display_text
             )
@@ -138,91 +153,108 @@ def simple_format(data):
             # --------------------------------------------------------------- #
 
             preference = ["lemma", "misc.Unsandhied", "form"]
-
-            display_text = [
+            display_text_header = [
                 ["Verse", "Token", "Annotation"],
                 ["-----", "-----", "----------"]
             ]
+            display_text = defaultdict(list)
 
-            for text_annotation in annotation_data["token_text_annotation"]:
+            for text_annotation in annotation_data[TASK_TOKEN_TEXT_ANNOTATION]:
+                task_id = text_annotation["task_id"]
+                if task_id not in display_text:
+                    display_text[task_id].extend(display_text_header)
+
                 text_annotation_token_id = text_annotation["token_id"]
                 text_annotation_token = chapter_data["tokens"][text_annotation_token_id]
                 token_text = get_token_text(text_annotation_token, preference)
 
-                display_text.append([
+                display_text[task_id].append([
                     str(text_annotation["verse_id"]),
                     token_text,
                     text_annotation["text"]
                 ])
 
-            task_data["token_text_annotation"] = "\n".join(
-                "\t".join(text_annotation_row)
-                for text_annotation_row in display_text
-            )
+            for task_id in display_text:
+                task_data[TASK_TOKEN_TEXT_ANNOTATION][task_id] = "\n".join(
+                    "\t".join(text_annotation_row)
+                    for text_annotation_row in display_text[task_id]
+                )
 
             # --------------------------------------------------------------- #
 
             preference = ["lemma", "misc.Unsandhied", "form"]
 
-            display_text = [
+            display_text_header = [
                 ["Verse", "Token", "Label", "Description"],
                 ["-----", "-----", "-----", "-----------"]
             ]
+            display_text = defaultdict(list)
 
-            for tokclf in annotation_data["token_classification"]:
+            for tokclf in annotation_data[TASK_TOKEN_CLASSIFICATION]:
+                task_id = tokclf["task_id"]
+                if task_id not in display_text:
+                    display_text[task_id].extend(display_text_header)
+
                 tokclf_token_id = tokclf["token_id"]
                 tokclf_token = chapter_data["tokens"][tokclf_token_id]
                 token_text = get_token_text(tokclf_token, preference)
 
-                display_text.append([
+                display_text[task_id].append([
                     str(tokclf["verse_id"]),
                     token_text,
                     tokclf["label_label"],
                     tokclf["label_description"]
                 ])
 
-            task_data["token_classification"] = "\n".join(
-                "\t".join(tokclf_row)
-                for tokclf_row in display_text
-            )
+            for task_id in display_text:
+                task_data[TASK_TOKEN_CLASSIFICATION][task_id] = "\n".join(
+                    "\t".join(tokclf_row)
+                    for tokclf_row in display_text[task_id]
+                )
 
             # --------------------------------------------------------------- #
 
             preference = ["lemma", "misc.Unsandhied", "form"]
 
-            token_graph_data = {
-                "nodes": [],
-                "edges": []
-            }
+            token_graph_data = {}
+            token_graph_node_ids = {}
 
-            for relation in annotation_data["token_graph"]:
+            for tokrel in annotation_data[TASK_TOKEN_GRAPH]:
+                task_id = tokrel["task_id"]
+                if task_id not in token_graph_data:
+                    token_graph_data[task_id] = {
+                        "nodes": [],
+                        "edges": []
+                    }
+                    token_graph_node_ids[task_id] = {}
+
                 from_id = None
                 to_id = None
 
-                for token_id in [relation["src_id"], relation["dst_id"]]:
+                for token_id in [tokrel["src_id"], tokrel["dst_id"]]:
                     token = chapter_data["tokens"][token_id]
                     token_text = get_token_text(token, preference)
 
-                    if token_text not in token_graph_node_ids:
-                        token_graph_node_ids[token_text] = get_unique_id()
+                    if token_text not in token_graph_node_ids[task_id]:
+                        token_graph_node_ids[task_id][token_text] = get_unique_id()
 
-                        token_graph_data["nodes"].append({
-                            "id": token_graph_node_ids[token_text],
+                        token_graph_data[task_id]["nodes"].append({
+                            "id": token_graph_node_ids[task_id][token_text],
                             "label": token_text,
                             "value": 3,
                             "group": None
                         })
 
-                    if token_id == relation["src_id"]:
-                        from_id = token_graph_node_ids[token_text]
-                    if token_id == relation["dst_id"]:
-                        to_id = token_graph_node_ids[token_text]
+                    if token_id == tokrel["src_id"]:
+                        from_id = token_graph_node_ids[task_id][token_text]
+                    if token_id == tokrel["dst_id"]:
+                        to_id = token_graph_node_ids[task_id][token_text]
 
-                token_graph_data["edges"].append({
+                token_graph_data[task_id]["edges"].append({
                     "from": from_id,
                     "to": to_id,
-                    "label": relation["label_description"],
-                    "title": relation["label_label"],
+                    "label": tokrel["label_description"],
+                    "title": tokrel["label_label"],
                     "arrows": {
                         "to": {
                             "enabled": True
@@ -231,126 +263,146 @@ def simple_format(data):
                     "value": 3,
                 })
 
-            task_data["token_graph"] = token_graph_data
+            task_data[TASK_TOKEN_GRAPH] = token_graph_data
 
             # --------------------------------------------------------------- #
 
             preference = ["misc.Unsandhied", "form", "lemma"]
 
-            token_connection_graph = nx.DiGraph()
-            token_connection_graph.add_edges_from([
-                (tokcon["src_id"], tokcon["dst_id"])
-                for tokcon in annotation_data["token_connection"]
-            ])
+            token_connection_graph = {}
+            for tokcon in annotation_data[TASK_TOKEN_CONNECTION]:
+                task_id = tokcon["task_id"]
+                if task_id not in token_connection_graph:
+                    token_connection_graph[task_id] = nx.DiGraph()
 
-            display_text = []
+                token_connection_graph[task_id].add_edge(
+                    tokcon["src_id"], tokcon["dst_id"]
+                )
 
-            clusters = nx.weakly_connected_components(token_connection_graph)
-            for cluster_idx, cluster in enumerate(clusters):
-                cluster_text = []
-                for token_id in cluster:
-                    token = chapter_data["tokens"][token_id]
-                    token_text = get_token_text(token, preference)
-                    cluster_text.append(
-                        "/".join([
-                            token_text,
-                            f"verse-{token['verse_id']}",
-                            f"line-{token['line_id']}",
-                            f"token-{token['inner_id']}"
-                        ])
-                    )
+            display_text = defaultdict(list)
 
-                display_text.append(cluster_text)
+            for task_id in token_connection_graph:
+                clusters = nx.weakly_connected_components(
+                    token_connection_graph[task_id]
+                )
+                for cluster_idx, cluster in enumerate(clusters):
+                    cluster_text = []
+                    for token_id in cluster:
+                        token = chapter_data["tokens"][token_id]
+                        token_text = get_token_text(token, preference)
+                        cluster_text.append(
+                            "/".join([
+                                token_text,
+                                f"verse-{token['verse_id']}",
+                                f"line-{token['line_id']}",
+                                f"token-{token['inner_id']}"
+                            ])
+                        )
 
-            task_data["token_connection"] = "\n".join(
-                ", ".join(cluster_text)
-                for cluster_text in display_text
-            )
+                    display_text[task_id].append(cluster_text)
+
+                task_data[TASK_TOKEN_CONNECTION][task_id] = "\n".join(
+                    ", ".join(cluster_text)
+                    for cluster_text in display_text[task_id]
+                )
 
             # --------------------------------------------------------------- #
 
-            display_text = [
-                ["", "Verse", "Sentence", "Label", "Description"],
-                ["", "-----", "--------", "-----", "-----------"]
+            display_text_header = [
+                ["#", "Verse", "Sentence", "Label", "Description"],
+                ["-", "-----", "--------", "-----", "-----------"]
             ]
+            display_text = defaultdict(list)
+            snclf_idx = {}
 
-            for snclf_idx, snclf in enumerate(
-                annotation_data["sentence_classification"], 1
-            ):
-                display_text.append([
-                    str(snclf_idx),
+            for snclf in annotation_data[TASK_SENTENCE_CLASSIFICATION]:
+                task_id = snclf["task_id"]
+                if task_id not in display_text:
+                    display_text[task_id].extend(display_text_header)
+                    snclf_idx[task_id] = 0
+
+                snclf_idx[task_id] += 1
+                display_text[task_id].append([
+                    str(snclf_idx[task_id]),
                     str(snclf["verse_id"]),
-                    sentences[snclf["boundary_id"]],
+                    SENTENCES[snclf["boundary_id"]],
                     snclf["label_label"],
                     snclf["label_description"]
                 ])
 
-            task_data["sentence_classification"] = "\n".join(
-                "\t".join(sentence_row)
-                for sentence_row in display_text
-            )
+            for task_id in display_text:
+                task_data[TASK_SENTENCE_CLASSIFICATION][task_id] = "\n".join(
+                    "\t".join(sentence_row)
+                    for sentence_row in display_text[task_id]
+                )
 
             # --------------------------------------------------------------- #
 
             preference = ["lemma", "misc.Unsandhied", "form"]
 
-            sentence_graph_data = {
-                "nodes": [],
-                "edges": []
-            }
+            sentence_graph_data = {}
+            sentence_graph_node_ids = {}
 
-            for relation in annotation_data["sentence_graph"]:
+            for sentrel in annotation_data[TASK_SENTENCE_GRAPH]:
+                task_id = sentrel["task_id"]
+                if task_id not in sentence_graph_data:
+                    sentence_graph_data[task_id] = {
+                        "nodes": [],
+                        "edges": []
+                    }
+                    sentence_graph_node_ids[task_id] = {}
+
                 from_id = None
                 to_id = None
 
-                src_token = chapter_data["tokens"][relation["src_token_id"]]
-                dst_token = chapter_data["tokens"][relation["dst_token_id"]]
-                relation_type = relation["relation_type"]
+                src_token = chapter_data["tokens"][sentrel["src_token_id"]]
+                dst_token = chapter_data["tokens"][sentrel["dst_token_id"]]
+                relation_type = sentrel["relation_type"]
 
-                src_title = sentences[relation["src_boundary_id"]]
-                dst_title = sentences[relation["dst_boundary_id"]]
+                src_title = SENTENCES[sentrel["src_boundary_id"]]
+                dst_title = SENTENCES[sentrel["dst_boundary_id"]]
 
                 if relation_type in [2, 3]:
-                    src_token_text = f"S-{relation['src_boundary_id']}"
+                    src_token_text = f"S-{sentrel['src_boundary_id']}"
                     src_group = 1
                 else:
                     src_token_text = get_token_text(src_token, preference)
                     src_group = 0
 
                 if relation_type in [1, 3]:
-                    dst_token_text = f"S-{relation['dst_boundary_id']}"
+                    dst_token_text = f"S-{sentrel['dst_boundary_id']}"
                     dst_group = 1
                 else:
                     dst_token_text = get_token_text(dst_token, preference)
                     dst_group = 0
 
-                if src_token_text not in sentence_graph_node_ids:
-                    sentence_graph_node_ids[src_token_text] = get_unique_id()
+                if src_token_text not in sentence_graph_node_ids[task_id]:
+                    sentence_graph_node_ids[task_id][src_token_text] = get_unique_id()
 
-                    sentence_graph_data["nodes"].append({
-                        "id": sentence_graph_node_ids[src_token_text],
+                    sentence_graph_data[task_id]["nodes"].append({
+                        "id": sentence_graph_node_ids[task_id][src_token_text],
                         "label": src_token_text,
                         "title": src_title,
                         "value": 3,
                         "group": src_group
                     })
 
-                if dst_token_text not in sentence_graph_node_ids:
-                    sentence_graph_node_ids[dst_token_text] = get_unique_id()
+                if dst_token_text not in sentence_graph_node_ids[task_id]:
+                    sentence_graph_node_ids[task_id][dst_token_text] = get_unique_id()
 
-                    sentence_graph_data["nodes"].append({
-                        "id": sentence_graph_node_ids[dst_token_text],
+                    sentence_graph_data[task_id]["nodes"].append({
+                        "id": sentence_graph_node_ids[task_id][dst_token_text],
                         "label": dst_token_text,
                         "title": dst_title,
                         "value": 3,
                         "group": dst_group
                     })
 
-                sentence_graph_data["edges"].append({
-                    "from": sentence_graph_node_ids[src_token_text],
-                    "to": sentence_graph_node_ids[dst_token_text],
-                    "label": relation["label_label"],
-                    "title": relation["label_description"],
+                sentence_graph_data[task_id]["edges"].append({
+                    "from": sentence_graph_node_ids[task_id][src_token_text],
+                    "to": sentence_graph_node_ids[task_id][dst_token_text],
+                    "label": sentrel["label_label"],
+                    "title": sentrel["label_description"],
                     "arrows": {
                         "to": {
                             "enabled": True
@@ -359,8 +411,7 @@ def simple_format(data):
                     "value": 3,
                 })
 
-            print(sentence_graph_data)
-            task_data["sentence_graph"] = sentence_graph_data
+            task_data[TASK_SENTENCE_GRAPH] = sentence_graph_data
 
             # --------------------------------------------------------------- #
 

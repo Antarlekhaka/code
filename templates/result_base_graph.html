@@ -1,0 +1,18 @@
+{% block body %}
+<script>
+    GRAPH_DATA["{{task.id}}"] = {};
+    GRAPH_NETWORK["{{task.id}}"] = {};
+</script>
+{% for chapter_id, chapter_result in data.result.items() %}
+<!-- Load Graph Data -->
+<script>
+    GRAPH_DATA["{{task.id}}"]["{{chapter_id}}"] =  JSON.parse('{{chapter_result[task.category][task.id] | tojson }}');
+</script>
+<button id="graph-snapshot-button-{{task.id}}-{{chapter_id}}" title="Snapshot" data-task-id="{{task.id}}" data-task-category="{{task.category}}" data-chapter="{{chapter_id}}" class="btn btn-primary mr-auto float-right graph-snapshot">
+    <i class="fa fa-camera"></i>
+</button>
+<div class="border rounded px-2 py-1" id="graph-{{task.id}}-{{chapter_id}}" style="height: 55vh;">
+    No edges found.
+</div>
+{% endfor %}
+{% endblock %}

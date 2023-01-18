@@ -1,12 +1,12 @@
 {% extends "task_base.html" %}
 {% block extra_header %}
-<button id="show-graph-sentence-graph" type="button" title="Show Graph" class="btn btn-sm btn-info ml-1 float-right show-graph-modal-button" data-task-id="{{task.id}}" data-task-category="{{task.category}}" data-toggle="modal" data-target="#show-graph-modal" disabled>
+<button id="show-graph-sentence-graph-{{task.id}}" type="button" title="Show Graph" class="btn btn-sm btn-info ml-1 float-right show-graph-modal-button" data-task-id="{{task.id}}" data-task-category="{{task.category}}" data-toggle="modal" data-target="#show-graph-modal" disabled>
     <i class="fa-solid fa-diagram-project"></i>
 </button>
 {% endblock %}
 {% block body %}
 <!-- Context -->
-<div id="sentence-graph-context-container" class="scroll">
+<div id="sentence-graph-context-container-{{task.id}}" class="scroll">
     <br>
     <br>
     Clickable list of tokens from sentences from the last 3 verses goes here.
@@ -17,22 +17,24 @@
 </div>
 
 <!-- Intermediate -->
-<div class="mark border border-warning rounded px-1 pt-1 pb-0 m-1" id="sentence-graph-intermediate-row-container">
-    <div id="sentence-graph-row" class="row">
-        <div id="sentence-graph-source-token-container" class="col-sm"></div>
-        <div id="sentence-graph-relation-container" class="col-sm-4">
-            <select id="sentence-graph-relation-selector" title="Select Sentence Relation" class="selectpicker" data-show-subtext="true" data-width="75%" data-live-search="true" required>
-                {% for _id, _label, _description in context_labels.sentence_relation_labels %}
+<div class="mark border border-warning rounded px-1 pt-1 pb-0 m-1" id="sentence-graph-intermediate-row-container-{{task.id}}">
+    <div id="sentence-graph-row-{{task.id}}" class="row">
+        <div id="sentence-graph-source-token-container-{{task.id}}" class="col-sm"></div>
+        <div id="sentence-graph-relation-container-{{task.id}}" class="col-sm-4">
+            <select id="sentence-graph-relation-selector-{{task.id}}" title="Select Sentence Relation" class="selectpicker" data-show-subtext="true" data-width="75%" data-live-search="true" required>
+                {% for _id, _task_id, _label, _description in context_labels.sentence_relation_labels %}
+                {% if _task_id == task.id %}
                 <option value="{{_id}}" data-subtext="{{_description}}">{{_label}}</option>
+                {% endif %}
                 {% endfor %}
             </select>
         </div>
-        <div id="sentence-graph-target-token-container" class="col-sm"></div>
+        <div id="sentence-graph-target-token-container-{{task.id}}" class="col-sm"></div>
         <div class="col-sm-2">
-            <button id="sentence-graph-confirm-button" type="button" title="Confirm" class="btn btn-success float-right mx-1 mb-1" disabled>
+            <button id="sentence-graph-confirm-button-{{task.id}}" type="button" title="Confirm" class="btn btn-success float-right mx-1 mb-1" disabled>
                 <i class="fas fa-check"></i>
             </button>
-            <button id="sentence-graph-reset-button" type="button" title="Reset" class="btn btn-warning float-right mb-1">
+            <button id="sentence-graph-reset-button-{{task.id}}" type="button" title="Reset" class="btn btn-warning float-right mb-1">
                 <i class="fas fa-rotate-right"></i>
             </button>
         </div>
@@ -40,8 +42,8 @@
 </div>
 
 <!-- Annotation -->
-<form id="sentence-graph-form">
-<div class="border border-success rounded px-1 pt-1 pb-0 m-1" id="sentence-graph-annotation-container">
+<form id="sentence-graph-form-{{task.id}}">
+<div class="border border-success rounded px-1 pt-1 pb-0 m-1" id="sentence-graph-annotation-container-{{task.id}}">
     <!-- Temporary Content -->
     <!-- Content will be overwritten by JS. -->
 

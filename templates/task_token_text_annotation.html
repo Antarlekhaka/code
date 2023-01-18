@@ -1,15 +1,15 @@
 {% extends "task_base.html" %}
 {% block body %}
-<div id="token-text-annotation-container">
-    <form id="token-text-annotation-form" class="scroll-small">
-    <table id="token-text-annotation-table" class="table"></table>
+<div id="token-text-annotation-container-{{task.id}}">
+    <form id="token-text-annotation-form-{{task.id}}" class="scroll-small">
+    <table id="token-text-annotation-table-{{task.id}}" class="table"></table>
     </form>
     <hr class="border-secondary m-1">
     <div class="scroll-small">
-    <table id="token-non-annotation-table" class="table bg-light"></table>
+    <table id="token-non-annotation-table-{{task.id}}" class="table bg-light"></table>
     </div>
 </div>
 <div class="sample-input" hidden="true">
-    <input id="sample-token-text-annotation-text" type="text" class="form-control" placeholder="Annotation" required>
+    <input id="sample-token-text-annotation-text-{{task.id}}" type="text" class="form-control" placeholder="Annotation" required>
 </div>
 {% endblock %}

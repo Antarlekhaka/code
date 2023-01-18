@@ -13,25 +13,28 @@ Created on Tue Jun 07 07:24:30 2022
 from typing import Dict, List
 
 ###############################################################################
-
-WORD_ORDER_CASE_ORDER = ["Loc", "Nom", "Dat", "Abl", "Ins", "Acc"]
-WORD_ORDER_XPOS_ORDER = ["CAD", "CX", "CNG", "V"]
-
-###############################################################################
+# NOTE: token_list contains dictionary of (token_id, token_details)
+# token_details objects are dictionaries produced by parsing CoNLL-U data
+# Specific structure could be assumed for these dictionaries as per input data
 
 
-def get_sentence_boundary(text: str, boundary_marker: str) -> str:
+def get_sentence_boundary(token_list: Dict[int, Dict]) -> int:
     """Heuristic to identify sentence boundary"""
-    return f"{text} {boundary_marker}"
+    if token_list:
+        return list(token_list)[-1]
 
 
 def get_word_order(token_list: Dict[int, Dict]) -> List[int]:
-    """Heuristic to get Canonical Word Order"""
+    """Heuristic to get word order"""
+
+    CASE_ORDER = ["Loc", "Nom", "Dat", "Abl", "Ins", "Acc"]
+    XPOS_ORDER = ["CAD", "CX", "CNG", "V"]
+
     case_order = []
     xpos_order = []
     used = set()
     unused = set(token_list)
-    for case in WORD_ORDER_CASE_ORDER:
+    for case in CASE_ORDER:
         for token_id, token in token_list.items():
             if not isinstance(token["analysis"], dict):
                 continue
@@ -41,7 +44,7 @@ def get_word_order(token_list: Dict[int, Dict]) -> List[int]:
                 unused.remove(token_id)
                 used.add(token_id)
 
-    for xpos in WORD_ORDER_XPOS_ORDER:
+    for xpos in XPOS_ORDER:
         for token_id, token in token_list.items():
             if token_id in used:
                 continue

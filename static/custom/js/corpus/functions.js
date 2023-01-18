@@ -39,16 +39,18 @@ function generic_row_detail_formatter(index, row) {
 }
 
 function column_progress_formatter(progress_value, row) {
-    // TODO: remove hard-coding 8
-    const percent = Math.round(progress_value.length / 8 * 100);
-    const title = []
+    const percent = Math.round(progress_value.length / TASK_ACTIVE_TASK_COUNT * 100);
+    const title = [
+        `Status: ${progress_value.length} of ${TASK_ACTIVE_TASK_COUNT} tasks complete.`
+    ];
+    if (progress_value.length != 0) {
+        title.push("")
+    }
+
     for (const task of progress_value) {
         const update_date = new Date(task.updated_at);
         const updated_at = update_date.toLocaleString();
         title.push(`${task.task_short} - ${updated_at}`);
-    }
-    if (title.length == 0) {
-        title.push("No progress")
     }
 
     const $progress_bar_container = $("<div />", {

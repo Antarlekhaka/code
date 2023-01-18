@@ -61,6 +61,25 @@ from flask_migrate import Migrate
 # from indic_transliteration.sanscript import transliterate
 
 from constants import (
+    ROLE_OWNER,
+    ROLE_ADMIN,
+    ROLE_CURATOR,
+    ROLE_ANNOTATOR,
+    ROLE_MEMBER,
+    ROLE_GUEST,
+    ROLE_DEFINITIONS,
+
+    PERMISSION_VIEW_ACP,
+    PERMISSION_ANNOTATE,
+    PERMISSION_VIEW_UCP,
+    PERMISSION_VIEW_CORPUS,
+
+    # Auto Annotation User
+    AUTO_ANNOTATION_USER_ID,
+    AUTO_ANNOTATION_USER_USERNAME,
+    AUTO_ANNOTATION_USER_EMAIL,
+    AUTO_ANNOTATION_USER_PASS,
+
     # Task Category Names
     TASK_SENTENCE_BOUNDARY,
     TASK_WORD_ORDER,
@@ -201,7 +220,7 @@ CONLLU_PARSER = CoNLLUParser(
 )
 
 ###############################################################################
-# Database Utlity Functions
+# Database Utility Functions
 
 
 def record_submit(verse_id: int, annotator_id: int, task_id: int):
@@ -232,9 +251,9 @@ def record_submit(verse_id: int, annotator_id: int, task_id: int):
 def init_database():
     """Initiate database and create admin user"""
     db.create_all()
-    role_definitions = sorted(app.role_definitions,
-                              key=lambda x: x['level'],
-                              reverse=True)
+    role_definitions = sorted(
+        ROLE_DEFINITIONS, key=lambda x: x['level'], reverse=True
+    )
     for role_definition in role_definitions:
         name = role_definition['name']
         description = role_definition['description']
@@ -247,13 +266,28 @@ def init_database():
             permissions=permissions
         )
 
+    # special user
+    if not user_datastore.find_user(id=AUTO_ANNOTATION_USER_ID):
+        user_datastore.create_user(
+            id=AUTO_ANNOTATION_USER_ID,
+            username=AUTO_ANNOTATION_USER_USERNAME,
+            email=AUTO_ANNOTATION_USER_EMAIL,
+            password=hash_password(AUTO_ANNOTATION_USER_PASS),
+            roles=[ROLE_ANNOTATOR, ROLE_MEMBER]
+        )
+
     if not user_datastore.find_user(username=app.admin['username']):
         user_datastore.create_user(
             username=app.admin['username'],
             email=app.admin['email'],
             password=hash_password(app.admin['password']),
-            roles=['owner', 'admin', 'curator',
-                   'annotator', 'member']
+            roles=[
+                ROLE_OWNER,
+                ROLE_ADMIN,
+                ROLE_CURATOR,
+                ROLE_ANNOTATOR,
+                ROLE_MEMBER
+            ]
         )
 
     # ----------------------------------------------------------------------- #
@@ -262,66 +296,22 @@ def init_database():
     objects = []
 
     # Task
+    required_tasks = [TASK_SENTENCE_BOUNDARY, TASK_WORD_ORDER]
     if not Task.query.first():
-        task_data_file = os.path.join(app.tables_dir, "task.json")
-        if not os.path.isfile(task_data_file):
-            task_data_file = os.path.join(
-                app.tables_dir, "samples", "task.json"
-            )
+        for task_idx, task_category in enumerate(required_tasks, start=1):
+            task_information = TASK_DEFAULT_INFORMATION[task_category]
 
-        with open(task_data_file, encoding="utf-8") as f:
-            tasks_data = json.load(f)
-
-        for idx, task in enumerate(tasks_data, start=1):
             t = Task()
-            t.id = task["id"]
-            t.category = task["category"]
-            t.title = task["title"]
-            t.short = task["short"]
-            t.help = task["help"]
-            t.order = idx
+            t.id = task_idx
+            t.category = task_category
+            t.title = task_information["title"]
+            t.short = task_information["short"]
+            t.help = task_information["help"]
+            t.order = task_idx
+            t.is_deleted = True
             objects.append(t)
 
-        webapp.logger.info(f"Loaded {idx} tasks.")
-
-    # Labels
-    # NOTE: Refer to `data/tables/README.md` for format of JSON and CSV
-    label_models = [
-        TokenLabel, TokenRelationLabel,
-        SentenceLabel, SentenceRelationLabel
-    ]
-    for label_model in label_models:
-        if not label_model.query.first():
-            table_name = label_model.__tablename__
-            table_json_file = os.path.join(
-                app.tables_dir, f"{table_name}.json"
-            )
-            table_csv_file = os.path.join(
-                app.tables_dir, f"{table_name}.csv"
-            )
-
-            table_file = None
-            if os.path.isfile(table_json_file):
-                table_file = table_json_file
-                with open(table_json_file, encoding="utf-8") as f:
-                    table_data = json.load(f)
-            elif os.path.isfile(table_csv_file):
-                table_file = table_csv_file
-                with open(table_csv_file, encoding="utf-8") as f:
-                    table_data = list(csv.DictReader(f))
-
-            if table_file is None:
-                continue
-
-            for idx, label in enumerate(table_data, start=1):
-                lm = label_model()
-                lm.label = label["label"]
-                lm.description = label["description"]
-                objects.append(lm)
-
-            webapp.logger.info(
-                f"Loaded {idx} items to {table_name} from {table_file}."
-            )
+        webapp.logger.info(f"Loaded {task_idx} tasks.")
 
     # Save
     if objects:
@@ -337,7 +327,7 @@ def init_database():
 @user_registered.connect_via(webapp)
 def assign_default_roles(sender, user, **extra):
     """Assign member role to users after successful registration"""
-    user_datastore.add_role_to_user(user, 'member')
+    user_datastore.add_role_to_user(user, ROLE_MEMBER)
     db.session.commit()
 
 
@@ -368,23 +358,36 @@ def inject_global_context():
         ])
     }
 
+    ROLES = {
+        "owner": ROLE_OWNER,
+        "admin": ROLE_ADMIN,
+        "curator": ROLE_CURATOR,
+        "annotator": ROLE_ANNOTATOR,
+        "member": ROLE_MEMBER,
+        "guest": ROLE_GUEST
+    }
+
     # NOTE: do we really need to have these in global context?
     # since they are not required on "every" page
     # move them to individual routes?
     # alternatively, can we add a check here which route is loading,
     # and export variables based on that?
-    active_tasks = {
+    all_tasks = {
         task.id: {
             "id": task.id,
             "category": task.category,
             "title": task.title,
             "short": task.short,
             "help": task.help,
-            "order": task.order
+            "order": task.order,
+            "is_deleted": task.is_deleted
         }
-        for task in Task.query.filter(
-            Task.is_deleted == False  # noqa # '== False' is required
-        ).order_by(Task.order).all()
+        for task in Task.query.order_by(Task.order).all()
+    }
+    active_tasks = {
+        task_id: task for
+        task_id, task in all_tasks.items()
+        if not task["is_deleted"]
     }
     active_task_ids = list(active_tasks)
     if active_task_ids:
@@ -400,6 +403,7 @@ def inject_global_context():
         next_task = {}
 
     TASKS = {
+        'tasks': all_tasks,
         'active_ids': active_task_ids,
         'active_tasks': active_tasks,
         'first_task': first_task,
@@ -431,57 +435,65 @@ def inject_global_context():
         'token_labels': TokenLabel.query.filter(
             TokenLabel.is_deleted == False  # noqa # '== False' is required
         ).with_entities(
-            TokenLabel.id, TokenLabel.label, TokenLabel.description
+            TokenLabel.id,
+            TokenLabel.task_id,
+            TokenLabel.label,
+            TokenLabel.description
         ).order_by(TokenLabel.label).all(),
         'token_relation_labels': TokenRelationLabel.query.filter(
             TokenRelationLabel.is_deleted == False  # noqa # '== False' is required
         ).with_entities(
             TokenRelationLabel.id,
+            TokenRelationLabel.task_id,
             TokenRelationLabel.label,
             TokenRelationLabel.description
         ).order_by(TokenRelationLabel.label).all(),
         'sentence_labels': SentenceLabel.query.filter(
             SentenceLabel.is_deleted == False  # noqa # '== False' is required
         ).with_entities(
-            SentenceLabel.id, SentenceLabel.label, SentenceLabel.description
+            SentenceLabel.id,
+            SentenceLabel.task_id,
+            SentenceLabel.label,
+            SentenceLabel.description
         ).order_by(SentenceLabel.label).all(),
         'sentence_relation_labels': SentenceRelationLabel.query.filter(
             SentenceRelationLabel.is_deleted == False  # noqa # '== False' is required
         ).with_entities(
             SentenceRelationLabel.id,
+            SentenceRelationLabel.task_id,
             SentenceRelationLabel.label,
             SentenceRelationLabel.description
         ).order_by(SentenceRelationLabel.label).all(),
-        'admin_labels': [
-            {
-                "name": "token",
-                "title": "Token",
-                "is_active": True,
-                "object_name": "token_labels"
-            },
-            {
-                "name": "token_relation",
-                "title": "Token Relation",
-                "is_active": False,
-                "object_name": "token_relation_labels"
-            },
-            {
-                "name": "sentence",
-                "title": "Sentence",
-                "is_active": False,
-                "object_name": "sentence_labels"
-            },
-            {
-                "name": "sentence_relation",
-                "title": "Sentence Relation",
-                "is_active": False,
-                "object_name": "sentence_relation_labels"
-            },
-        ]
+        'admin_labels': []
     }
+
+    for task in Task.query.all():
+        _name = None
+        if task.category == TASK_TOKEN_CLASSIFICATION:
+            _name = "token"
+            _object_name = "token_labels"
+        if task.category == TASK_TOKEN_GRAPH:
+            _name = "token_relation"
+            _object_name = "token_relation_labels"
+        if task.category == TASK_SENTENCE_CLASSIFICATION:
+            _name = "sentence"
+            _object_name = "sentence_labels"
+        if task.category == TASK_SENTENCE_GRAPH:
+            _name = "sentence_relation"
+            _object_name = "sentence_relation_labels"
+
+        if _name is not None:
+            LABELS["admin_labels"].append({
+                "task_id": task.id,
+                "name": _name,
+                "title": task.title,
+                "object_name": _object_name
+            })
+
     return {
         'title': app.title,
         'now': datetime.datetime.utcnow(),
+        'context_roles': ROLES,
         'context_tasks': TASKS,
         'context_labels': LABELS,
         'context_themes': THEMES,
@@ -494,13 +506,13 @@ def inject_global_context():
 
 @webapp.route("/admin")
 @auth_required()
-@permissions_required('view_acp')
+@permissions_required(PERMISSION_VIEW_ACP)
 def show_admin():
     data = {}
     data['title'] = 'Admin'
 
     user_level = max([role.level for role in current_user.roles])
-    annotator_role = user_datastore.find_role('annotator')
+    annotator_role = user_datastore.find_role(ROLE_ANNOTATOR)
 
     user_model = user_datastore.user_model
     role_model = user_datastore.role_model
@@ -524,21 +536,6 @@ def show_admin():
         role.name
         for role in role_query.order_by(role_model.level).all()
         if role.level < user_level
-    ]
-
-    # TODO: Task.query too many times, try to reduce that
-    # NOTE: At every template render, global_context are evaluated anyway
-    # May be move this task query in global and check every instance in JS
-    # and templates whether task.is_deleted
-    data['tasks'] = [
-        {
-            'id': task.id,
-            'category': task.category,
-            'title': task.title,
-            'order': task.order,
-            'is_deleted': task.is_deleted
-        }
-        for task in Task.query.order_by(Task.order).all()
     ]
 
     data['corpus_list'] = [
@@ -566,12 +563,12 @@ def show_admin():
 
 @webapp.route("/export", methods=["GET", "POST"])
 @auth_required()
-@permissions_required('annotate')
+@permissions_required(PERMISSION_ANNOTATE)
 def show_export():
     data = {}
     data['title'] = 'Export'
 
-    if current_user.has_role("curator"):
+    if current_user.has_role(ROLE_CURATOR):
         user_model = user_datastore.user_model
         user_query = user_model.query
         data['users'] = [
@@ -596,23 +593,10 @@ def show_export():
         }
         for corpus in Corpus.query.all()
     ]
-    data['tasks'] = [
-        {
-            "id": task.id,
-            "category": task.category,
-            "title": task.title,
-            "short": task.short,
-            "help": task.help,
-            "order": task.order
-        }
-        for task in Task.query.filter(
-            Task.is_deleted == False  # noqa # '== False' is required
-        ).order_by(Task.order).all()
-    ]
 
     if request.method == "POST":
         annotator_id = None
-        if current_user.has_role("curator"):
+        if current_user.has_role(ROLE_CURATOR):
             annotator_id = request.form.get('annotator_id', '').strip()
 
         if not annotator_id:
@@ -641,7 +625,7 @@ def show_export():
 
 @webapp.route("/settings")
 @auth_required()
-@permissions_required('view_ucp')
+@permissions_required(PERMISSION_VIEW_UCP)
 def show_settings():
     data = {}
     data['title'] = 'Settings'
@@ -651,7 +635,7 @@ def show_settings():
 @webapp.route("/corpus")
 @webapp.route("/corpus/<string:chapter_id>")
 @auth_required()
-@permissions_required('view_corpus')
+@permissions_required(PERMISSION_VIEW_CORPUS)
 def show_corpus(chapter_id=None):
     if chapter_id is None:
         flash("Please select a corpus to view.")
@@ -769,10 +753,9 @@ def api():
     annotator_actions = task_update_actions + ["add_token"]
 
     role_actions = {
-        "admin": [],
-        "annotator": annotator_actions,
-        "curator": [],
-        "querier": []
+        ROLE_ADMIN: [],
+        ROLE_ANNOTATOR: annotator_actions,
+        ROLE_CURATOR: [],
     }
     valid_actions = [
         action for actions in role_actions.values() for action in actions
@@ -839,6 +822,11 @@ def api():
         # SentenceClassification also gets deleted as (CASCADE)
         # SentenceGraph also gets deleted as (CASCADE)
 
+        # NOTE: A sentence boundary task should always be "present"
+        # (even if inactive), since very other task is tied to boundary_id
+        # NOTE: We do not check with task_id because, only single sentence
+        # boundary task is supported
+        # TODO: Perhaps remove `task_id` column from Boundary table altogether
         existing_boundary_query = Boundary.query.filter(
             Boundary.verse_id == verse_id,
             Boundary.annotator_id == annotator_id
@@ -865,6 +853,12 @@ def api():
             ).order_by(Boundary.token_id).first()
             print(next_boundary)
 
+            # NOTE: We do not check with task_id because, currently, only
+            # single word order task is supported (as there needs to be a
+            # link between this and boundary task)
+            # NOTE: If for some reason we need multiple word order tasks,
+            # all of them would require to be deleted anyway as the boundary
+            # gets changed, so we might never need to check with task_id here
             if next_boundary:
                 word_order_of_next_boundary_query = WordOrder.query.filter(
                     WordOrder.boundary_id == next_boundary.id,
@@ -877,6 +871,7 @@ def api():
             # add new boundary markers
             for boundary_token in boundary_tokens:
                 boundary = Boundary()
+                boundary.task_id = task_id
                 boundary.verse_id = verse_id
                 boundary.token_id = boundary_token
                 boundary.annotator_id = annotator_id
@@ -983,6 +978,7 @@ def api():
         objects_to_update = []
 
         existing_word_order_query = WordOrder.query.filter(
+            WordOrder.task_id == task_id,
             WordOrder.boundary_id.in_(boundary_ids),
             WordOrder.annotator_id == annotator_id
         )
@@ -991,6 +987,7 @@ def api():
         for boundary_id, token_ids in word_order_order.items():
             for order_id, token_id in enumerate(token_ids, start=1):
                 _word_order = WordOrder()
+                _word_order.task_id = task_id
                 _word_order.boundary_id = boundary_id
                 _word_order.token_id = token_id
                 _word_order.order = order_id
@@ -1040,7 +1037,7 @@ def api():
                     "text_annotation": v["text_annotation"]
                 }
                 for k, v in text_annotation_data.items()
-                if re.match(r'token-text-annotation-input-([0-9]+)$', k)
+                if re.match(r'token-text-annotation-input-[0-9]+-([0-9]+)$', k)
             }
         except Exception:
             api_response["success"] = False
@@ -1049,6 +1046,7 @@ def api():
             return jsonify(api_response)
 
         existing_text_annotations = TokenTextAnnotation.query.filter(
+            TokenTextAnnotation.task_id == task_id,
             TokenTextAnnotation.boundary.has(Boundary.verse_id == verse_id),
             TokenTextAnnotation.annotator_id == annotator_id,
         ).all()
@@ -1088,6 +1086,7 @@ def api():
 
             # submitted text_annotation doesn't exist, create
             text_annotation = TokenTextAnnotation()
+            text_annotation.task_id = task_id
             text_annotation.boundary_id = _text_annotation_data["boundary_id"]
             text_annotation.token_id = token_id
             text_annotation.text = _text_annotation_data["text_annotation"]
@@ -1140,7 +1139,7 @@ def api():
                     "label_id": int(v["label_id"])
                 }
                 for k, v in token_classification_data.items()
-                if re.match(r'token-class-selector-([0-9]+)$', k)
+                if re.match(r'token-class-selector-[0-9]+-([0-9]+)$', k)
             }
         except Exception:
             api_response["success"] = False
@@ -1149,6 +1148,7 @@ def api():
             return jsonify(api_response)
 
         existing_token_classification = TokenClassification.query.filter(
+            TokenClassification.task_id == task_id,
             TokenClassification.boundary.has(Boundary.verse_id == verse_id),
             TokenClassification.annotator_id == annotator_id,
         ).all()
@@ -1188,6 +1188,7 @@ def api():
 
             # submitted tokclf doesn't exist, create
             tokclf = TokenClassification()
+            tokclf.task_id = task_id
             tokclf.boundary_id = _tokclf_data["boundary_id"]
             tokclf.token_id = token_id
             tokclf.label_id = _tokclf_data["label_id"]
@@ -1255,6 +1256,7 @@ def api():
             return jsonify(api_response)
 
         existing_tokrels_query = TokenGraph.query.filter(
+            TokenGraph.task_id == task_id,
             TokenGraph.boundary.has(Boundary.verse_id == verse_id),
             TokenGraph.annotator_id == annotator_id,
         )
@@ -1291,6 +1293,7 @@ def api():
 
             # submitted tokrel doesn't exist, create
             tokrel = TokenGraph()
+            tokrel.task_id = task_id
             tokrel.boundary_id = _tokrel_data["boundary_id"]
             tokrel.src_id = _tokrel_data["src_id"]
             tokrel.label_id = _tokrel_data["label_id"]
@@ -1362,6 +1365,7 @@ def api():
             return jsonify(api_response)
 
         existing_tokcons_query = TokenConnection.query.filter(
+            TokenConnection.task_id == task_id,
             TokenConnection.boundary_id.in_(context_data),
             TokenConnection.annotator_id == annotator_id,
         )
@@ -1402,6 +1406,7 @@ def api():
 
             # submitted tokcon doesn't exist, create
             tokcon = TokenConnection()
+            tokcon.task_id = task_id
             tokcon.boundary_id = _tokcon_data["boundary_id"]
             tokcon.src_id = _tokcon_data["src_id"]
             tokcon.dst_id = _tokcon_data["dst_id"]
@@ -1461,6 +1466,7 @@ def api():
             return jsonify(api_response)
 
         existing_sentence_classification = SentenceClassification.query.filter(
+            SentenceClassification.task_id == task_id,
             SentenceClassification.boundary.has(Boundary.verse_id == verse_id),
             SentenceClassification.annotator_id == annotator_id,
         ).all()
@@ -1494,6 +1500,7 @@ def api():
 
             # submitted sentclf doesn't exist, create
             sentclf = SentenceClassification()
+            sentclf.task_id = task_id
             sentclf.boundary_id = _boundary_id
             sentclf.label_id = _label_id
             sentclf.annotator_id = annotator_id
@@ -1571,6 +1578,7 @@ def api():
 
         # TODO: Re-examine if the conditions are proper
         existing_sentrels_query = SentenceGraph.query.filter(
+            SentenceGraph.task_id == task_id,
             SentenceGraph.src_boundary_id.in_(context_data),
             SentenceGraph.dst_boundary_id.in_(context_data),
             SentenceGraph.annotator_id == annotator_id,
@@ -1623,6 +1631,7 @@ def api():
 
             # submitted sentrel doesn't exist, create
             sentrel = SentenceGraph()
+            sentrel.task_id = task_id
             sentrel.src_boundary_id = _sentrel_data["src_boundary_id"]
             sentrel.src_token_id = _sentrel_data["src_token_id"]
             sentrel.dst_boundary_id = _sentrel_data["dst_boundary_id"]
@@ -1703,7 +1712,7 @@ def api_verse(verse_id):
         return jsonify({})
 
     annotator_ids = []
-    if current_user.has_permission('annotate'):
+    if current_user.has_permission(PERMISSION_ANNOTATE):
         annotator_ids = [current_user.id]
 
     data = get_verse_data([verse_id], annotator_ids=annotator_ids)
@@ -1728,28 +1737,37 @@ def perform_action():
     # Admin Actions
 
     role_actions = {
-        'owner': [
+        ROLE_OWNER: [
             'application_info', 'application_update', 'application_reload'
         ],
-        'admin': [
+        ROLE_ADMIN: [
             'user_role_add', 'user_role_remove',
 
             # Task Order/Status Update
             'task_update',
+            'task_collection_update',
 
-            # Add/Remove Labels
+            # Add/Remove/Upload Labels
 
             # - Token Label
-            'token_label_add', 'token_label_remove',
+            'token_label_add',
+            'token_label_remove',
+            'token_label_upload',
 
             # - Token Graph Relation Label
-            'token_relation_label_add', 'token_relation_label_remove',
+            'token_relation_label_add',
+            'token_relation_label_remove',
+            'token_relation_label_upload',
 
             # - Sentence Label
-            'sentence_label_add', 'sentence_label_remove',
+            'sentence_label_add',
+            'sentence_label_remove',
+            'sentence_label_upload',
 
             # - Sentence Graph Relation Label
-            'sentence_relation_label_add', 'sentence_relation_label_remove',
+            'sentence_relation_label_add',
+            'sentence_relation_label_remove',
+            'sentence_relation_label_upload',
 
             # Data
             'corpus_add', 'chapter_add',
@@ -1757,9 +1775,9 @@ def perform_action():
             # Export
             'annotation_download',
         ],
-        'curator': [],
-        'annotator': ['show_user_annotation'],
-        'member': ['update_settings']
+        ROLE_CURATOR: [],
+        ROLE_ANNOTATOR: [],
+        ROLE_MEMBER: ['update_settings']
     }
     valid_actions = [
         action for actions in role_actions.values() for action in actions
@@ -1868,8 +1886,42 @@ def perform_action():
 
     # ----------------------------------------------------------------------- #
     # Task Update
+
     if action == 'task_update':
-        print(request.form)
+        task_id = request.form["task_id"]
+        task_category = request.form["task_category"]
+        task_title = request.form["task_title"]
+        task_short = request.form["task_short"]
+        task_help = request.form["task_help"]
+
+        if task_id == "auto":
+            task_count = Task.query.count()
+            task = Task()
+            task.category = task_category
+            task.title = task_title
+            task.short = task_short
+            task.help = task_help
+            task.order = task_count + 1
+            message = f"New task added. (Category: '{task_category}')"
+        else:
+            task = Task.query.get(task_id)
+            if task is None:
+                message = f"Invalid task ID: {task_id}"
+            else:
+                task.title = task_title
+                task.short = task_short
+                task.help = task_help
+                message = f"Task {task_id} updated."
+
+        if task is not None:
+            db.session.add(task)
+            db.session.commit()
+            flash(message, "success")
+        else:
+            flash(message)
+        return redirect(request.referrer)
+
+    if action == 'task_collection_update':
         tasks = Task.query.all()
         for task in tasks:
             task_active = request.form.get(f"task-{task.id}-status") == "on"
@@ -1886,18 +1938,30 @@ def perform_action():
     # Ontology
 
     if action in [
-        'token_label_add', 'token_label_remove',
-        'token_relation_label_add', 'token_relation_label_remove',
-        'sentence_label_add', 'sentence_label_remove',
-        'sentence_relation_label_add', 'sentence_relation_label_remove',
+            # - Token Label
+            'token_label_add',
+            'token_label_remove',
+            'token_label_upload',
+
+            # - Token Graph Relation Label
+            'token_relation_label_add',
+            'token_relation_label_remove',
+            'token_relation_label_upload',
+
+            # - Sentence Label
+            'sentence_label_add',
+            'sentence_label_remove',
+            'sentence_label_upload',
+
+            # - Sentence Graph Relation Label
+            'sentence_relation_label_add',
+            'sentence_relation_label_remove',
+            'sentence_relation_label_upload',
     ]:
-        action_parts = action.split('_')
+        action_parts = action.split('_label_')
 
         object_name = action_parts[0]
         target_action = action_parts[-1]
-
-        _label_text = request.form[f'{object_name}_label_text']
-        _label_description = request.form[f'{object_name}_label_desc']
 
         MODELS = {
             'token': (TokenLabel, TokenClassification, 'label_id'),
@@ -1908,14 +1972,22 @@ def perform_action():
             ),
         }
         _model, _annotation_model, _attribute = MODELS[object_name]
-
-        _instance = _model.query.filter(_model.label == _label_text).first()
         _model_name = _model.__name__
 
         if target_action == 'add':
+            _label_task_id = request.form[f'{object_name}_label_task_id']
+            _label_text = request.form[f'{object_name}_label_text']
+            _label_description = request.form[f'{object_name}_label_desc']
+
+            _instance = _model.query.filter(
+                _model.label == _label_text,
+                _model.task_id == _label_task_id
+            ).first()
+
             message = f"Added {_model_name} '{_label_text}'."
             if _instance is None:
                 _instance = _model()
+                _instance.task_id = _label_task_id
                 _instance.label = _label_text
                 _instance.description = _label_description
                 _instance.is_deleted = False
@@ -1930,6 +2002,7 @@ def perform_action():
                     message = f"{_model_name} '{_label_text}' already exists."
 
         if target_action == 'remove':
+            _label_text = request.form[f'{object_name}_label_text']
             message = f"{_model_name} '{_label_text}' does not exists."
             if _instance is not None and not _instance.is_deleted:
                 objects_with_given_label = _annotation_model.query.filter(
@@ -1943,6 +2016,58 @@ def perform_action():
                     db.session.add(_instance)
                     status = True
                     message = f"Removed {_model_name} '{_label_text}'."
+
+        if target_action == 'upload':
+            # Labels
+            # NOTE: Refer to `data/tables/README.md` for format of JSON and CSV
+            _label_task_id = int(request.form[f'{object_name}_label_task_id'])
+            _label_file = request.files['label_file']
+            _upload_format = request.files['upload_format']
+
+            _existing_labels = {
+                (_instance.task_id, _instance.label): _instance
+                for _instance in _model.query.all()
+            }
+
+            if _upload_format == "json":
+                with open(_label_file, encoding="utf-8") as f:
+                    table_data = json.load(f)
+            elif _upload_format == "csv":
+                with open(_label_file, encoding="utf-8") as f:
+                    table_data = list(csv.DictReader(f))
+
+            _add_count = 0
+            _undelete_count = 0
+            _ignore_count = 0
+            objects_to_update = []
+            for idx, label in enumerate(table_data, start=1):
+                _label_identifier = (_label_task_id, label["label"])
+                if _label_identifier in _existing_labels:
+                    _instance = _existing_labels[_label_identifier]
+                    if _instance.is_deleted:
+                        _instance.is_deleted = False
+                        _undelete_count += 1
+                        objects_to_update.append(_instance)
+                    else:
+                        _ignore_count += 1
+                else:
+                    _instance = _model()
+                    _instance.task_id = _label_task_id
+                    _instance.label = label["label"]
+                    _instance.description = label["description"]
+                    _add_count += 1
+                    objects_to_update.append(_instance)
+
+                if objects_to_update:
+                    db.session.bulk_save_objects(objects_to_update)
+                    status = True
+                    _total = _add_count + _undelete_count
+                    message = (
+                        f"Added {_total} {_model_name}s. "
+                        f"({_add_count} + {_undelete_count})"
+                    )
+                else:
+                    message = f"No new {_model_name}s were added."
 
         if status:
             db.session.commit()
@@ -2040,7 +2165,6 @@ def perform_action():
         flash("Work in progress")
         print(request.form)
         return redirect(request.referrer)
-
 
     # ----------------------------------------------------------------------- #
     # Update Settings

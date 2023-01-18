@@ -5,11 +5,6 @@ $(document).ready(function () {
     const task_2_placeholder_content = $task_2_sample_word_order_container.html();
     $task_2_word_order_container.html(task_2_placeholder_content);
 
-    const $task_6_placeholder = $task_6_sample_sentence_classification_input.clone();
-    $task_6_placeholder.removeAttr("id");
-    $task_6_placeholder.find(".sentence-label").selectpicker();
-    $task_6_placeholder.appendTo($task_6_sentence_classification_input_container);
-
     // Split Columns
     var splitobj = Split(["#corpus-column","#annotation-column"], {
         elementStyle: function (dimension, size, gutterSize) {
@@ -42,7 +37,7 @@ $corpus_table.on('expand-row.bs.table', function (e, index, row, $detail) {
 
     $verse_id_containers.html(verse_id);
     $add_token_modal_button.prop('disabled', false);
-    $show_graph_button_sentence_graph.prop('disabled', false);
+    $show_graph_modal_buttons.prop('disabled', false);
     $refresh_verse_buttons.prop('disabled', false);
 
     storage.setItem("current_verse_id", parseInt(verse_id));
@@ -55,14 +50,15 @@ $corpus_table.on('expand-row.bs.table', function (e, index, row, $detail) {
     // individually anyway.
     // Instead, simply locate the active tab and setup the corresponding task
 
-    const $active_tab = $('a[aria-selected="true"]');
+    const $active_tab = $('.task-tab[aria-selected="true"]');
     const active_task_category = $active_tab.data('task-category');
-    setup_task(active_task_category, verse_id);
+    const active_task_id = $active_tab.data('task-id');
+    setup_task(active_task_category, active_task_id, verse_id);
 });
 
 
 // Tab Change
-$('a[data-toggle="pill"]').on('shown.bs.tab', function (event) {
+$('.task-tab[data-toggle="pill"]').on('shown.bs.tab', function (event) {
     const verse_id = $verse_id_containers.html();
     if (verse_id == "None") {
         $.notify({
@@ -75,14 +71,24 @@ $('a[data-toggle="pill"]').on('shown.bs.tab', function (event) {
 
     const $active_tab = $(event.target);
     const task_category = $active_tab.data("task-category");
-    setup_task(task_category, verse_id);
+    const task_id = $active_tab.data("task-id");
+    setup_task(task_category, task_id, verse_id);
 });
+
+// Submit Button
+
+$task_submit_buttons.click(function () {
+    const task_category = $(this).data("task-category");
+    const task_id = $(this).data("task-id");
+    submit_task(task_category, task_id);
+});
+
 
 // Page Change
 $corpus_table.on('page-change.bs.table', function (e, number, size) {
     $verse_id_containers.html("None");
     $add_token_modal_button.prop('disabled', true);
-    $show_graph_button_sentence_graph.prop('disabled', true);
+    $show_graph_modal_buttons.prop('disabled', true);
     $refresh_verse_buttons.prop('disabled', true);
     $("textarea").prop('disabled', true).removeClass('text-info').addClass('text-muted');
 
