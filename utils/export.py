@@ -12,6 +12,17 @@ from collections import defaultdict
 
 import networkx as nx
 
+from constants import (
+    TASK_SENTENCE_BOUNDARY,
+    TASK_WORD_ORDER,
+    TASK_TOKEN_TEXT_ANNOTATION,
+    TASK_TOKEN_CLASSIFICATION,
+    TASK_TOKEN_GRAPH,
+    TASK_TOKEN_CONNECTION,
+    TASK_SENTENCE_CLASSIFICATION,
+    TASK_SENTENCE_GRAPH
+)
+
 ###############################################################################
 
 
@@ -54,7 +65,7 @@ def simple_format(data):
 
             boundary_tokens = [
                 boundary["token_id"]
-                for boundary in annotation_data["sentence_boundary"].values()
+                for boundary in annotation_data[TASK_SENTENCE_BOUNDARY].values()
             ]
             next_boundary = boundary_tokens[0] if boundary_tokens else None
 
@@ -82,7 +93,7 @@ def simple_format(data):
                 display_text[-1].extend(["//", str(verse_id)])
                 display_text.append([])
 
-            task_data["sentence_boundary"][task_id] = "\n".join(
+            task_data[TASK_SENTENCE_BOUNDARY][task_id] = "\n".join(
                 " ".join(line_text)
                 for line_text in display_text
             )
@@ -105,7 +116,7 @@ def simple_format(data):
             current_verse_id = None
             sentence_tokens = []
 
-            for word_order in annotation_data["word_order"]:
+            for word_order in annotation_data[TASK_WORD_ORDER]:
                 if current_boundary_id is None:
                     current_boundary_id = word_order["boundary_id"]
                     current_verse_id = word_order["verse_id"]
@@ -134,7 +145,7 @@ def simple_format(data):
                     [str(sent_idx), str(current_verse_id), sentence_text]
                 )
 
-            task_data["word_order"][task_id] = "\n".join(
+            task_data[TASK_WORD_ORDER][task_id] = "\n".join(
                 "\t".join(sentence_row)
                 for sentence_row in display_text
             )
@@ -148,7 +159,7 @@ def simple_format(data):
             ]
             display_text = defaultdict(list)
 
-            for text_annotation in annotation_data["token_text_annotation"]:
+            for text_annotation in annotation_data[TASK_TOKEN_TEXT_ANNOTATION]:
                 task_id = text_annotation["task_id"]
                 if task_id not in display_text:
                     display_text[task_id].extend(display_text_header)
@@ -164,7 +175,7 @@ def simple_format(data):
                 ])
 
             for task_id in display_text:
-                task_data["token_text_annotation"][task_id] = "\n".join(
+                task_data[TASK_TOKEN_TEXT_ANNOTATION][task_id] = "\n".join(
                     "\t".join(text_annotation_row)
                     for text_annotation_row in display_text[task_id]
                 )
@@ -179,7 +190,7 @@ def simple_format(data):
             ]
             display_text = defaultdict(list)
 
-            for tokclf in annotation_data["token_classification"]:
+            for tokclf in annotation_data[TASK_TOKEN_CLASSIFICATION]:
                 task_id = tokclf["task_id"]
                 if task_id not in display_text:
                     display_text[task_id].extend(display_text_header)
@@ -196,7 +207,7 @@ def simple_format(data):
                 ])
 
             for task_id in display_text:
-                task_data["token_classification"][task_id] = "\n".join(
+                task_data[TASK_TOKEN_CLASSIFICATION][task_id] = "\n".join(
                     "\t".join(tokclf_row)
                     for tokclf_row in display_text[task_id]
                 )
@@ -208,7 +219,7 @@ def simple_format(data):
             token_graph_data = {}
             token_graph_node_ids = {}
 
-            for tokrel in annotation_data["token_graph"]:
+            for tokrel in annotation_data[TASK_TOKEN_GRAPH]:
                 task_id = tokrel["task_id"]
                 if task_id not in token_graph_data:
                     token_graph_data[task_id] = {
@@ -252,14 +263,14 @@ def simple_format(data):
                     "value": 3,
                 })
 
-            task_data["token_graph"] = token_graph_data
+            task_data[TASK_TOKEN_GRAPH] = token_graph_data
 
             # --------------------------------------------------------------- #
 
             preference = ["misc.Unsandhied", "form", "lemma"]
 
             token_connection_graph = {}
-            for tokcon in annotation_data["token_connection"]:
+            for tokcon in annotation_data[TASK_TOKEN_CONNECTION]:
                 task_id = tokcon["task_id"]
                 if task_id not in token_connection_graph:
                     token_connection_graph[task_id] = nx.DiGraph()
@@ -290,7 +301,7 @@ def simple_format(data):
 
                     display_text[task_id].append(cluster_text)
 
-                task_data["token_connection"][task_id] = "\n".join(
+                task_data[TASK_TOKEN_CONNECTION][task_id] = "\n".join(
                     ", ".join(cluster_text)
                     for cluster_text in display_text[task_id]
                 )
@@ -304,7 +315,7 @@ def simple_format(data):
             display_text = defaultdict(list)
             snclf_idx = {}
 
-            for snclf in annotation_data["sentence_classification"]:
+            for snclf in annotation_data[TASK_SENTENCE_CLASSIFICATION]:
                 task_id = snclf["task_id"]
                 if task_id not in display_text:
                     display_text[task_id].extend(display_text_header)
@@ -320,7 +331,7 @@ def simple_format(data):
                 ])
 
             for task_id in display_text:
-                task_data["sentence_classification"][task_id] = "\n".join(
+                task_data[TASK_SENTENCE_CLASSIFICATION][task_id] = "\n".join(
                     "\t".join(sentence_row)
                     for sentence_row in display_text[task_id]
                 )
@@ -332,7 +343,7 @@ def simple_format(data):
             sentence_graph_data = {}
             sentence_graph_node_ids = {}
 
-            for sentrel in annotation_data["sentence_graph"]:
+            for sentrel in annotation_data[TASK_SENTENCE_GRAPH]:
                 task_id = sentrel["task_id"]
                 if task_id not in sentence_graph_data:
                     sentence_graph_data[task_id] = {
@@ -400,7 +411,7 @@ def simple_format(data):
                     "value": 3,
                 })
 
-            task_data["sentence_graph"] = sentence_graph_data
+            task_data[TASK_SENTENCE_GRAPH] = sentence_graph_data
 
             # --------------------------------------------------------------- #
 

@@ -1,7 +1,7 @@
 /* ********************************** */
 // Task Related Constants, Functions, Events etc.
 /* ********************************** */
-// Note: Constants/Variables in capital are declared in the HTML template.
+// NOTE: Constants/Variables in capital are declared in the HTML template.
 
 // Constants
 
@@ -299,12 +299,12 @@ function setup_task_sentence_boundary(task_id, verse_id) {
         // console.log("Verse Tokens:");
         // console.log(verse.tokens);
         // console.log("Verse Boundary:");
-        // console.log(verse.sentence_boundary);
+        // console.log(verse[TASK_SENTENCE_BOUNDARY]);
 
         var verse_text = [`${verse_data.verse_id}`];
         var boundary_tokens = new Set();
 
-        for (const [boundary_id, boundary] of Object.entries(verse_data.sentence_boundary)) {
+        for (const [boundary_id, boundary] of Object.entries(verse_data[TASK_SENTENCE_BOUNDARY])) {
             boundary_tokens.add(boundary.token_id);
         };
         $.each(verse_data.tokens, function(verse_index, line_tokens) {
@@ -469,7 +469,7 @@ function setup_task_word_order(task_id, verse_id) {
         // console.log("Boundary ID: " + boundary_id);
         // console.log("Tokens:")
         // console.log(sentence_tokens);
-        for (const token_id of row.word_order[boundary_id]) {
+        for (const token_id of row[TASK_WORD_ORDER][boundary_id]) {
             if (extra_tokens.hasOwnProperty(token_id)) {
                 used_extra_tokens.push(token_id);
             }
@@ -479,13 +479,13 @@ function setup_task_word_order(task_id, verse_id) {
         var token_order = [];
         var unused_tokens = [];
         if (boundary_id !== "extra") {
-            token_order = row.word_order[boundary_id];
+            token_order = row[TASK_WORD_ORDER][boundary_id];
             for (const [_token_id_string, _token] of Object.entries(sentence_tokens)) {
                 if (!token_order.includes(_token.id)) {
                     unused_tokens.push(_token.id);
                 }
             }
-            // ensure in server_sqla.py that row.word_order isn't empty
+            // ensure in server_sqla.py that row[TASK_WORD_ORDER] isn't empty
             // either it is annotated word_order, or it's obtained via heuristic
         } else {
             // order doesn't really matter, just need extra tokens
@@ -725,8 +725,8 @@ function setup_task_token_classification(task_id, verse_id) {
     for (const [boundary_id, sentence_tokens] of Object.entries(row.sentences)) {
         $.extend(all_tokens, sentence_tokens);
         if (boundary_id !== "extra") {
-            [].push.apply(used_tokens, row.word_order[boundary_id]);
-            boundary_tokens[boundary_id] = row.word_order[boundary_id];
+            [].push.apply(used_tokens, row[TASK_WORD_ORDER][boundary_id]);
+            boundary_tokens[boundary_id] = row[TASK_WORD_ORDER][boundary_id];
         }
     }
 
@@ -735,7 +735,7 @@ function setup_task_token_classification(task_id, verse_id) {
     // in that case, .includes() can be replaced with .hasOwnProperty() check
     var existing_token_classification = [];
     var existing_labels = {};
-    for (const tokclf of row.token_classification) {
+    for (const tokclf of row[TASK_TOKEN_CLASSIFICATION]) {
         if (tokclf.is_deleted || tokclf.task_id != task_id) {
             continue;
         }
@@ -900,13 +900,13 @@ function setup_task_token_graph(task_id, verse_id) {
     for (const [boundary_id, sentence_tokens] of Object.entries(row.sentences)) {
         $.extend(all_tokens, sentence_tokens);
         if (boundary_id != "extra") {
-            boundary_tokens[boundary_id] = row.word_order[boundary_id];
+            boundary_tokens[boundary_id] = row[TASK_WORD_ORDER][boundary_id];
         }
     }
 
     // record existing relations
     var existing_relations = {};
-    for (const tokrel of row.token_graph) {
+    for (const tokrel of row[TASK_TOKEN_GRAPH]) {
         if (tokrel.is_deleted || tokrel.task_id != task_id) {
             continue;
         }
@@ -1295,12 +1295,12 @@ function setup_task_token_connection(task_id, verse_id) {
         for (const [boundary_id, sentence_tokens] of Object.entries(verse_data.sentences)) {
             $.extend(all_tokens, sentence_tokens);
             if (boundary_id != "extra") {
-                boundary_tokens.push([boundary_id, verse_data.word_order[boundary_id]]);
+                boundary_tokens.push([boundary_id, verse_data[TASK_WORD_ORDER][boundary_id]]);
             }
             // ensure that every boundary in the previous n verses has word_order
             // if one is doing word_order in order, this won't be an issue
         }
-        for (const token_connection of verse_data.token_connection) {
+        for (const token_connection of verse_data[TASK_TOKEN_CONNECTION]) {
             if (token_connection.is_deleted || token_connection.task_id != task_id) {
                 continue;
             }
@@ -1518,13 +1518,13 @@ function setup_task_sentence_classification(task_id, verse_id) {
     for (const [boundary_id, sentence_tokens] of Object.entries(row.sentences)) {
         $.extend(all_tokens, sentence_tokens);
         if (boundary_id != "extra") {
-            boundary_tokens[boundary_id] = row.word_order[boundary_id];
+            boundary_tokens[boundary_id] = row[TASK_WORD_ORDER][boundary_id];
         }
     }
 
     // record existing sentence classification
     var existing_sentence_classification = {};
-    for (const sentclf of row.sentence_classification) {
+    for (const sentclf of row[TASK_SENTENCE_CLASSIFICATION]) {
         if (sentclf.task_id != task_id) {
             continue;
         }
@@ -1661,16 +1661,16 @@ function setup_task_sentence_graph(task_id, verse_id) {
 
     for (const verse_data of context) {
         // verse_data
-        $.extend(boundary_marker_tokens, verse_data.sentence_boundary);
+        $.extend(boundary_marker_tokens, verse_data[TASK_SENTENCE_BOUNDARY]);
         for (const [boundary_id, sentence_tokens] of Object.entries(verse_data.sentences)) {
             $.extend(all_tokens, sentence_tokens);
             if (boundary_id != "extra") {
-                boundary_tokens.push([boundary_id, verse_data.word_order[boundary_id]]);
+                boundary_tokens.push([boundary_id, verse_data[TASK_WORD_ORDER][boundary_id]]);
             }
             // ensure that every boundary in the previous n verses has word_order
             // if one is doing word_order in order, this won't be an issue
         }
-        for (const sentrel of verse_data.sentence_graph) {
+        for (const sentrel of verse_data[TASK_SENTENCE_GRAPH]) {
             if (sentrel.is_deleted || sentrel.task_id != task_id) {
                 continue;
             }
@@ -2084,8 +2084,8 @@ function setup_task_token_text_annotation(task_id, verse_id) {
     for (const [boundary_id, sentence_tokens] of Object.entries(row.sentences)) {
         $.extend(all_tokens, sentence_tokens);
         if (boundary_id !== "extra") {
-            [].push.apply(used_tokens, row.word_order[boundary_id]);
-            boundary_tokens[boundary_id] = row.word_order[boundary_id];
+            [].push.apply(used_tokens, row[TASK_WORD_ORDER][boundary_id]);
+            boundary_tokens[boundary_id] = row[TASK_WORD_ORDER][boundary_id];
         }
     }
 
@@ -2094,7 +2094,7 @@ function setup_task_token_text_annotation(task_id, verse_id) {
     // in that case, .includes() can be replaced with .hasOwnProperty() check
     var existing_token_text_annotations = [];
     var existing_texts = {};
-    for (const token_text_annotation of row.token_text_annotation) {
+    for (const token_text_annotation of row[TASK_TOKEN_TEXT_ANNOTATION]) {
         if (token_text_annotation.is_deleted || token_text_annotation.task_id != task_id) {
             continue;
         }

@@ -1,4 +1,8 @@
 /* ************************ Data Transfer Commands ************************ */
+/* CAUTION:
+  DO NOT USE THIS SCRIPT IF YOU HAVE STARTED USING THE SYSTEM AFTER BETA
+  RELEASE v0.1.0.
+*/
 /* LOGIC:
 * Rename relevant tables to `old_*` and drop relevant indexes
 * Restart server to create as per new schema
@@ -53,7 +57,7 @@ DROP INDEX sentence_graph_annotator_id_src_boundary_id_dst_boundary_id_src_token
 
 /* Copy Tasks */
 DELETE FROM `task` WHERE 1;
-INSERT INTO `task` SELECT * FROM `old task` WHERE `id` > 2;
+INSERT INTO `task` SELECT * FROM `old_task`;
 
 /* Copy Ontology */
 INSERT INTO `token_label` (`id`, `task_id`, `label`, `description`, `is_deleted`)

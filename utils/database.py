@@ -301,7 +301,7 @@ def export_data(
                 Boundary.annotator_id == annotator.id
             ).order_by(Boundary.token_id)
 
-            annotation_data["sentence_boundary"] = {
+            annotation_data[TASK_SENTENCE_BOUNDARY] = {
                 boundary.id: {
                     "task_id": boundary.task_id,
                     "token_id": boundary.token_id,
@@ -309,7 +309,7 @@ def export_data(
                 }
                 for boundary in boundary_query.all()
             }
-            boundary_ids = list(annotation_data["sentence_boundary"])
+            boundary_ids = list(annotation_data[TASK_SENTENCE_BOUNDARY])
 
             # --------------------------------------------------------------- #
 
@@ -321,8 +321,8 @@ def export_data(
             )
 
             # TODO: avoid .boundary.verse_id call ?
-            # fetch from task_data["sentence_boundary"] ?
-            annotation_data["word_order"] = [
+            # fetch from task_data[TASK_SENTENCE_BOUNDARY] ?
+            annotation_data[TASK_WORD_ORDER] = [
                 {
                     "task_id": word_order.task_id,
                     "verse_id": word_order.boundary.verse_id,
@@ -341,8 +341,8 @@ def export_data(
             ).order_by(TokenTextAnnotation.token_id)
 
             # TODO: avoid .boundary.verse_id call ?
-            # fetch from task_data["sentence_boundary"] ?
-            annotation_data["token_text_annotation"] = [
+            # fetch from task_data[TASK_SENTENCE_BOUNDARY] ?
+            annotation_data[TASK_TOKEN_TEXT_ANNOTATION] = [
                 {
                     "task_id": text_annotation.task_id,
                     "verse_id": text_annotation.boundary.verse_id,
@@ -362,8 +362,8 @@ def export_data(
             ).order_by(TokenClassification.token_id)
 
             # TODO: avoid .boundary.verse_id call ?
-            # fetch from task_data["sentence_boundary"] ?
-            annotation_data["token_classification"] = [
+            # fetch from task_data[TASK_SENTENCE_BOUNDARY] ?
+            annotation_data[TASK_TOKEN_CLASSIFICATION] = [
                 {
                     "task_id": tokclf.task_id,
                     "verse_id": tokclf.boundary.verse_id,
@@ -385,8 +385,8 @@ def export_data(
             ).order_by(TokenGraph.src_id, TokenGraph.dst_id)
 
             # TODO: avoid .boundary.verse_id call ?
-            # fetch from task_data["sentence_boundary"] ?
-            annotation_data["token_graph"] = [
+            # fetch from task_data[TASK_SENTENCE_BOUNDARY] ?
+            annotation_data[TASK_TOKEN_GRAPH] = [
                 {
                     "task_id": tokrel.task_id,
                     "verse_id": tokrel.boundary.verse_id,
@@ -409,8 +409,8 @@ def export_data(
             ).order_by(TokenConnection.src_id)
 
             # TODO: avoid .boundary.verse_id call ?
-            # fetch from task_data["sentence_boundary"] ?
-            annotation_data["token_connection"] = [
+            # fetch from task_data[TASK_SENTENCE_BOUNDARY] ?
+            annotation_data[TASK_TOKEN_CONNECTION] = [
                 {
                     "task_id": token_connection.task_id,
                     "verse_id": token_connection.boundary.verse_id,
@@ -430,8 +430,8 @@ def export_data(
             ).join(Boundary).order_by(Boundary.token_id)
 
             # TODO: avoid .boundary.verse_id call ?
-            # fetch from task_data["sentence_boundary"] ?
-            annotation_data["sentence_classification"] = [
+            # fetch from task_data[TASK_SENTENCE_BOUNDARY] ?
+            annotation_data[TASK_SENTENCE_CLASSIFICATION] = [
                 {
                     "task_id": sentclf.task_id,
                     "verse_id": sentclf.boundary.verse_id,
@@ -454,10 +454,10 @@ def export_data(
 
             # TODO: avoid .src_boundary.verse_id call ?
             # TODO: avoid .dst_boundary.verse_id call ?
-            # fetch from task_data["sentence_boundary"] ?
+            # fetch from task_data[TASK_SENTENCE_BOUNDARY] ?
             # any guarantee that .dst_boundary. will be present?
 
-            annotation_data["sentence_graph"] = [
+            annotation_data[TASK_SENTENCE_GRAPH] = [
                 {
                     "task_id": sentrel.task_id,
                     "src_verse_id": sentrel.src_boundary.verse_id,
@@ -606,15 +606,15 @@ def get_verse_data(
                     # Could also consider keeping original tokens in "tokens"
                     # and adding a "_tokens" for custom tokens
                 ]],
-                "sentence_boundary": {},
+                TASK_SENTENCE_BOUNDARY: {},
                 "sentences": {},
-                "word_order": {},
-                "token_text_annotation": [],
-                "token_classification": [],
-                "token_graph": [],
-                "token_connection": [],
-                "sentence_classification": [],
-                "sentence_graph": [],
+                TASK_WORD_ORDER: {},
+                TASK_TOKEN_TEXT_ANNOTATION: [],
+                TASK_TOKEN_CLASSIFICATION: [],
+                TASK_TOKEN_GRAPH: [],
+                TASK_TOKEN_CONNECTION: [],
+                TASK_SENTENCE_CLASSIFICATION: [],
+                TASK_SENTENCE_GRAPH: [],
                 "progress": [
                     {
                         "task_id": p.task_id,
@@ -681,7 +681,7 @@ def get_verse_data(
     # boundary specific data - BEGIN
     for boundary in boundary_query.all():
         verse_id = boundary.verse_id
-        data[verse_id]["sentence_boundary"][boundary.id] = {
+        data[verse_id][TASK_SENTENCE_BOUNDARY][boundary.id] = {
             "id": boundary.id,
             "task_id": boundary.task_id,
             "token_id": boundary.token_id,
@@ -720,7 +720,7 @@ def get_verse_data(
                     data[verse_id]["sentences"][boundary.id]
                 )
 
-        data[verse_id]["word_order"][boundary.id] = sentence_word_order
+        data[verse_id][TASK_WORD_ORDER][boundary.id] = sentence_word_order
         # TODO: consider if we should provide predicted word_order separately
         #       instead of in the same field
 
@@ -731,7 +731,7 @@ def get_verse_data(
             TokenTextAnnotation.annotator_id.in_(annotator_ids)
         )
 
-        data[verse_id]["token_text_annotation"].extend([
+        data[verse_id][TASK_TOKEN_TEXT_ANNOTATION].extend([
             {
                 "id": text_annotation.id,
                 "task_id": text_annotation.task_id,
@@ -751,7 +751,7 @@ def get_verse_data(
             TokenClassification.annotator_id.in_(annotator_ids)
         )
 
-        data[verse_id]["token_classification"].extend([
+        data[verse_id][TASK_TOKEN_CLASSIFICATION].extend([
             {
                 "id": tokclf.id,
                 "task_id": tokclf.task_id,
@@ -771,7 +771,7 @@ def get_verse_data(
             TokenGraph.annotator_id.in_(annotator_ids)
         )
 
-        data[verse_id]["token_graph"].extend([
+        data[verse_id][TASK_TOKEN_GRAPH].extend([
             {
                 "id": tokrel.id,
                 "task_id": tokrel.task_id,
@@ -792,7 +792,7 @@ def get_verse_data(
             TokenConnection.annotator_id.in_(annotator_ids)
         )
 
-        data[verse_id]["token_connection"].extend([
+        data[verse_id][TASK_TOKEN_CONNECTION].extend([
             {
                 "id": token_connection.id,
                 "task_id": token_connection.task_id,
@@ -812,7 +812,7 @@ def get_verse_data(
             SentenceClassification.annotator_id.in_(annotator_ids)
         )
 
-        data[verse_id]["sentence_classification"].extend([
+        data[verse_id][TASK_SENTENCE_CLASSIFICATION].extend([
             {
                 "id": sentclf.id,
                 "task_id": sentclf.task_id,
@@ -832,7 +832,7 @@ def get_verse_data(
             SentenceGraph.annotator_id.in_(annotator_ids)
         )
 
-        data[verse_id]["sentence_graph"].extend([
+        data[verse_id][TASK_SENTENCE_GRAPH].extend([
             {
                 "id": sentrel.id,
                 "task_id": sentrel.task_id,
