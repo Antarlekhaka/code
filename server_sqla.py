@@ -2029,19 +2029,30 @@ def perform_action():
             # NOTE: Refer to `data/tables/README.md` for format of JSON and CSV
             _label_task_id = int(request.form[f'{object_name}_label_task_id'])
             _label_file = request.files['label_file']
-            _upload_format = request.files['upload_format']
+            _upload_format = request.form['upload_format']
 
             _existing_labels = {
                 (_instance.task_id, _instance.label): _instance
                 for _instance in _model.query.all()
             }
 
+            _label_file_content = _label_file.read().decode()
             if _upload_format == "json":
-                with open(_label_file, encoding="utf-8") as f:
-                    table_data = json.load(f)
+                try:
+                    table_data = json.loads(_label_file_content)
+                except json.decoder.JSONDecodeError as e:
+                    webapp.logger.exception(e)
+                    flash("Invalid JSON file format.")
+                    return redirect(request.referrer)
             elif _upload_format == "csv":
-                with open(_label_file, encoding="utf-8") as f:
-                    table_data = list(csv.DictReader(f))
+                try:
+                    table_data = list(
+                        csv.DictReader(_label_file_content.splitlines())
+                    )
+                except csv.Error as e:
+                    webapp.logger.exception(e)
+                    flash("Invalid CSV file format.")
+                    return redirect(request.referrer)
 
             _add_count = 0
             _undelete_count = 0
@@ -2065,17 +2076,17 @@ def perform_action():
                     _add_count += 1
                     objects_to_update.append(_instance)
 
-                if objects_to_update:
-                    db.session.bulk_save_objects(objects_to_update)
-                    status = True
-                    _total = _add_count + _undelete_count
-                    message = (
-                        f"Added {_total} {_model_name}s "
-                        f"({_add_count} + {_undelete_count}). "
-                        f"Ignored {_ignore_count}."
-                    )
-                else:
-                    message = f"No new {_model_name}s were added."
+            if objects_to_update:
+                db.session.bulk_save_objects(objects_to_update)
+                status = True
+                _total = _add_count + _undelete_count
+                message = (
+                    f"Added {_total} {_model_name}s "
+                    f"({_add_count} + {_undelete_count}). "
+                    f"Ignored {_ignore_count}."
+                )
+            else:
+                message = f"No new {_model_name}s were added."
 
         if status:
             db.session.commit()
