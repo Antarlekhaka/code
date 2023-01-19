@@ -2002,7 +2002,14 @@ def perform_action():
                     message = f"{_model_name} '{_label_text}' already exists."
 
         if target_action == 'remove':
+            _label_task_id = request.form[f'{object_name}_label_task_id']
             _label_text = request.form[f'{object_name}_label_text']
+
+            _instance = _model.query.filter(
+                _model.label == _label_text,
+                _model.task_id == _label_task_id
+            ).first()
+
             message = f"{_model_name} '{_label_text}' does not exists."
             if _instance is not None and not _instance.is_deleted:
                 objects_with_given_label = _annotation_model.query.filter(
@@ -2063,8 +2070,9 @@ def perform_action():
                     status = True
                     _total = _add_count + _undelete_count
                     message = (
-                        f"Added {_total} {_model_name}s. "
-                        f"({_add_count} + {_undelete_count})"
+                        f"Added {_total} {_model_name}s "
+                        f"({_add_count} + {_undelete_count}). "
+                        f"Ignored {_ignore_count}."
                     )
                 else:
                     message = f"No new {_model_name}s were added."

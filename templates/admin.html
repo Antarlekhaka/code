@@ -371,6 +371,7 @@
                         <hr>
                         <form class="form" method=POST enctype=multipart/form-data action="{{url_for('perform_action')}}">
                             <input type="hidden" name="csrf_token" value={{csrf_token()}}>
+                            <input type="hidden" name="{{label.name}}_label_task_id" value="{{label.task_id}}">
                             <div class="form-group">
                                 <label for="{{label.name}}-{{label.id}}-label-select">Label</label>
                                 <select class="lead m-1 selectpicker" name="{{label.name}}_label_text" id="{{label.name}}-{{label.id}}-label-select" data-live-search="true" required>
