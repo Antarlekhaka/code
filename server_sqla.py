@@ -220,7 +220,7 @@ CONLLU_PARSER = CoNLLUParser(
 )
 ###############################################################################
 
-EXPORT_CONFIG = app.config("export")
+EXPORT_CONFIG = app.config["export"]
 
 ###############################################################################
 # Database Utility Functions
