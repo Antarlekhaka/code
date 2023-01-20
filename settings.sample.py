@@ -82,7 +82,11 @@ APPLICATION_CONFIG = {
         "transliterate_metadata_keys": ["text"],
         "transliterate_token_keys": ["form", "lemma", "misc.Unsandhied"],
     },
-
+    # Plaintext Corpus Settings
+    "plaintext": {
+        "input_scheme": "iast",
+        "store_scheme": "devanagari",
+    },
     # TODO: handle corpus specific things through config?
     # corpus agnostic treatment will require changes to JS too
     # e.g. assumptions about / usage of "unsandhied"

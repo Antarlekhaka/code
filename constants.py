@@ -193,3 +193,29 @@ TASK_DEFAULT_INFORMATION = {
         )
     }
 }
+
+###############################################################################
+# File Type
+
+FILE_TYPE_JSON = {
+    "value": "json",
+    "description": "JSON",
+    "extensions": ["json"]
+}
+FILE_TYPE_CSV = {
+    "value": "csv",
+    "description": "CSV",
+    "extensions": ["csv"]
+}
+FILE_TYPE_CONLLU = {
+    "value": "conllu",
+    "description": "CoNLL-U",
+    "extensions": ["conllu", "txt"]
+}
+FILE_TYPE_PLAINTEXT = {
+    "value": "plaintext",
+    "description": "Plain Text",
+    "extensions": ["txt"]
+}
+
+###############################################################################

@@ -92,7 +92,13 @@ from constants import (
 
     TASK_DEFAULT_INFORMATION,
     TASK_UPDATE_ACTIONS,
-    TASK_ANNOTATION_TEMPLATES, TASK_EXPORT_TEMPLATES
+    TASK_ANNOTATION_TEMPLATES, TASK_EXPORT_TEMPLATES,
+
+    # File Types
+    FILE_TYPE_CONLLU,
+    FILE_TYPE_PLAINTEXT,
+    FILE_TYPE_JSON,
+    FILE_TYPE_CSV,
 )
 
 from models_sqla import (db, user_datastore,
@@ -111,6 +117,7 @@ from utils.database import export_data, get_verse_data, get_chapter_data
 from utils.database import add_chapter
 from utils.export import simple_format, standard_format
 from utils.conllu import CoNLLUParser
+from utils.plaintext import PlaintextProcessor
 
 ###############################################################################
 
@@ -221,6 +228,14 @@ CONLLU_PARSER = CoNLLUParser(
 ###############################################################################
 
 EXPORT_CONFIG = app.config["export"]
+
+###############################################################################
+
+PLAINTEXT_CONFIG = app.config["plaintext"]
+PLAINTEXT_PROCESSOR = PlaintextProcessor(
+    input_scheme=PLAINTEXT_CONFIG["input_scheme"],
+    store_scheme=PLAINTEXT_CONFIG["store_scheme"]
+)
 
 ###############################################################################
 # Database Utility Functions
@@ -522,6 +537,10 @@ def show_admin():
     user_query = user_model.query
     role_query = role_model.query
 
+    data['filetypes'] = {
+        'chapter': [FILE_TYPE_CONLLU, FILE_TYPE_PLAINTEXT],
+        'ontology': [FILE_TYPE_CSV, FILE_TYPE_JSON],
+    }
     data['users'] = []
     data['annotators'] = []
 
@@ -2043,14 +2062,14 @@ def perform_action():
             }
 
             _label_file_content = _label_file.read().decode()
-            if _upload_format == "json":
+            if _upload_format == FILE_TYPE_JSON["value"]:
                 try:
                     table_data = json.loads(_label_file_content)
                 except json.decoder.JSONDecodeError as e:
                     webapp.logger.exception(e)
                     flash("Invalid JSON file format.")
                     return redirect(request.referrer)
-            elif _upload_format == "csv":
+            elif _upload_format == FILE_TYPE_CSV["value"]:
                 try:
                     table_data = list(
                         csv.DictReader(_label_file_content.splitlines())
@@ -2129,13 +2148,21 @@ def perform_action():
         chapter_description = request.form['chapter_description']
         chapter_file = request.files['chapter_file']
         chapter_filename = chapter_file.filename
+        chapter_format = request.form['chapter_format']
 
         if chapter_filename == '':
             flash("No file selected.")
             return redirect(request.referrer)
 
         # Validity
-        allowed_extensions = {'conllu', 'txt'}
+        if chapter_format == FILE_TYPE_CONLLU["value"]:
+            allowed_extensions = FILE_TYPE_CONLLU["extensions"]
+        elif chapter_format == FILE_TYPE_PLAINTEXT["value"]:
+            allowed_extensions = FILE_TYPE_PLAINTEXT["extensions"]
+        else:
+            flash("Invalid chapter file type.")
+            return redirect(request.referrer)
+
         file_extension = chapter_filename.rsplit('.', 1)[1].lower()
         is_valid_filename = (file_extension in allowed_extensions)
 
@@ -2146,24 +2173,25 @@ def perform_action():
                 flash("No corpus selected.")
                 return redirect(request.referrer)
 
-            # NOTE: "processing" which should give data as
+            # NOTE: "processing" should give data in the format described below
+            # function should take file and produce such output
+            # NOTE: Verse Data Format
             # [[{}, {}, {}, ...], [{}, {}, {}, ...], ...]
             # data: list of verses
             # verse: list of lines
             # line: dict (id, verse_id, text, tokens)
-            # should have metadata, text, sent_id, sent_counter
-
             # tokens: list of dict
             # token: dict 10 CoNLL-U mandatory fields
             # in particular,
             # "id", "form", "lemma", "upos", "xpos", "feats", "misc"
-            # function should take file and produce such output
-            # `CORPUS.read_conllu_data` formats it in this format
+            # `CONLLU_PARSER.read_conllu_data` formats it in this format
 
             try:
-                chapter_data = CONLLU_PARSER.read_conllu_data(
-                    chapter_file.read().decode()
-                )
+                file_content = chapter_file.read().decode()
+                if chapter_format == FILE_TYPE_CONLLU["value"]:
+                    chapter_data = CONLLU_PARSER.read_conllu_data(file_content)
+                if chapter_format == FILE_TYPE_PLAINTEXT["value"]:
+                    chapter_data = PLAINTEXT_PROCESSOR.process(file_content)
             except Exception as e:
                 webapp.logger.exception(e)
                 flash("Invalid file format.")

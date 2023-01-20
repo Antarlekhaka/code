@@ -188,16 +188,33 @@
                                 </div>
                                 <div class="input-group my-2">
                                     <div class="input-group-prepend">
-                                        <span class="input-group-text" id="file_upload">Upload</span>
+                                        <span class="input-group-text" id="chapter_file_upload">Upload</span>
                                     </div>
                                     <div class="custom-file">
-                                        <input type="file" class="custom-file-input" id="chapter_file" name="chapter_file" aria-describedby="file_upload" required>
+                                        <input type="file" class="custom-file-input" id="chapter_file" name="chapter_file" aria-describedby="chapter_file_upload" required>
                                         <label class="custom-file-label" for="chapter_file">Choose chapter file</label>
                                     </div>
                                 </div>
-                                <button type="submit" name="action" value="chapter_add" class="btn btn-success m-1">
-                                    Add
-                                </button>
+                                <div class="form-group form-row">
+                                    <div class="mt-2 col-sm">
+                                        {% for filetype in data.filetypes.chapter %}
+                                        {% if loop.first %}
+                                        {% set checked = "checked" %}
+                                        {% else %}
+                                        {% set checked = "" %}
+                                        {% endif %}
+                                        <div class="custom-control custom-radio custom-control-inline">
+                                            <input class="custom-control-input" type="radio" name="chapter_format" id="chapter-upload-format-{{filetype.value}}" value="{{filetype.value}}" {{checked}}>
+                                            <label class="custom-control-label" for="chapter-upload-format-{{filetype.value}}">{{filetype.description}}</label>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                    <div class="col-sm">
+                                        <button type="submit" name="action" value="chapter_add" class="btn btn-success m-1 float-right">
+                                            Add
+                                        </button>
+                                    </div>
+                                </div>
                             </form>
                         </div>
                     </div>
@@ -352,14 +369,17 @@
                             </div>
                             <div class="form-group form-row">
                                 <div class="mt-2 col-sm">
+                                    {% for filetype in data.filetypes.ontology %}
+                                    {% if loop.first %}
+                                    {% set checked = "checked" %}
+                                    {% else %}
+                                    {% set checked = "" %}
+                                    {% endif %}
                                     <div class="custom-control custom-radio custom-control-inline">
-                                        <input class="custom-control-input" type="radio" name="upload_format" id="{{label.name}}-{{label.task_id}}-upload-format-json" value="json" checked>
-                                        <label class="custom-control-label" for="{{label.name}}-{{label.task_id}}-upload-format-json">JSON</label>
+                                        <input class="custom-control-input" type="radio" name="upload_format" id="{{label.name}}-{{label.task_id}}-upload-format-{{filetype.value}}" value="{{filetype.value}}" {{checked}}>
+                                        <label class="custom-control-label" for="{{label.name}}-{{label.task_id}}-upload-format-{{filetype.value}}">{{filetype.description}}</label>
                                     </div>
-                                    <div class="custom-control custom-radio custom-control-inline">
-                                        <input class="custom-control-input" type="radio" name="upload_format" id="{{label.name}}-{{label.task_id}}-upload-format-csv" value="csv">
-                                        <label class="custom-control-label" for="{{label.name}}-{{label.task_id}}-upload-format-csv">CSV</label>
-                                    </div>
+                                    {% endfor %}
                                 </div>
                                 <div class="col-sm">
                                     <button type="submit" name="action" value="{{label.name}}_label_upload" class="btn btn-primary m-1 float-right">
