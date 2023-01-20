@@ -167,12 +167,14 @@ def add_chapter(
                         end_id = _token_id[-1]
 
             # NOTE: SentenceBoundary task is auto created at the start
-            # * Insert verse boundary as sentence boundary
+            # * Auto-boundary: Insert verse boundary as sentence boundary
             # * Use AUTO_ANNOTATOR_USER_ID as `annotator_id`
-            # * SentenceBoundary task_id is hard-coded (1)
-            # * Auto-boundary is used if the sentence boundary task is not active
+            # * Auto-boundary is used if the SentenceBoundary is not active
+            task = Task.query.filter(
+                Task.category == TASK_SENTENCE_BOUNDARY
+            ).first()
             boundary = Boundary()
-            boundary.task_id = 1
+            boundary.task = task
             boundary.token = token
             boundary.verse = verse
             boundary.annotator_id = AUTO_ANNOTATION_USER_ID
