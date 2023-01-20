@@ -1,12 +1,9 @@
 # Tables
 
-* This folder contains data to initialize various tables on the first run.
+* This folder contains sample data to illustrate format of various tables.
 * File name should be `table_name.json` or `table_name.csv` (for `_Label ` tables)
-  - If both are present, `.json` takes priority over `.csv`
-  - **TODO**: Add CSV support for task table
 * Please refer to `sample/` directory for examples.
-
-
+* The files can be uploaded through Admin tab for bulk ontology update.
 
 ## Schema
 

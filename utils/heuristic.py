@@ -3,8 +3,6 @@
 """
 Collection of Heuristics
 
-Created on Tue Jun 07 07:24:30 2022
-
 @author: Hrishikesh Terdalkar
 """
 

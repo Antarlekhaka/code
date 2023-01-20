@@ -11,6 +11,7 @@ SQLAlchemy>=1.4.25
 
 # Extra
 indic_transliteration>=2.2.4
+networkx>=2.5
 
 # PythonAnywhere Support
 requests>=2.26.0

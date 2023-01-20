@@ -1,12 +1,17 @@
 ## TODO
 
-- [ ] Task Category System (allow multiple tasks from same category)
-  - [ ] Global `TASK_CATEGORY` Constants
-  - [ ] Update models
-    - [ ] Task model to have `category` (`Enum()` of all valid task categories)
-    - [ ] All task models to have `task_id`
-  - [ ] Render templates, perform JS actions based on `Task.category`
-  - [ ] Admin interface to add/edit tasks, `category` to be chosen
+- [ ] Accept plaintext input
+  - [x] Simple plaintext processor (regex split)
+  - [ ] Stanza or some similar processors
+  - [ ] Input/Output Transliteration option at the time of chapter file upload
+
+- [ ] Use localStorage
+  - [ ] (corpus) split.js percentages
+  - [ ] (corpus) unconfirmed annotations
+    - [ ] different style for unconfirmed annotations
+  - [x] (admin) remember last open tab
+    - [x] data management accordion
+    - [x] ontology tabs
 
 - [ ] Export Data
   - [ ] Every task in 2 formats
@@ -18,10 +23,6 @@
   - [ ] Import entities (do it manually in database)
 
 - [ ] "Submit and go to next verse" ?
-
-- [ ] Initialization of various tabels
-  - [x] Accept JSON files
-  - [ ] Accept CSV files
 
 - [ ] Admin
   - [ ] Download Data
@@ -43,18 +44,24 @@
   - [x] Task table
   - [x] Remove `task_id` hard-coding in `server_sqla.py` api action handling
   - [x] Next task etc using Task.order
-  - [ ] Task related elements etc in JS
-  - [ ] Anything else that still remains
+  - [x] Task related elements etc in JS
+  - [ ] `export.py` hard-coding for Sentence Boundary and Word Order task
 
 - [ ] Custom key-events
   - [ ] Next/Previous Verse
   - [ ] Next/Previous Page
   - [ ] Submit
 
-- [ ] Detailed Help Messages
-
 ---
 
+- [x] Task Category System (allow multiple tasks from same category)
+  - [x] Global `TASK_CATEGORY` Constants
+  - [x] Update models
+    - [x] Task model to have `category` (`Enum()` of all valid task categories)
+    - [x] All task models to have `task_id`
+  - [x] Render templates, perform JS actions based on `Task.category`
+  - [x] Admin interface to add/edit tasks, `category` to be chosen
+    - [x] Customizable Help Messages
 - [x] Log all Submits instead of just latest per task per annotator?
 - [x] SentenceGraph show graph
 - [x] Add triplets for token graph
@@ -64,15 +71,15 @@
   - [x] Front-end (formatter function, on-hover info)
   - [x] Back-end (update after every task-submit)
 - [x] Skip vs Submit
-  [x] Remove Skip button?
-  [x] Allow empty submits
+  - [x] Remove Skip button?
+  - [x] Allow empty submits
 - [x] Draggable Left-Right Column
   - [x] ~At least adjust width (50-50 or so)~ (no longer needed)
 
 
 ## Bugs
 
-- [x] Export - boundary not shown in some cases 
+- [x] Export - boundary not shown in some cases
   - (details: bug was when boundary token does not have text (or equals `_`))
 
 - [ ] If there are deleted items, it triggers a "Successfully updated" message even if there are no changes. Refer to `server_sqla.py` for further details.
@@ -80,7 +87,7 @@
 - [x] If sentence boundary is marked for a verse in the next chapter, all the nodes in between get counted as sentences
 - [x] Task 4 not recording
 - [x] Task 4 display only displays single relation out of existing ones
-- [x] After marking sentence boundary, transition to canonical-word-order task doesn't take proper sentence as canonical-word-order, need to call `setup_word_order()` again. Probably async issue.
+- [x] After marking sentence boundary, transition to word-order task doesn't take proper sentence as word-order, need to call `setup_word_order()` again. Probably async issue.
 - [x] When new boundaries are marked, it may affect next sentence as well, need to do something about that. (e.g. If token 12 was boundary, and token 24 was another, and token 12 gets deleted, now, if token 24 had word_order, that needs to be re-done)
 
 ## Core
@@ -114,7 +121,6 @@
 
 - [ ] Allow selecting if DCS etc in case that conllu allowed
 - [ ] Run SSCS for splitting (for general Sanskrit corpus when not in CoNLLU) (Think!)
-- [ ] Addition of dynamic tasks from Admin panel
 - [ ] Edit in table??
 - [ ] Allow multiple selection in classification tasks -- handle it on JS side, generating multiple entries from a single selector -- Issue: when it is actually
 single select, multi-select adds one extra click for changing.

@@ -4,6 +4,8 @@
 Database Utility Functions
 
 Note: Functions are usable only in an application context.
+
+@author: Hrishikesh Terdalkar
 """
 
 ###############################################################################
@@ -54,18 +56,16 @@ LOGGER = logging.getLogger(__name__)
 
 ###############################################################################
 
-# Format for verse_data
+# NOTE: Format Verse Data (`chapter_data`)
 # [[{}, {}, {}, ...], [{}, {}, {}, ...], ...]
 # data: list of verses
 # verse: list of lines
 # line: dict (id, verse_id, text, tokens)
-# should have metadata, text, line_id, chapter_verse_id
-
 # tokens: list of dict
 # token: dict 10 CoNLL-U mandatory fields
 # in particular,
 # "id", "form", "lemma", "upos", "xpos", "feats", "misc"
-# `DCS.read_conllu_data` returns data it in this format
+# `CONLLU_PARSER.read_conllu_data` formats it in this format
 
 
 def add_chapter(
@@ -85,7 +85,7 @@ def add_chapter(
     chapter_description : str
         Chapter Description
     chapter_data : List[List[Dict]]
-        Chapter data as formatted by `DCS.read_conllu_data()`
+        Chapter data as formatted by `CONLLU_PARSER.read_conllu_data()`
     """
 
     result = {

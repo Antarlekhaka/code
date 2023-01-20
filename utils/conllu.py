@@ -32,7 +32,7 @@ class CoNLLUParser:
         "id",      # 01
         "form",    # 02 word form or punctuation symbol
         # if it contains multiple words, the annotation
-        # follows the proposals for multiword annotation
+        # follows the proposals for multi-word annotation
         # (URL: format.html#words-tokens-and-empty-nodes)
         "lemma",   # 03 lemma or stem, lexical id of lemma is in column 10
         "upos",    # 04 universal POS tags
@@ -46,7 +46,7 @@ class CoNLLUParser:
 
         # Digital Corpus of Sanskrit Specific Fields
         # LemmaId: matches first column of `dictionary.csv`
-        # OccId: id of this occurence of the word
+        # OccId: id of this occurrence of the word
         # Unsandhied: Unsandhied word form (padapāṭha version)
         # WordSem: Ids of word semantic concepts, matches first column of
         #          `word-senses.csv`
@@ -76,7 +76,7 @@ class CoNLLUParser:
         transliterate_metadata_keys: List[str] = None,
         transliterate_token_keys: List[str] = None
     ):
-        """Corpus of CoNLL-U Files
+        """CoNLL-U Files Parser
 
         Parameters
         ----------
@@ -215,6 +215,15 @@ class CoNLLUParser:
         return token
 
     # ----------------------------------------------------------------------- #
+    # NOTE: Verse Data Format
+    # [[{}, {}, {}, ...], [{}, {}, {}, ...], ...]
+    # data: list of verses
+    # verse: list of lines
+    # line: dict (id, verse_id, text, tokens)
+    # tokens: list of dict
+    # token: dict 10 CoNLL-U mandatory fields
+    # in particular,
+    # "id", "form", "lemma", "upos", "xpos", "feats", "misc"
 
     # TODO:
     # * Can we remove dependence on sent_id, sent_counter ?
@@ -231,8 +240,8 @@ class CoNLLUParser:
 
         Parameters
         ----------
-        conllu_data : object
-            CoNLL-U Content
+        verses : List[object]
+            Verse data
         """
 
         data = self.parse_conllu(conllu_data)
