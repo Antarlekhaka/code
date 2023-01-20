@@ -10,8 +10,19 @@ Configuration
 
 import os
 from utils.configuration import Configuration
+from constants import (
+    TASK_SENTENCE_BOUNDARY,
+    TASK_WORD_ORDER,
+    TASK_TOKEN_TEXT_ANNOTATION,
+    TASK_TOKEN_CLASSIFICATION,
+    TASK_TOKEN_GRAPH,
+    TASK_TOKEN_CONNECTION,
+    TASK_SENTENCE_CLASSIFICATION,
+    TASK_SENTENCE_GRAPH
+)
 
 ###############################################################################
+# EDIT
 
 DEBUG = False
 
@@ -40,7 +51,7 @@ APPLICATION_CONFIG = {
     #     "token_classification": True
     # },
 
-    # CoNLL-U Corpus Settigns
+    # CoNLL-U Corpus Settings
     "conllu": {
         "input_scheme": "iast",
         "store_scheme": "devanagari",
@@ -48,7 +59,7 @@ APPLICATION_CONFIG = {
             "id",      # 01
             "form",    # 02 word form or punctuation symbol
             # if it contains multiple words, the annotation
-            # follows the proposals for multiword annotation
+            # follows the proposals for multi-word annotation
             # (URL: format.html#words-tokens-and-empty-nodes)
             "lemma",   # 03 lemma or stem
             "upos",    # 04 universal POS tags
@@ -72,7 +83,7 @@ APPLICATION_CONFIG = {
         "transliterate_token_keys": ["form", "lemma", "misc.Unsandhied"],
     },
 
-    # TODO: handle corpus speific things through config?
+    # TODO: handle corpus specific things through config?
     # corpus agnostic treatment will require changes to JS too
     # e.g. assumptions about / usage of "unsandhied"
     "token_analysis_items": [
@@ -90,8 +101,18 @@ APPLICATION_CONFIG = {
         {"id": "verb-form", "title": "VerbForm"},
         {"id": "voice", "title": "Voice"}
     ],
-    "token_misc_items": []
-
+    "token_misc_items": [],
+    # Export
+    "export": {
+        "token_text_preference": {
+            TASK_WORD_ORDER: ["misc.Unsandhied", "form", "lemma"],
+            TASK_TOKEN_TEXT_ANNOTATION: ["lemma", "misc.Unsandhied", "form"],
+            TASK_TOKEN_CLASSIFICATION: ["lemma", "misc.Unsandhied", "form"],
+            TASK_TOKEN_GRAPH: ["lemma", "misc.Unsandhied", "form"],
+            TASK_TOKEN_CONNECTION: ["misc.Unsandhied", "form", "lemma"],
+            TASK_SENTENCE_GRAPH: ["lemma", "misc.Unsandhied", "form"],
+        }
+    },
 }
 
 # --------------------------------------------------------------------------- #
@@ -112,8 +133,8 @@ ABOUT = """
 "Antarlekhaka" is a framework for annotation towards numerous classes of
 linguistic tasks such as sentence boundary, word order, token text annotation,
 token classification (e.g. named entity recognition), token graph (e.g. action
-graph, coreference resolution), sentence classification, sentence graph (e.g
-discourse graph).
+graph), token connection (e.g. co-reference resolution), sentence classification,
+sentence graph (e.g discourse graph).
 """
 
 # --------------------------------------------------------------------------- #

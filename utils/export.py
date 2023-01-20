@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """
 Export Data
+
+@author: Hrishikesh Terdalkar
 """
 
 ###############################################################################
@@ -49,8 +51,10 @@ def get_token_text(token: dict, key_preference: List[str]):
 # --------------------------------------------------------------------------- #
 
 
-def simple_format(data):
+def simple_format(data, **kwargs):
     simple_data = {}
+    token_text_preference_map = kwargs.get("token_text_preference", {})
+    default_token_text_preference = ["lemma", "form"]
 
     for chpater_id, chapter_data in data["chapter"].items():
 
@@ -61,6 +65,9 @@ def simple_format(data):
             # --------------------------------------------------------------- #
             # NOTE: Assumption is that there's only one SentenceBoundary task
             # TODO: Obtain Task ID of SentenceBoundary Task
+            # Don't want to add database calls from this module, so perhaps
+            # export task_id from `export_data` function itself
+            # (as with the other tasks)
             task_id = 1
 
             boundary_tokens = [
@@ -101,9 +108,14 @@ def simple_format(data):
             # --------------------------------------------------------------- #
             # NOTE: Assumption is that there's only one WordOrder task
             # TODO: Obtain Task ID of WordOrder Task
+            # Don't want to add database calls from this module, so perhaps
+            # export task_id from `export_data` function itself
+            # (as with the other tasks)
             task_id = 2
 
-            preference = ["misc.Unsandhied", "form", "lemma"]
+            preference = token_text_preference_map.get(
+                TASK_WORD_ORDER, default_token_text_preference
+            )
 
             SENTENCES = {}
             display_text = [
@@ -152,7 +164,9 @@ def simple_format(data):
 
             # --------------------------------------------------------------- #
 
-            preference = ["lemma", "misc.Unsandhied", "form"]
+            preference = token_text_preference_map.get(
+                TASK_TOKEN_TEXT_ANNOTATION, default_token_text_preference
+            )
             display_text_header = [
                 ["Verse", "Token", "Annotation"],
                 ["-----", "-----", "----------"]
@@ -182,8 +196,9 @@ def simple_format(data):
 
             # --------------------------------------------------------------- #
 
-            preference = ["lemma", "misc.Unsandhied", "form"]
-
+            preference = token_text_preference_map.get(
+                TASK_TOKEN_CLASSIFICATION, default_token_text_preference
+            )
             display_text_header = [
                 ["Verse", "Token", "Label", "Description"],
                 ["-----", "-----", "-----", "-----------"]
@@ -214,7 +229,9 @@ def simple_format(data):
 
             # --------------------------------------------------------------- #
 
-            preference = ["lemma", "misc.Unsandhied", "form"]
+            preference = token_text_preference_map.get(
+                TASK_TOKEN_GRAPH, default_token_text_preference
+            )
 
             token_graph_data = {}
             token_graph_node_ids = {}
@@ -267,7 +284,9 @@ def simple_format(data):
 
             # --------------------------------------------------------------- #
 
-            preference = ["misc.Unsandhied", "form", "lemma"]
+            preference = token_text_preference_map.get(
+                TASK_TOKEN_CONNECTION, default_token_text_preference
+            )
 
             token_connection_graph = {}
             for tokcon in annotation_data[TASK_TOKEN_CONNECTION]:
@@ -338,7 +357,9 @@ def simple_format(data):
 
             # --------------------------------------------------------------- #
 
-            preference = ["lemma", "misc.Unsandhied", "form"]
+            preference = token_text_preference_map.get(
+                TASK_SENTENCE_GRAPH, default_token_text_preference
+            )
 
             sentence_graph_data = {}
             sentence_graph_node_ids = {}

@@ -218,6 +218,9 @@ CONLLU_PARSER = CoNLLUParser(
     transliterate_metadata_keys=CONLLU_CONFIG["transliterate_metadata_keys"],
     transliterate_token_keys=CONLLU_CONFIG["transliterate_token_keys"]
 )
+###############################################################################
+
+EXPORT_CONFIG = app.config("export")
 
 ###############################################################################
 # Database Utility Functions
@@ -609,7 +612,10 @@ def show_export():
             chapter_ids=[int(chapter_id) for chapter_id in chapter_ids],
             task_ids=[]
         )
-        simple_data = simple_format(annotation_data)
+        simple_data = simple_format(
+            annotation_data,
+            token_text_preference=EXPORT_CONFIG["token_text_preference"]
+        )
         annotation_result = {
             k[0]: v
             for k, v in simple_data.items()
