@@ -102,7 +102,7 @@ from constants import (
 )
 
 from models_sqla import (db, user_datastore,
-                         CustomLoginForm, CustomRegisterForm,
+                         CustomLoginForm,
                          Corpus, Chapter, Verse, Line, Token,
                          Task, SubmitLog, WordOrder, Boundary,
                          TokenTextAnnotation, TokenLabel, TokenClassification,
@@ -173,10 +173,8 @@ webapp.config['SECURITY_USER_IDENTITY_ATTRIBUTES'] = [
 webapp.config['SECURITY_RECOVERABLE'] = app.smtp_enabled
 webapp.config['SECURITY_CHANGEABLE'] = True
 webapp.config['SECURITY_TRACKABLE'] = True
-# NOTE: SECURITY_USERNAME_ still buggy in Flask-Security-Too
-# Exercise caution before enabling the following two options
-# webapp.config['SECURITY_USERNAME_ENABLE'] = True
-# webapp.config['SECURITY_USERNAME_REQUIRED'] = True
+webapp.config['SECURITY_USERNAME_ENABLE'] = True
+webapp.config['SECURITY_USERNAME_REQUIRED'] = True
 webapp.config['SECURITY_POST_LOGIN_VIEW'] = 'show_home'
 webapp.config['SECURITY_POST_LOGOUT_VIEW'] = 'show_home'
 
@@ -200,9 +198,8 @@ if app.smtp_enabled:
 db.init_app(webapp)
 
 csrf = CSRFProtect(webapp)
-security = Security(webapp, user_datastore,
-                    login_form=CustomLoginForm,
-                    register_form=CustomRegisterForm)
+security = Security(webapp, user_datastore, login_form=CustomLoginForm)
+
 mail = Mail(webapp)
 migrate = Migrate(webapp, db)
 babel = Babel(webapp)
@@ -226,11 +223,13 @@ CONLLU_PARSER = CoNLLUParser(
     transliterate_metadata_keys=CONLLU_CONFIG["transliterate_metadata_keys"],
     transliterate_token_keys=CONLLU_CONFIG["transliterate_token_keys"]
 )
+
 ###############################################################################
 
 EXPORT_CONFIG = app.config["export"]
 
 ###############################################################################
+# Plaintext Utility
 
 PLAINTEXT_CONFIG = app.config["plaintext"]
 PLAINTEXT_PROCESSOR = PlaintextProcessor(
