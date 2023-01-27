@@ -9,8 +9,7 @@ Plaintext Processing Utility
 ###############################################################################
 
 import re
-from pathlib import Path
-from typing import List, Dict
+from typing import List
 
 from indic_transliteration import sanscript
 from indic_transliteration.sanscript import transliterate

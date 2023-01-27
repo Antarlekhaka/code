@@ -48,7 +48,7 @@
         <div id="annotation-column" class="sticky-top align-self-start">
             <!-- For "sticky-top" to work on a "col" element requires "align-self-start" class as well. -->
             <!-- <div class="scroll-large"> -->
-            {% if current_user.has_permission("annotate") %}
+            {% if data.enable_annotation %}
             <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
                 {% for task_id, task in context_tasks.active_tasks.items() %}
                 {% if loop.index == 1 %}

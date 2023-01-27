@@ -344,7 +344,7 @@ def init_database():
 
 @user_registered.connect_via(webapp)
 def assign_default_roles(sender, user, **extra):
-    """Assign member role to users after successful registration"""
+    """Assign `ROLE_MEMBER` to users after successful registration"""
     user_datastore.add_role_to_user(user, ROLE_MEMBER)
     db.session.commit()
 
@@ -669,6 +669,9 @@ def show_corpus(chapter_id=None):
     data = {}
     data['title'] = 'Corpus'
     data['chapter_id'] = chapter_id
+    data['enable_annotation'] = current_user.has_permission(
+        PERMISSION_ANNOTATE
+    )
     return render_template('corpus.html', data=data)
 
 
