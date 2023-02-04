@@ -25,6 +25,7 @@ UPDATE `task` SET `id` = 8, `order` = 8 WHERE `category` = 'sentence_graph';
 
 /* Move old tables */
 ALTER TABLE `task` RENAME TO `old_task`;
+ALTER TABLE `submit_log` RENAME TO `old_submit_log`;
 ALTER TABLE `boundary` RENAME TO `old_boundary`;
 ALTER TABLE `word_order` RENAME TO `old_word_order`;
 ALTER TABLE `token_text_annotation` RENAME TO `old_token_text_annotation`;
@@ -39,6 +40,7 @@ ALTER TABLE `sentence_label` RENAME TO `old_sentence_label`;
 ALTER TABLE `sentence_relation_label` RENAME TO `old_sentence_relation_label`;
 
 /* Drop old indexes */
+DROP INDEX ix_submit_log_verse_id;
 DROP INDEX ix_boundary_verse_id;
 DROP INDEX boundary_token_id_annotator_id;
 DROP INDEX word_order_boundary_id_annotator_id_token_id;
@@ -58,6 +60,7 @@ DROP INDEX sentence_graph_annotator_id_src_boundary_id_dst_boundary_id_src_token
 /* Copy Tasks */
 DELETE FROM `task` WHERE 1;
 INSERT INTO `task` SELECT * FROM `old_task`;
+INSERT INTO `submit_log` SELECT * FROM `old_submit_log`;
 
 /* Copy Ontology */
 INSERT INTO `token_label` (`id`, `task_id`, `label`, `description`, `is_deleted`)
@@ -101,6 +104,7 @@ SELECT `id`, 8, `src_boundary_id`, `dst_boundary_id`, `src_token_id`, `dst_token
 /* **************************** Remove Old Data **************************** */
 
 DROP TABLE `old_task`;
+DROP TABLE `old_submit_log`;
 DROP TABLE `old_token_label`;
 DROP TABLE `old_token_relation_label`;
 DROP TABLE `old_sentence_label`;
