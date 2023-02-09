@@ -79,8 +79,15 @@ APPLICATION_CONFIG = {
             "feats": {},
             "misc": {}
         },
-        "transliterate_metadata_keys": ["text"],
-        "transliterate_token_keys": ["form", "lemma", "misc.Unsandhied"],
+        # NOTE: data structure is modelled as Verse > Line > Token
+        # line id is globally unique identifier (if any)
+        # verse id is used to group lines together,
+        # i.e., lines with same verse id are grouped together
+        "metadata_field_line_text": None,  # line text
+        "metadata_field_line_id": None,    # line id (unique line id)
+        "metadata_field_verse_id": None,   # verse id (sentence id)
+        "transliterate_metadata_keys": [],
+        "transliterate_token_keys": ["form", "lemma"],
     },
     # Plaintext Corpus Settings
     "plaintext": {

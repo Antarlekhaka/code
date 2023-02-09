@@ -220,6 +220,9 @@ CONLLU_PARSER = CoNLLUParser(
     store_scheme=CONLLU_CONFIG["store_scheme"],
     input_fields=CONLLU_CONFIG["input_fields"],
     relevant_fields=CONLLU_CONFIG["relevant_fields"],
+    metadata_field_line_text=CONLLU_CONFIG["metadata_field_line_text"],
+    metadata_field_line_id=CONLLU_CONFIG["metadata_field_line_id"],
+    metadata_field_verse_id=CONLLU_CONFIG["metadata_field_verse_id"],
     transliterate_metadata_keys=CONLLU_CONFIG["transliterate_metadata_keys"],
     transliterate_token_keys=CONLLU_CONFIG["transliterate_token_keys"]
 )
