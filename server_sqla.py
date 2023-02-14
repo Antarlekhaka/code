@@ -748,7 +748,7 @@ def show_settings():
 @permissions_required(PERMISSION_VIEW_CORPUS)
 def show_corpus(chapter_id=None):
     if chapter_id is None:
-        flash("Please select a corpus to view.")
+        flash("Please select a corpus to view.", "info")
         return redirect(url_for('show_home'))
 
     data = {}
@@ -1843,7 +1843,7 @@ def perform_action():
     try:
         action = request.form['action']
     except KeyError:
-        flash("Insufficient paremeters in request.")
+        flash("Insufficient parameters in request.", "error")
         return redirect(request.referrer)
 
     # ----------------------------------------------------------------------- #
@@ -1897,12 +1897,12 @@ def perform_action():
     ]
 
     if action not in valid_actions:
-        flash(f"Invalid action. ({action})")
+        flash(f"Invalid action. ({action})", "error")
         return redirect(request.referrer)
 
     for role, actions in role_actions.items():
         if action in actions and not current_user.has_role(role):
-            flash("You are not authorized to perform that action.", "danger")
+            flash("You are not authorized to perform that action.", "error")
             return redirect(request.referrer)
 
     # ----------------------------------------------------------------------- #
@@ -1911,7 +1911,7 @@ def perform_action():
     if action in [
         'application_info', 'application_update', 'application_reload'
     ] and not app.pa_enabled:
-        flash("PythonAnywhere configuration incomplete or missing.")
+        flash("PythonAnywhere configuration incomplete or missing.", "error")
         return redirect(request.referrer)
 
     if action == 'application_info':
@@ -1938,7 +1938,7 @@ def perform_action():
         session['admin_result'] = result
 
         if result == 'Already up-to-date.':
-            flash("Already up-to-date.")
+            flash("Already up-to-date.", "info")
         elif 'Updating' in result and 'changed,' in result:
             flash("Application code has been updated.", "success")
         else:
@@ -1978,7 +1978,7 @@ def perform_action():
                 valid_update = False
         else:
             if user_level <= target_level:
-                flash(f"You cannot modify '{target_user}'.", "danger")
+                flash(f"You cannot modify '{target_user}'.", "error")
                 valid_update = False
 
         if valid_update:
@@ -1991,9 +1991,9 @@ def perform_action():
 
             if status:
                 db.session.commit()
-                flash(message.format(target_role, target_user), "info")
+                flash(message.format(target_role, target_user), "success")
             else:
-                flash("No changes were made.")
+                flash("No changes were made.", "info")
 
         return redirect(request.referrer)
 
@@ -2123,14 +2123,16 @@ def perform_action():
                 _model.task_id == _label_task_id
             ).first()
 
-            message = f"{_model_name} '{_label_text}' does not exists."
+            message = f"{_model_name} '{_label_text}' does not exist."
             if _instance is not None and not _instance.is_deleted:
                 objects_with_given_label = _annotation_model.query.filter(
                     getattr(_annotation_model, _attribute) == _instance.id,
                     _annotation_model.is_deleted == False  # noqa
                 ).all()
                 if objects_with_given_label:
-                    f"{_model_name} '{_label_text}' is used in annotation."
+                    message = (
+                        f"{_model_name} '{_label_text}' is used in annotation."
+                    )
                 else:
                     _instance.is_deleted = True
                     db.session.add(_instance)
@@ -2155,7 +2157,7 @@ def perform_action():
                     table_data = json.loads(_label_file_content)
                 except json.decoder.JSONDecodeError as e:
                     webapp.logger.exception(e)
-                    flash("Invalid JSON file format.")
+                    flash("Invalid JSON file format.", "error")
                     return redirect(request.referrer)
             elif _upload_format == FILE_TYPE_CSV["value"]:
                 try:
@@ -2164,7 +2166,7 @@ def perform_action():
                     )
                 except csv.Error as e:
                     webapp.logger.exception(e)
-                    flash("Invalid CSV file format.")
+                    flash("Invalid CSV file format.", "error")
                     return redirect(request.referrer)
 
             _add_count = 0
@@ -2203,9 +2205,9 @@ def perform_action():
 
         if status:
             db.session.commit()
-            flash(message, "info")
+            flash(message, "success")
         else:
-            flash(message)
+            flash(message, "info")
         return redirect(request.referrer)
 
     # ----------------------------------------------------------------------- #
@@ -2248,7 +2250,7 @@ def perform_action():
         elif chapter_format == FILE_TYPE_PLAINTEXT["value"]:
             allowed_extensions = FILE_TYPE_PLAINTEXT["extensions"]
         else:
-            flash("Invalid chapter file type.")
+            flash("Invalid chapter file type.", "error")
             return redirect(request.referrer)
 
         file_extension = chapter_filename.rsplit('.', 1)[1].lower()
@@ -2282,7 +2284,7 @@ def perform_action():
                     chapter_data = PLAINTEXT_PROCESSOR.process(file_content)
             except Exception as e:
                 webapp.logger.exception(e)
-                flash("Invalid file format.")
+                flash("Invalid file format.", "error")
                 return redirect(request.referrer)
 
             # --------------------------------------------------------------- #
@@ -2298,12 +2300,12 @@ def perform_action():
 
             # --------------------------------------------------------------- #
         else:
-            flash("Invalid file or file extension.")
+            flash("Invalid file or file extension.", "error")
 
         return redirect(request.referrer)
 
     if action == 'annotation_download':
-        flash("Work in progress")
+        flash("Work in progress.")
         print(request.form)
         return redirect(request.referrer)
 
@@ -2337,7 +2339,7 @@ def perform_action():
     # ----------------------------------------------------------------------- #
 
     if not status:
-        flash("Action failed.", "danger")
+        flash("Action failed.", "error")
 
     return redirect(request.referrer)
 
