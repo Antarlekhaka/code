@@ -413,13 +413,14 @@
         </div>
     </div>
 
-    {% if current_user.has_role(context_roles.owner) and data.pa %}
-    <!-- PythonAnywhere -->
+    {% if current_user.has_role(context_roles.owner) %}
     <div class="card mt-2">
         <div class="card-header lead">
             Application
         </div>
         <div class="card-body">
+            {% if data.pa %}
+            <!-- PythonAnywhere -->
             <form method=POST enctype=multipart/form-data action="{{url_for('perform_action')}}">
                 <input type="hidden" name="csrf_token" value={{csrf_token()}}>
                 <button type="submit" name="action" value="application_info" class="btn btn-primary">
@@ -453,6 +454,8 @@
                     });
                 });
             </script>
+            {% endif %}
+            <a class="btn btn-dark" href="{{url_for('admin.index')}}">database</a>
         </div>
     </div>
     {% if data.result %}
