@@ -79,6 +79,7 @@
 
 ## Bugs
 
+- [x] TokenConnection/SentenceGraph connections/relations show incomplete rows when one of the tokens is out of context.
 - [x] Export - boundary not shown in some cases
   - (details: bug was when boundary token does not have text (or equals `_`))
 

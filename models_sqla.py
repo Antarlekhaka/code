@@ -415,6 +415,10 @@ class TokenConnection(db.Model):
     boundary_id = Column(
         Integer, ForeignKey('boundary.id', ondelete='CASCADE'), nullable=False
     )
+    # TODO:
+    # Do we need `src_boundary_id` and `dst_boundary_id` both?
+    # That is what we do in in SentenceGraph task?
+    # Figure out if there's anything fundamentally different!
     src_id = Column(Integer, ForeignKey('token.id'), nullable=False)
     dst_id = Column(Integer, ForeignKey('token.id'), nullable=False)
     # ----------------------------------------------------------------------- #
@@ -492,6 +496,10 @@ class SentenceGraph(db.Model):
     dst_boundary_id = Column(
         Integer, ForeignKey('boundary.id', ondelete='CASCADE'), nullable=False
     )
+    # TODO:
+    # Why do we need `src_boundary_id` and `dst_boundary_id` both?
+    # Why not simply use `src_boundary_id` as `boundary_id`
+    # That is what we do in in TokenConnection task?
     src_token_id = Column(Integer, ForeignKey('token.id'), nullable=False)
     dst_token_id = Column(Integer, ForeignKey('token.id'), nullable=False)
     label_id = Column(

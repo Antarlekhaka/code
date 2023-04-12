@@ -1362,20 +1362,29 @@ function setup_task_token_connection(task_id, verse_id) {
 
     // add existing references
     for (const token_connection of existing_token_connections) {
-        const $source_token = $(`#tokcon-token-${task_id}-${token_connection.src_id}`).clone();
+        const $original_source_token = $(`#tokcon-token-${task_id}-${token_connection.src_id}`);
+        const $original_target_token = $(`#tokcon-token-${task_id}-${token_connection.dst_id}`);
+
+        if (($original_source_token.length == 0) || ($original_target_token.length == 0)) {
+            // If either token is out of context, don't show that relation.
+            continue;
+        }
+
+        const $source_token = $original_source_token.clone();
         $source_token.removeAttr("id");
         $source_token.data("token-id", token_connection.src_id);
         $source_token.data("boundary-id", token_connection.boundary_id);
         $source_token.addClass("tokcon-source-token");
 
-        const $target_token = $(`#tokcon-token-${task_id}-${token_connection.dst_id}`).clone();
+        const $target_token = $original_target_token.clone();
         const target_token_boundary_id = $(`#tokcon-token-${task_id}-${token_connection.dst_id}`).data("boundary-id");
         $target_token.removeAttr("id");
         $target_token.data("token-id", token_connection.dst_id);
         $target_token.data("boundary-id", target_token_boundary_id);
         $target_token.addClass("tokcon-target-token");
 
-        add_token_connection_row($token_connection_annotation_container, $source_token, $target_token);
+        const is_context_connection = (verse_id != token_connection.verse_id);
+        add_token_connection_row($token_connection_annotation_container, $source_token, $target_token, is_context_connection);
     }
 
     /* setup event listeners */
@@ -1403,9 +1412,12 @@ function setup_task_token_connection(task_id, verse_id) {
 }
 
 
-function add_token_connection_row($location, $source_token, $target_token) {
+function add_token_connection_row($location, $source_token, $target_token, is_context_connection) {
     const $row = $('<div />').addClass("row").prependTo($location);
-    $row.addClass('tokcon-annotation-row');
+    $row.addClass('tokcon-annotation-row p-0 m-0');
+    if (is_context_connection) {
+        $row.addClass("bg-light pt-1 mb-1 border rounded");
+    }
 
     // add source token
     var $column = $("<div />", {
@@ -1759,35 +1771,44 @@ function setup_task_sentence_graph(task_id, verse_id) {
         // type == 2: sentence-token connection
         // type == 3: sentence-sentence connection
 
-        var $source_token, $target_token;
+        var $original_source_token, $original_target_token;
         if ((relation_relation_type == 0) || (relation_relation_type == 1)) {
-            $source_token = $(`#sentence-graph-token-${task_id}-${sentrel.src_token_id}`).clone();
+            $original_source_token = $(`#sentence-graph-token-${task_id}-${sentrel.src_token_id}`);
         } else {
-            $source_token = $(`#sentence-graph-sentence-token-${task_id}-${sentrel.src_token_id}`).clone();
+            $original_source_token = $(`#sentence-graph-sentence-token-${task_id}-${sentrel.src_token_id}`);
         }
+        if ((relation_relation_type == 0) || (relation_relation_type == 2)) {
+            $original_target_token = $(`#sentence-graph-token-${task_id}-${sentrel.dst_token_id}`);
+        } else {
+            $original_target_token = $(`#sentence-graph-sentence-token-${task_id}-${sentrel.dst_token_id}`);
+        }
+
+        if (($original_source_token.length == 0) || ($original_target_token.length == 0)) {
+            // If either token is out of context, don't show that relation.
+            continue;
+        }
+
+        const $source_token = $original_source_token.clone();
         $source_token.removeAttr("id");
         $source_token.data("token-id", sentrel.src_token_id);
         $source_token.data("boundary-id", sentrel.src_boundary_id);
         $source_token.addClass("sentence-graph-source-token");
 
-        if ((relation_relation_type == 0) || (relation_relation_type == 2)) {
-            $target_token = $(`#sentence-graph-token-${task_id}-${sentrel.dst_token_id}`).clone();
-        } else {
-            $target_token = $(`#sentence-graph-sentence-token-${task_id}-${sentrel.dst_token_id}`).clone();
-        }
+        const $target_token = $original_target_token.clone();
         $target_token.removeAttr("id");
         $target_token.data("token-id", sentrel.dst_token_id);
         $target_token.data("boundary-id", sentrel.dst_boundary_id);
         $target_token.addClass("sentence-graph-target-token");
 
         const relation_label_id = sentrel.label_id;
-
+        const is_context_connection = ((verse_id != sentrel.src_verse_id) && (verse_id != sentrel.dst_verse_id));
         add_sentence_graph_row(
             $sentence_graph_annotation_container,
             $sentence_graph_relation_selector,
             $source_token,
             $target_token,
-            relation_label_id
+            relation_label_id,
+            is_context_connection
         );
     }
 
@@ -1826,9 +1847,12 @@ function setup_task_sentence_graph(task_id, verse_id) {
 
 }
 
-function add_sentence_graph_row($location, $selector, $source_token, $target_token, relation_label_id) {
+function add_sentence_graph_row($location, $selector, $source_token, $target_token, relation_label_id, is_context_connection) {
     const $row = $('<div />').addClass("row").prependTo($location);
-    $row.addClass('sentence-graph-annotation-row');
+    $row.addClass('sentence-graph-annotation-row p-0 m-0');
+    if (is_context_connection) {
+        $row.addClass("bg-light pt-1 mb-1 border rounded");
+    }
 
     // add source token
     var $column = $("<div />", {
