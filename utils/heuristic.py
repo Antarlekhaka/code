@@ -69,3 +69,108 @@ def get_word_order(token_list: Dict[int, Dict]) -> List[int]:
 def get_lemma(text: str) -> str:
     """Heuristic to identify lemma"""
     return text
+
+
+def get_token_graph(
+    token_list: Dict[int, Dict],
+    boundary_id: int,
+    relation_map: Dict[str, int] = None
+) -> List[int]:
+    """Heuristic to get token graph"""
+    from functools import reduce
+
+    relations = []
+    relation_map = {
+        "कर्ता": 1,
+        "कर्म": 2,
+        "करणम्": 3,
+        "सम्प्रदानम्": 4,
+        "अपादानम्": 5
+    }
+    rules = [
+        {
+            "src_condition": [("upos", "==", "VERB"), ("feats.Voice", "!=", "Pass")],
+            "dst_condition": [("feats.Case", "==", "Nom")],
+            "relation_label": ["कर्ता"]
+        },
+        {
+            "src_condition": [("upos", "==", "VERB"), ("feats.Voice", "==", "Pass")],
+            "dst_condition": [("feats.Case", "==", "Ins")],
+            "relation_label": ["कर्ता"]
+        },
+        {
+            "src_condition": [("upos", "==", "VERB"), ("feats.Voice", "!=", "Pass")],
+            "dst_condition": [("feats.Case", "==", "Acc")],
+            "relation_label": ["कर्म"]
+        },
+        {
+            "src_condition": [("upos", "==", "VERB"), ("feats.Voice", "==", "Pass")],
+            "dst_condition": [("feats.Case", "==", "Nom")],
+            "relation_label": ["कर्म"]
+        },
+        {
+            "src_condition": [("upos", "==", "VERB")],
+            "dst_condition": [("feats.Case", "==", "Dat")],
+            "relation_label": ["सम्प्रदानम्"]
+        },
+        {
+            "src_condition": [("upos", "==", "VERB")],
+            "dst_condition": [("feats.Case", "==", "Abl")],
+            "relation_label": ["अपादानम्"]
+        },
+        {
+            "src_condition": [("upos", "==", "VERB")],
+            "dst_condition": [("feats.Case", "==", "Loc")],
+            "relation_label": []
+        }
+    ]
+
+    def check_rule(_rule, _src_token, _dst_token):
+        tokens = {
+            "src": _src_token,
+            "dst": _dst_token
+        }
+        conditions = []
+        for condition_type in ["src", "dst"]:
+            _conditions = _rule[f"{condition_type}_condition"]
+            _token = tokens[condition_type]
+            for (_key, _operator, _value) in _conditions:
+                key = reduce(
+                    lambda d, k: d.get(k, {}),
+                    _key.split("."),
+                    _token["analysis"]
+                )
+                if _operator == "==":
+                    conditions.append(key == _value)
+                if _operator == "!=":
+                    conditions.append(key != _value)
+        return all(conditions)
+
+    src_token_list = list(token_list.items())
+    dst_token_list = list(token_list.items())
+
+    for dst_id, dst_token in dst_token_list:
+        for src_id, src_token in src_token_list:
+            if src_id == dst_id:
+                continue
+
+            if (
+                not isinstance(src_token["analysis"], dict) or
+                not isinstance(dst_token["analysis"], dict)
+            ):
+                continue
+
+            for rule in rules:
+                if check_rule(rule, src_token, dst_token):
+                    relation_id = None
+                    if rule["relation_label"]:
+                        relation_id = relation_map.get(rule["relation_label"][0])
+
+                    relations.append({
+                        "boundary_id": boundary_id,
+                        "src_id": src_id,
+                        "label_id": relation_id,
+                        "dst_id": dst_id
+                    })
+
+    return relations
