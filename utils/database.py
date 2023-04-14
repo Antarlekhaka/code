@@ -48,7 +48,7 @@ from constants import (
     TASK_SENTENCE_CLASSIFICATION,
     TASK_SENTENCE_GRAPH
 )
-from utils.heuristic import get_word_order
+from utils.heuristic import get_word_order, get_token_graph
 
 ###############################################################################
 
@@ -617,6 +617,14 @@ def get_verse_data(
                 TASK_TOKEN_CONNECTION: [],
                 TASK_SENTENCE_CLASSIFICATION: [],
                 TASK_SENTENCE_GRAPH: [],
+                "heuristics": {
+                    TASK_TOKEN_TEXT_ANNOTATION: [],
+                    TASK_TOKEN_CLASSIFICATION: [],
+                    TASK_TOKEN_GRAPH: [],
+                    TASK_TOKEN_CONNECTION: [],
+                    TASK_SENTENCE_CLASSIFICATION: [],
+                    TASK_SENTENCE_GRAPH: []
+                },
                 "progress": [
                     {
                         "task_id": p.task_id,
@@ -786,6 +794,23 @@ def get_verse_data(
             }
             for tokrel in token_graph_query.all()
         ])
+
+        # NOTE: Do we pass task_id to get_token_graph()
+        # * Would need to pass task_id all TOKEN_GRAPH category tasks,
+        #   so would need an outer loop.
+        #   e.g. for task_id in [valid_token_graph_tasks]:
+        # Other alternative could be to have separate heuristic functions for
+        # every token graph task, but managing that might be harder!
+
+        sentence_tokens = data[verse_id]["sentences"][boundary.id]
+        used_tokens = {
+            _token_id: _token
+            for _token_id, _token in sentence_tokens.items()
+            if _token_id in data[verse_id][TASK_WORD_ORDER][boundary.id]
+        }
+        data[verse_id]["heuristics"][TASK_TOKEN_GRAPH].extend(
+            get_token_graph(used_tokens, boundary.id)
+        )
 
         # ------------------------------------------------------------------- #
 
