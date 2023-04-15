@@ -906,6 +906,7 @@ function setup_task_token_graph(task_id, verse_id) {
 
     // record existing relations
     var existing_relations = {};
+    var heuristic_relations = {};
     for (const tokrel of row[TASK_TOKEN_GRAPH]) {
         if (tokrel.is_deleted || tokrel.task_id != task_id) {
             continue;
@@ -919,6 +920,32 @@ function setup_task_token_graph(task_id, verse_id) {
             tokrel.dst_id
         ]);
     }
+    for (const tokrel of row["heuristics"][TASK_TOKEN_GRAPH]) {
+        // NOTE: get_token_graph() heuristic should return a list of dicts
+        // every dict should have at least 5 properties: boundary_id, task_id, src_id, label_id, dst_id
+        // NOTE: It is unclear how to provide task_id etc yet, for now, the heuristic is pretty ad-hoc
+        // Some notable pitfalls:
+        // * Same heuristic will apply to all token_graph tasks
+        // * tokrel.relation_id provision is pretty hard to provide
+
+        // if (tokrel.task_id != task_id) {
+        //     continue;
+        // }
+
+        // continue if there is at least one annotated relation for this boundary
+        if (existing_relations.hasOwnProperty(tokrel.boundary_id)) {
+            continue
+        }
+        if (!heuristic_relations.hasOwnProperty(tokrel.boundary_id)) {
+            heuristic_relations[tokrel.boundary_id] = [];
+        }
+        heuristic_relations[tokrel.boundary_id].push([
+            tokrel.src_id,
+            tokrel.label_id,
+            tokrel.dst_id
+        ]);
+    }
+
     console.log(existing_relations);
 
     for (const [boundary_id, used_token_ids] of Object.entries(boundary_tokens)) {
@@ -965,18 +992,28 @@ function setup_task_token_graph(task_id, verse_id) {
 
         if (existing_relations.hasOwnProperty(boundary_id)) {
             for (const [_src_id, _label_id, _dst_id] of existing_relations[boundary_id]) {
-                const $triple_row = add_token_graph_row($triplet_location, task_id);
+                const $triple_row = add_token_graph_row($triplet_location, task_id, false);
                 $triple_row.find(".source-entity").selectpicker('val', _src_id);
                 $triple_row.find(".relation-label").selectpicker('val', _label_id);
                 $triple_row.find(".target-entity").selectpicker('val', _dst_id);
             }
         } else {
-            // $add_triplet_button.click();
+            if (heuristic_relations.hasOwnProperty(boundary_id)) {
+                for (const [_src_id, _label_id, _dst_id] of heuristic_relations[boundary_id]) {
+                    const $triple_row = add_token_graph_row($triplet_location, task_id, true);
+                    $triple_row.find(".source-entity").selectpicker('val', _src_id);
+                    $triple_row.find(".relation-label").selectpicker('val', _label_id);
+                    $triple_row.find(".target-entity").selectpicker('val', _dst_id);
+                }
+            } else {
+                // Initiate empty row?
+                // $add_triplet_button.click();
+            }
         }
     }
 }
 
-function add_token_graph_row($location, task_id) {
+function add_token_graph_row($location, task_id, is_heuristic) {
     const source_entity_options = $location.data("source-options");
     const target_entity_options = $location.data("target-options");
 
@@ -985,8 +1022,11 @@ function add_token_graph_row($location, task_id) {
     const $sample_token_graph_relation_label = $(`#sample-token-graph-relation-label-${task_id}`);
 
     // Create and Insert Triplet Row Element
-    const $row = $('<div />').addClass(`form-row mt-1 px-0`).appendTo($location);
+    const $row = $('<div />').addClass(`form-row mx-0 mt-1 px-0`).appendTo($location);
     $row.addClass('triplet-row');
+    if (is_heuristic) {
+        $row.addClass("border border-warning rounded rounded py-1")
+    }
 
     const triplet_count = $location.data("triplet-count") + 1;
     $location.data("triplet-count", triplet_count);
@@ -1014,7 +1054,7 @@ function add_token_graph_row($location, task_id) {
 
 
     // Insert Action Entity Input Element
-    var $column = $('<div />').addClass(`col-sm mx-0 pr-0`).appendTo($row);
+    var $column = $('<div />').addClass(`col-sm mx-0 pr-0 my-auto`).appendTo($row);
     $input_source_entity.appendTo($column);
     // $input_source_entity.autoComplete();
 
@@ -1030,7 +1070,7 @@ function add_token_graph_row($location, task_id) {
     $input_relation_label.addClass("relation-label");
 
     // Insert Actor Label Selector Element
-    var $column = $('<div />').addClass(`col-sm mx-1 px-0`).appendTo($row);
+    var $column = $('<div />').addClass(`col-sm mx-1 px-0 my-auto`).appendTo($row);
     $input_relation_label.appendTo($column);
 
     // Create Target Entity Input Element
@@ -1055,9 +1095,8 @@ function add_token_graph_row($location, task_id) {
     }
 
     // Insert Target Entity Input Element
-    var $column = $('<div />').addClass(`col-sm mx-0 pl-0`).appendTo($row);
-    const $form_group = $('<div />').addClass('form-group').appendTo($column);
-    $input_target_entity.appendTo($form_group);
+    var $column = $('<div />').addClass(`col-sm mx-0 pl-0 my-auto`).appendTo($row);
+    $input_target_entity.appendTo($column);
     // $input_target_entity.autoComplete();
 
     // Create Remove Triplet Button
@@ -1067,7 +1106,7 @@ function add_token_graph_row($location, task_id) {
     const $remove_icon = $('<i />').addClass(`fas fa-minus`);
 
     // Insert Remove Triplet Button
-    var $column = $('<div />').addClass(`col-sm-1 mx-0 px-0`).appendTo($row);
+    var $column = $('<div />').addClass(`col-sm-1 mx-0 px-0 my-auto`).appendTo($row);
     $remove_icon.appendTo($remove_triplet_button);
     $remove_triplet_button.appendTo($column);
     $remove_triplet_button.click(function () {
