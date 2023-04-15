@@ -1452,8 +1452,8 @@ function setup_task_token_connection(task_id, verse_id) {
 
 
 function add_token_connection_row($location, $source_token, $target_token, is_context_connection) {
-    const $row = $('<div />').addClass("row").prependTo($location);
-    $row.addClass('tokcon-annotation-row p-0 m-0');
+    const $row = $('<div />').addClass("row p-0 m-0").prependTo($location);
+    $row.addClass('tokcon-annotation-row');
     if (is_context_connection) {
         $row.addClass("bg-light pt-1 mb-1 border rounded");
     }
@@ -1486,6 +1486,10 @@ function add_token_connection_row($location, $source_token, $target_token, is_co
     $remove_tokcon_button.click(function () {
         $(this).parent().parent().remove();
     });
+    if (is_context_connection) {
+        $remove_tokcon_button.attr("title", "Go to the source verse to remove the token connection.");
+        $remove_tokcon_button.prop("disabled", true);
+    }
 }
 
 /* Task: Token Connection: Actions */
@@ -1917,16 +1921,19 @@ function add_sentence_graph_row($location, $selector, $source_token, $target_tok
     $target_token.appendTo($column);
 
     // add remove button
+    var $column = $('<div />').addClass("col-sm-2").appendTo($row);
     const $remove_sentence_graph_button = $('<button />').addClass(`btn btn-danger float-right mx-1`);
     $remove_sentence_graph_button.attr("title", "Remove Sentence Relation");
     const $remove_icon = $('<i />').addClass(`fas fa-minus`);
-    var $column = $('<div />').addClass("col-sm-2").appendTo($row);
     $remove_icon.appendTo($remove_sentence_graph_button);
     $remove_sentence_graph_button.appendTo($column);
     $remove_sentence_graph_button.click(function () {
         $(this).parent().parent().remove();
     });
-
+    if (is_context_connection) {
+        $remove_sentence_graph_button.attr("title", "Go to the source verse to remove the token connection.");
+        $remove_sentence_graph_button.prop("disabled", true);
+    }
 }
 
 function prepare_sentence_graph_data($data_location) {
