@@ -15,7 +15,7 @@ from flask_security import Security, hash_password
 # Local
 from settings import app
 from models_sqla import db, user_datastore
-from models_sqla import CustomLoginForm, CustomRegisterForm
+from models_sqla import CustomLoginForm
 
 ###############################################################################
 
@@ -29,9 +29,7 @@ webapp.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
 }
 
 db.init_app(webapp)
-security = Security(webapp, user_datastore,
-                    login_form=CustomLoginForm,
-                    register_form=CustomRegisterForm)
+security = Security(webapp, user_datastore, login_form=CustomLoginForm)
 webapp.app_context().push()
 
 ###############################################################################
