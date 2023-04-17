@@ -30,6 +30,7 @@ from models_sqla import (
     TokenConnection,
     SentenceClassification,
     SentenceGraph,
+    TokenRelationLabel,
     SubmitLog
 )
 from constants import (
@@ -808,8 +809,30 @@ def get_verse_data(
             for _token_id, _token in sentence_tokens.items()
             if _token_id in data[verse_id][TASK_WORD_ORDER][boundary.id]
         }
+
+        # TODO: Need better heuristic management.
+        # One option is to connect TASK_ID to heuristic functions
+        # This mapping needs to be dynamic though? Since the task_ids would be
+        # decided based on the order in which tasks are added.
+
+        # The following assumes a single TOKEN_GRAPH task, else the dictionary
+        # might not work well since there might be common labels across tasks
+        # and their ID will get overwritten
+
+        # Further, this relation map can be generated outside the verse loop,
+        # so that it's calculated only once per function call instead of once
+        # per boundary
+
+        token_relation_label_query = TokenRelationLabel.query.filter(
+            TokenRelationLabel.is_deleted == False  # noqa
+        )
+        token_relation_map = {
+            token_relation_label.description: token_relation_label.id
+            for token_relation_label in token_relation_label_query.all()
+        }
+
         data[verse_id]["heuristics"][TASK_TOKEN_GRAPH].extend(
-            get_token_graph(used_tokens, boundary.id)
+            get_token_graph(used_tokens, boundary.id, token_relation_map)
         )
 
         # ------------------------------------------------------------------- #

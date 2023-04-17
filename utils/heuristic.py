@@ -74,19 +74,12 @@ def get_lemma(text: str) -> str:
 def get_token_graph(
     token_list: Dict[int, Dict],
     boundary_id: int,
-    relation_map: Dict[str, int] = None
+    relation_map: Dict[str, int]
 ) -> List[int]:
     """Heuristic to get token graph"""
     from functools import reduce
 
     relations = []
-    relation_map = {
-        "कर्ता": 1,
-        "कर्म": 2,
-        "करणम्": 3,
-        "सम्प्रदानम्": 4,
-        "अपादानम्": 5
-    }
     rules = [
         {
             "src_condition": [("upos", "==", "VERB"), ("feats.Voice", "!=", "Pass")],
