@@ -26,10 +26,10 @@ def get_word_order(token_list: Dict[int, Dict]) -> List[int]:
     """Heuristic to get word order"""
 
     CASE_ORDER = ["Loc", "Nom", "Dat", "Abl", "Ins", "Acc"]
-    XPOS_ORDER = ["CAD", "CX", "CNG", "V"]
+    UPOS_ORDER = ["ADV", "PART", "VERB"]
 
     case_order = []
-    xpos_order = []
+    upos_order = []
     used = set()
     unused = set(token_list)
     for case in CASE_ORDER:
@@ -42,12 +42,12 @@ def get_word_order(token_list: Dict[int, Dict]) -> List[int]:
                 unused.remove(token_id)
                 used.add(token_id)
 
-    for xpos in XPOS_ORDER:
+    for upos in UPOS_ORDER:
         for token_id, token in token_list.items():
             if token_id in used:
                 continue
-            if token["analysis"].get("xpos") == xpos:
-                xpos_order.append(token_id)
+            if token["analysis"].get("upos") == upos:
+                upos_order.append(token_id)
                 unused.remove(token_id)
                 used.add(token_id)
 
@@ -60,7 +60,7 @@ def get_word_order(token_list: Dict[int, Dict]) -> List[int]:
             unused.remove(token_id)
             used.add(token_id)
 
-    word_order.extend(xpos_order)
+    word_order.extend(upos_order)
     assert set(token_list) == set(word_order)
 
     return word_order
@@ -83,37 +83,37 @@ def get_token_graph(
     rules = [
         {
             "src_condition": [("upos", "==", "VERB"), ("feats.Voice", "!=", "Pass")],
-            "dst_condition": [("feats.Case", "==", "Nom")],
+            "dst_condition": [("feats.Case", "==", "Nom"), ("upos", "==", "NOUN")],
             "relation_label": ["कर्ता"]
         },
         {
             "src_condition": [("upos", "==", "VERB"), ("feats.Voice", "==", "Pass")],
-            "dst_condition": [("feats.Case", "==", "Ins")],
+            "dst_condition": [("feats.Case", "==", "Ins"), ("upos", "==", "NOUN")],
             "relation_label": ["कर्ता"]
         },
         {
             "src_condition": [("upos", "==", "VERB"), ("feats.Voice", "!=", "Pass")],
-            "dst_condition": [("feats.Case", "==", "Acc")],
+            "dst_condition": [("feats.Case", "==", "Acc"), ("upos", "==", "NOUN")],
             "relation_label": ["कर्म"]
         },
         {
             "src_condition": [("upos", "==", "VERB"), ("feats.Voice", "==", "Pass")],
-            "dst_condition": [("feats.Case", "==", "Nom")],
+            "dst_condition": [("feats.Case", "==", "Nom"), ("upos", "==", "NOUN")],
             "relation_label": ["कर्म"]
         },
         {
             "src_condition": [("upos", "==", "VERB")],
-            "dst_condition": [("feats.Case", "==", "Dat")],
+            "dst_condition": [("feats.Case", "==", "Dat"), ("upos", "==", "NOUN")],
             "relation_label": ["सम्प्रदानम्"]
         },
         {
             "src_condition": [("upos", "==", "VERB")],
-            "dst_condition": [("feats.Case", "==", "Abl")],
+            "dst_condition": [("feats.Case", "==", "Abl"), ("upos", "==", "NOUN")],
             "relation_label": ["अपादानम्"]
         },
         {
             "src_condition": [("upos", "==", "VERB")],
-            "dst_condition": [("feats.Case", "==", "Loc")],
+            "dst_condition": [("feats.Case", "==", "Loc"), ("upos", "==", "NOUN")],
             "relation_label": []
         }
     ]
