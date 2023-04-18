@@ -1,5 +1,8 @@
 {% extends "task_base.html" %}
 {% block extra_header %}
+<button id="load-context-sentence-graph-{{task.id}}" type="button" title="Load More Context" class="btn btn-sm btn-info ml-1 float-right load-context-button" data-task-id="{{task.id}}" data-task-category="{{task.category}}">
+    <i class="fa-solid fa-file"></i>
+</button>
 <button id="show-graph-sentence-graph-{{task.id}}" type="button" title="Show Graph" class="btn btn-sm btn-info ml-1 float-right show-graph-modal-button" data-task-id="{{task.id}}" data-task-category="{{task.category}}" data-toggle="modal" data-target="#show-graph-modal" disabled>
     <i class="fa-solid fa-diagram-project"></i>
 </button>

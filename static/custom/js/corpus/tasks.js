@@ -1300,7 +1300,7 @@ function submit_task_token_graph(task_id) {
 // Setup: Token Connection
 
 
-function setup_task_token_connection(task_id, verse_id) {
+function setup_task_token_connection(task_id, verse_id, context_window) {
     console.log(`Called ${arguments.callee.name}(${Object.values(arguments).join(", ")});`);
 
     const row = $corpus_table.bootstrapTable('getRowByUniqueId', verse_id);
@@ -1321,7 +1321,11 @@ function setup_task_token_connection(task_id, verse_id) {
         return r.verse_id == verse_id;
     });
 
-    const start_index = (current_index > 2) ? (current_index - 3) : 0;
+    if (!context_window) {
+        context_window = 3;
+    }
+
+    const start_index = (current_index > (context_window - 1)) ? (current_index - context_window) : 0;
     const context = data.slice(start_index, current_index + 1);
 
     var all_tokens = {};
@@ -1683,7 +1687,7 @@ function submit_task_sentence_classification(task_id) {
 // Task: Sentence Graph (e.g. Discourse Graph)
 
 // Setup: Sentence Graph
-function setup_task_sentence_graph(task_id, verse_id) {
+function setup_task_sentence_graph(task_id, verse_id, context_window) {
     console.log(`Called ${arguments.callee.name}(${Object.values(arguments).join(", ")});`);
 
     const row = $corpus_table.bootstrapTable('getRowByUniqueId', verse_id);
@@ -1705,7 +1709,11 @@ function setup_task_sentence_graph(task_id, verse_id) {
         return r.verse_id == verse_id;
     });
 
-    const start_index = (current_index > 2) ? (current_index - 3) : 0;
+    if (!context_window) {
+        context_window = 3;
+    }
+
+    const start_index = (current_index > (context_window - 1)) ? (current_index - context_window) : 0;
     const context = data.slice(start_index, current_index + 1);
 
     var all_tokens = {};

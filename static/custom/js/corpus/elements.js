@@ -54,5 +54,12 @@ const $graph = $("#graph");
 
 /* ******************* */
 
+/* Load Context */
+// Load more context rows for token connection and sentence graph tasks
+
+const $load_context_buttons = $(".load-context-button");
+
+/* ******************* */
+
 // Globals
 const storage = window.localStorage;

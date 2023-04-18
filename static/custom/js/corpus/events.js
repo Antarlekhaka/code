@@ -72,7 +72,27 @@ $('.task-tab[data-toggle="pill"]').on('shown.bs.tab', function (event) {
     const $active_tab = $(event.target);
     const task_category = $active_tab.data("task-category");
     const task_id = $active_tab.data("task-id");
+    $load_context_buttons.removeData("context-window");
     setup_task(task_category, task_id, verse_id);
+});
+
+$load_context_buttons.click(function () {
+    const verse_id = $verse_id_containers.html();
+    const task_category = $(this).data("task-category");
+    const task_id = $(this).data("task-id");
+
+    var context_window = $(this).data("context-window");
+    if (!context_window) {
+        context_window = 3;
+    }
+    context_window += 3;
+    $(this).data("context-window", context_window);
+    if (task_category == TASK_TOKEN_CONNECTION) {
+        setup_task_token_connection(task_id, verse_id, context_window);
+    }
+    if (task_category == TASK_SENTENCE_GRAPH) {
+        setup_task_sentence_graph(task_id, verse_id, context_window);
+    }
 });
 
 // Submit Button

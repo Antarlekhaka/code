@@ -1,4 +1,9 @@
 {% extends "task_base.html" %}
+{% block extra_header %}
+<button id="load-context-token-connection-{{task.id}}" type="button" title="Load More Context" class="btn btn-sm btn-info ml-1 float-right load-context-button" data-task-id="{{task.id}}" data-task-category="{{task.category}}">
+    <i class="fa-solid fa-file"></i>
+</button>
+{% endblock %}
 {% block body %}
 <div id="tokcon-context-container-{{task.id}}" class="scroll">
     <br>
