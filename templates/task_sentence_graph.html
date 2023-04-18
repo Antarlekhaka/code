@@ -18,8 +18,8 @@
 
 <!-- Intermediate -->
 <div class="mark border border-warning rounded px-1 pt-1 pb-0 m-1" id="sentence-graph-intermediate-row-container-{{task.id}}">
-    <div id="sentence-graph-row-{{task.id}}" class="row">
-        <div id="sentence-graph-source-token-container-{{task.id}}" class="col-sm"></div>
+    <div id="sentence-graph-row-{{task.id}}" class="row p-0 m-0">
+        <div id="sentence-graph-source-token-container-{{task.id}}" class="col-sm px-1"></div>
         <div id="sentence-graph-relation-container-{{task.id}}" class="col-sm-4">
             <select id="sentence-graph-relation-selector-{{task.id}}" title="Select Sentence Relation" class="selectpicker" data-show-subtext="true" data-width="75%" data-live-search="true" required>
                 {% for _id, _task_id, _label, _description in context_labels.sentence_relation_labels %}
@@ -29,8 +29,8 @@
                 {% endfor %}
             </select>
         </div>
-        <div id="sentence-graph-target-token-container-{{task.id}}" class="col-sm"></div>
-        <div class="col-sm-2">
+        <div id="sentence-graph-target-token-container-{{task.id}}" class="col-sm px-1"></div>
+        <div class="col-sm-2 px-0">
             <button id="sentence-graph-confirm-button-{{task.id}}" type="button" title="Confirm" class="btn btn-success float-right mx-1 mb-1" disabled>
                 <i class="fas fa-check"></i>
             </button>
@@ -47,8 +47,8 @@
     <!-- Temporary Content -->
     <!-- Content will be overwritten by JS. -->
 
-    <div class="row">
-        <div class="col-sm">
+    <div class="row p-0 m-0">
+        <div class="col-sm px-1">
             <span class="btn btn-light mb-1">
                 source-token
             </span>
@@ -56,12 +56,12 @@
         <div class="col-sm-4">
             <select class="form-control selectpicker" data-width="75%"></select>
         </div>
-        <div class="col-sm">
+        <div class="col-sm px-1">
             <span class="btn btn-light mb-1">
                 target-token
             </span>
         </div>
-        <div class="col-sm-2">
+        <div class="col-sm-2 px-0">
             <button type="button" class="btn btn-danger float-right mx-1">
                 <i class="fas fa-minus"></i>
             </button>

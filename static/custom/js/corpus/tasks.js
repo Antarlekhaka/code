@@ -1460,7 +1460,7 @@ function add_token_connection_row($location, $source_token, $target_token, is_co
 
     // add source token
     var $column = $("<div />", {
-        class: "col-sm",
+        class: "col-sm px-1",
     }).appendTo($row);
     $source_token.appendTo($column);
 
@@ -1472,7 +1472,7 @@ function add_token_connection_row($location, $source_token, $target_token, is_co
 
     // add target token
     var $column = $("<div />", {
-        class: "col-sm",
+        class: "col-sm px-1",
     }).appendTo($row);
     $target_token.appendTo($column);
 
@@ -1480,7 +1480,7 @@ function add_token_connection_row($location, $source_token, $target_token, is_co
     const $remove_tokcon_button = $('<button />').addClass(`btn btn-danger float-right mx-1`);
     $remove_tokcon_button.attr("title", "Remove Token Connection");
     const $remove_icon = $('<i />').addClass(`fas fa-minus`);
-    var $column = $('<div />').addClass("col-sm-2").appendTo($row);
+    var $column = $('<div />').addClass("col-sm-2 px-0").appendTo($row);
     $remove_icon.appendTo($remove_tokcon_button);
     $remove_tokcon_button.appendTo($column);
     $remove_tokcon_button.click(function () {
@@ -1899,7 +1899,7 @@ function add_sentence_graph_row($location, $selector, $source_token, $target_tok
 
     // add source token
     var $column = $("<div />", {
-        class: "col-sm",
+        class: "col-sm px-1",
     }).appendTo($row);
     $source_token.appendTo($column);
 
@@ -1916,12 +1916,12 @@ function add_sentence_graph_row($location, $selector, $source_token, $target_tok
 
     // add target token
     var $column = $("<div />", {
-        class: "col-sm",
+        class: "col-sm px-1",
     }).appendTo($row);
     $target_token.appendTo($column);
 
     // add remove button
-    var $column = $('<div />').addClass("col-sm-2").appendTo($row);
+    var $column = $('<div />').addClass("col-sm-2 px-0").appendTo($row);
     const $remove_sentence_graph_button = $('<button />').addClass(`btn btn-danger float-right mx-1`);
     $remove_sentence_graph_button.attr("title", "Remove Sentence Relation");
     const $remove_icon = $('<i />').addClass(`fas fa-minus`);

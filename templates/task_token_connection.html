@@ -10,15 +10,15 @@
     <br>
 </div>
 <div class="mark border border-warning rounded px-1 pt-1 pb-0 m-1" id="tokcon-intermediate-row-container-{{task.id}}">
-    <div id="tokcon-row-{{task.id}}" class="row">
-        <div id="tokcon-source-token-container-{{task.id}}" class="col-sm"></div>
+    <div id="tokcon-row-{{task.id}}" class="row p-0 m-0">
+        <div id="tokcon-source-token-container-{{task.id}}" class="col-sm px-1"></div>
         <div class="col-sm-2">
             <span class="btn btn-secondary mb-1 mr-1">
                 <i class="fas fa-arrows-left-right"></i>
             </span>
         </div>
-        <div id="tokcon-target-token-container-{{task.id}}" class="col-sm"></div>
-        <div class="col-sm-2">
+        <div id="tokcon-target-token-container-{{task.id}}" class="col-sm px-1"></div>
+        <div class="col-sm-2 px-0">
             <button id="tokcon-confirm-button-{{task.id}}" type="button" title="Confirm" class="btn btn-success float-right mx-1" disabled>
                 <i class="fas fa-check"></i>
             </button>
@@ -32,8 +32,8 @@
     <!-- Temporary Content -->
     <!-- Content will be overwritten by JS. -->
 
-    <div class="row">
-        <div class="col-sm">
+    <div class="row p-0 m-0">
+        <div class="col-sm px-1">
             <span class="btn btn-light">
                 source-placeholder
             </span>
@@ -43,12 +43,12 @@
                 <i class="fas fa-arrows-left-right"></i>
             </button>
         </div>
-        <div class="col-sm">
+        <div class="col-sm px-1">
             <span class="btn btn-light">
                 target-placeholder
             </span>
         </div>
-        <div class="col-sm-2">
+        <div class="col-sm-2 px-0">
             <button type="button" class="btn btn-danger float-right mx-1">
                 <i class="fas fa-minus"></i>
             </button>
