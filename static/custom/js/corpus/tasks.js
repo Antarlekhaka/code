@@ -35,7 +35,7 @@ function generate_token_button(options) {
     var token_text = token.text;
 
     // whenever unsandhied is available, use it?
-    if (token.analysis.misc.Unsandhied && token.analysis.misc.Unsandhied != "_") {
+    if (token.analysis.misc.Unsandhied && token.analysis.misc.Unsandhied != "_" && false) {
         token_text = token.analysis.misc.Unsandhied;
     }
 
@@ -45,6 +45,8 @@ function generate_token_button(options) {
         token_text = token.analysis.misc.Unsandhied;
         // setting token_text again is actually redundant
         // since we already use token.analysis.misc.Unsandhied whenever available
+        // although, we may need it if the logic of always using
+        // token.analysis.misc.Unsandhied changes (due to errors)
     }
 
     if (token.inner_id.includes("-")) {
