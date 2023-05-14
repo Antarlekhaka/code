@@ -17,3 +17,11 @@
 
 * `fix_multitoken_analysis.py` - script to fix missing analysis of multitokens
 * `fix_missing_analysis.py` - script to fix missing analysis of custom tokens [INCOMPLETE]
+
+## Corpus Specific
+
+* `corpus_statistics.py` - get DCS corpus statistics
+  - requires DCS corpus to be present in `data/corpus/dcs/`
+  - reads `data/corpus/dcs/*.conllu` and writes multiple files to `data/corpus/dcs/stats/`
+  - can be customized to suit specific corpus needs
+  - does not change database, merely queries it
