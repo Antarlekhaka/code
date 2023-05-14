@@ -8,6 +8,7 @@ Collection of Heuristics
 
 ###############################################################################
 
+import random
 from typing import Dict, List
 
 ###############################################################################
@@ -22,36 +23,75 @@ def get_sentence_boundary(token_list: Dict[int, Dict]) -> int:
         return list(token_list)[-1]
 
 
-def get_word_order(token_list: Dict[int, Dict]) -> List[int]:
+###############################################################################
+
+
+def get_word_order(*args, **kwargs):
+    # return get_word_order_base(*args, **kwargs)
+    # return get_word_order_random(*args, **kwargs)
+    return get_word_order_heuristic(*args, **kwargs)
+
+
+def get_word_order_base(token_list: Dict[int, Dict]) -> List[int]:
+    return list(token_list)
+
+
+def get_word_order_random(token_list: Dict[int, Dict]) -> List[int]:
+    token_ids = list(token_list)
+    random.shuffle(token_ids)
+    return token_ids
+
+
+def get_word_order_heuristic(token_list: Dict[int, Dict]) -> List[int]:
     """Heuristic to get word order"""
 
-    CASE_ORDER = ["Loc", "Nom", "Dat", "Abl", "Ins", "Acc"]
-    UPOS_ORDER = ["ADV", "PART", "VERB"]
+    CASE_ORDER = ["Voc", "Loc", "Nom", "Dat", "Abl", "Ins", "Acc"]
+    SAME_CASE_UPOS_ORDER = ["PRON", "ADJ", "NUM", "NOUN"]
+    UPOS_START_ORDER = ["INTJ"]
+    UPOS_END_ORDER = ["ADP", "ADV", "PART", "VERB"]
 
+    upos_start_order = []
+    upos_end_order = []
     case_order = []
-    upos_order = []
     used = set()
     unused = set(token_list)
+
     for case in CASE_ORDER:
+        _same_case = []
         for token_id, token in token_list.items():
             if not isinstance(token["analysis"], dict):
                 continue
 
             if token["analysis"].get("feats", {}).get("Case") == case:
-                case_order.append(token_id)
-                unused.remove(token_id)
-                used.add(token_id)
+                _same_case.append(token_id)
 
-    for upos in UPOS_ORDER:
+        # for token_id in _same_case:
+        #     token = token_list[token_id]
+        #     if token["analysis"].get("upos") not in SAME_CASE_UPOS_ORDER:
+        #         case_order.append(token_id)
+
+        for upos in SAME_CASE_UPOS_ORDER:
+            for token_id in _same_case:
+                token = token_list[token_id]
+                if token["analysis"].get("upos") == upos:
+                    case_order.append(token_id)
+                    unused.remove(token_id)
+                    used.add(token_id)
+
+    for upos in UPOS_START_ORDER + UPOS_END_ORDER:
         for token_id, token in token_list.items():
             if token_id in used:
                 continue
             if token["analysis"].get("upos") == upos:
-                upos_order.append(token_id)
+                if upos in UPOS_START_ORDER:
+                    upos_start_order.append(token_id)
+                else:
+                    upos_end_order.append(token_id)
                 unused.remove(token_id)
                 used.add(token_id)
 
     word_order = []
+    word_order.extend(upos_start_order)
     word_order.extend(case_order)
 
     for token_id, token in token_list.items():
@@ -60,15 +100,20 @@ def get_word_order(token_list: Dict[int, Dict]) -> List[int]:
             unused.remove(token_id)
             used.add(token_id)
 
-    word_order.extend(upos_order)
+    word_order.extend(upos_end_order)
     assert set(token_list) == set(word_order)
 
     return word_order
+
+###############################################################################
 
 
 def get_lemma(text: str) -> str:
     """Heuristic to identify lemma"""
     return text
+
+
+###############################################################################
 
 
 def get_token_graph(
@@ -167,3 +212,5 @@ def get_token_graph(
                     })
 
     return relations
+
+###############################################################################
