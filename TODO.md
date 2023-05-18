@@ -1,5 +1,10 @@
 ## TODO
 
+- [ ] Update Word Order task pipeline
+  - [ ] Present it as a two-step task
+  - [ ] Step 1: Decide which tokens to keep or get rid of
+  - [ ] Step 2: Decide word order (current full task)
+
 - [ ] Accept plaintext input
   - [x] Simple plaintext processor (regex split)
   - [ ] Stanza or some similar processors
@@ -9,6 +14,7 @@
   - [ ] (corpus) split.js percentages
   - [ ] (corpus) unconfirmed annotations
     - [ ] different style for unconfirmed annotations
+    - [x] store unsubmitted word-order annotations
   - [x] (admin) remember last open tab
     - [x] data management accordion
     - [x] ontology tabs
@@ -54,6 +60,7 @@
 
 ---
 
+- [x] Allow display of additional context when required
 - [x] Task Category System (allow multiple tasks from same category)
   - [x] Global `TASK_CATEGORY` Constants
   - [x] Update models
