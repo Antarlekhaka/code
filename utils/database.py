@@ -619,6 +619,7 @@ def get_verse_data(
                 TASK_SENTENCE_CLASSIFICATION: [],
                 TASK_SENTENCE_GRAPH: [],
                 "heuristics": {
+                    TASK_WORD_ORDER: {},
                     TASK_TOKEN_TEXT_ANNOTATION: [],
                     TASK_TOKEN_CLASSIFICATION: [],
                     TASK_TOKEN_GRAPH: [],
@@ -717,21 +718,27 @@ def get_verse_data(
             WordOrder.boundary_id == boundary.id,
             WordOrder.annotator_id.in_(annotator_ids)
         ).order_by(WordOrder.order)
-        sentence_word_order = [
+        annotated_word_order = [
             a.token_id for a in word_order_query.all()
         ]
+        verse_word_order = list(
+            data[verse_id]["sentences"][boundary.id]
+        )
         # if word_order doesn't exist, apply heuristic
-        if not sentence_word_order:
+        if not annotated_word_order:
+            display_word_order = verse_word_order
             if word_order_task_active:
-                sentence_word_order = get_word_order(
+                heuristic_word_order = get_word_order(
                     data[verse_id]["sentences"][boundary.id]
                 )
             else:
-                sentence_word_order = list(
-                    data[verse_id]["sentences"][boundary.id]
-                )
-
-        data[verse_id][TASK_WORD_ORDER][boundary.id] = sentence_word_order
+                heuristic_word_order = verse_word_order
+            data[verse_id]["heuristics"][TASK_WORD_ORDER][boundary.id] = (
+                heuristic_word_order
+            )
+        else:
+            display_word_order = annotated_word_order
+        data[verse_id][TASK_WORD_ORDER][boundary.id] = display_word_order
         # TODO: consider if we should provide predicted word_order separately
         #       instead of in the same field
 
