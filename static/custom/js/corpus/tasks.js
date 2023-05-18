@@ -43,6 +43,7 @@ function add_badge(badge_id, badge_text, badge_style, $parent, hidden=false) {
     if (hidden) {
         $badge.hide();
     }
+    return $badge;
 };
 
 function update_badge(badge_id, badge_text, badge_style="info") {
@@ -477,23 +478,27 @@ function setup_sortable() {
         cursor: "move",
         tolerance: "pointer",
         placeholder: 'btn btn-secondary py-3 px-5 mb-1 mr-1',
-    }).on("sortupdate sortreceive", function(e, ui) {
+    }).on("sortupdate", function(e, ui) {
         // ui.item contains the current dragged element.
         // Triggered when the user stopped sorting and the DOM position has changed.
         const boundary_element_id = this.id;
         // store word order to localStorage for restoring (stored as ',' joined list of token-ids)
         const word_order_order = $(this).sortable("toArray").join(",");
-        storage.setItem(`${PREFIX_KEY_WORD_ORDER}_${boundary_element_id}`, word_order_order);
-        update_badge(`warning-${boundary_element_id}`, "Pending", "warning");
-        console.log("Saved Order: " + word_order_order);
+        storage.setItem(`${PREFIX_KEY_BOUNDARY_WORD_ORDER}_${boundary_element_id}`, word_order_order);
+        const boundary_state_key = `${PREFIX_KEY_BOUNDARY_STATE}_${boundary_element_id}`;
+        const boundary_state = storage.getItem(boundary_state_key);
+        if ((boundary_state != BOUNDARY_STATE_TOKEN_DECISION) && (boundary_state != BOUNDARY_STATE_SORT)) {
+            storage.setItem(boundary_state_key, BOUNDARY_STATE_SORT);
+            update_badge(`boundary-status-${boundary_element_id}`, TEXT_BOUNDARY_STATE_SORT, CLASS_BOUNDARY_STATE_SORT);
+        }
+        console.log(`Saved Order (${boundary_element_id}): ${word_order_order}`);
     });
 }
 
 // apply specific word order to a sentence
-function apply_word_order(boundary_element_id, proposed_word_order, force=false) {
+function apply_word_order(boundary_element_id, proposed_word_order) {
     // proposed_word_order is list of token ids (either <integer> or token-button-<integer>)
-    // force = true   ==> every token_id that is present in proposed_word_order will be used
-    // force = false  ==> only those token_id from proposed_word_order that are already in $sentence_container will be used
+    // only those token_id from proposed_word_order that are already in $sentence_container will be used
 
     const $extra_container = $task_2_word_order_container.find("div.extra-token-container");
     const $sentence_container = $(`#${boundary_element_id}`);
@@ -502,7 +507,8 @@ function apply_word_order(boundary_element_id, proposed_word_order, force=false)
 
     // temporarily disable sortable
     $sentence_container.sortable("cancel");
-    // first move all tokens to unused or extra
+    // first move all sentence tokens to unused
+    // populate sentence_tokens array
     $sentence_container.children("div").each(function(token_button_idx, token_button) {
         sentence_tokens.push(token_button.id);
         const $token_button = $(token_button);
@@ -512,30 +518,59 @@ function apply_word_order(boundary_element_id, proposed_word_order, force=false)
             $token_button.appendTo($unused_container);
         }
     });
-    // move sentence tokens to sentence container
+    // add extra tokens to possible sentence_tokens as well
+    $extra_container.children("div").each(function(token_button_idx, token_button) {
+        sentence_tokens.push(token_button.id);
+    });
+
+    // move tokens from proposed order to sentence container if they are valid sentence tokens
     proposed_word_order.forEach(token_id => {
         const token_button_id = (Number.isInteger(Number(token_id))) ? `token-button-${token_id}` : token_id;
         const $token_button = $(`#${token_button_id}`);
-        if (sentence_tokens.includes(token_button_id) || force) {
+        const $token_toggle = $token_button.find('button');
+        if (sentence_tokens.includes(token_button_id)) {
             $token_button.appendTo($sentence_container);
+            // NOTE: Heuristics don't contain extra tokens
+            // So when the heuristic is applied, it will remove extra token from sentence
+            if ($token_toggle.prop("disabled")) {
+                $token_toggle.prop("disabled", false);
+            }
         }
     });
+    // fix toggles
+    // BUG: this is triggering state change it seems
+    $unused_container.children("div").each(function(token_button_idx, token_button) {
+        const $token_button = $(`#${token_button.id}`);
+        const $token_toggle = $token_button.find('button');
+        if ($token_toggle.hasClass("exclude-token")) {
+            // CAUTION: performing $token_toggle.click() would trigger "sortupdate", so avoid that.
+            $token_toggle.removeClass("exclude-token");
+            $token_toggle.removeClass("btn-secondary");
+            $token_toggle.addClass("btn-info");
+            $token_toggle.html('<i class="fa fa-plus"></i>');
+        }
+    })
     // refresh sortable
     $sentence_container.sortable("refresh");
 }
 
 // restore saved word order
 function restore_word_order(boundary_element_id) {
-    const saved_order = storage.getItem(`${PREFIX_KEY_WORD_ORDER}_${boundary_element_id}`);
+    const saved_order = storage.getItem(`${PREFIX_KEY_BOUNDARY_WORD_ORDER}_${boundary_element_id}`);
     if (saved_order) {
-        apply_word_order(boundary_element_id, saved_order.split(","), true);
-        update_badge(`warning-${boundary_element_id}`, "Pending", "warning");
+        apply_word_order(boundary_element_id, saved_order.split(","));
         console.log(`Restored Saved Word Order to ${boundary_element_id}`);
     }
 }
 
 function setup_task_word_order(task_id, verse_id) {
     console.log(`Called ${arguments.callee.name}(${Object.values(arguments).join(", ")});`);
+
+    // // TODO: Do we want to disable task-submit button without token confirmation?
+    // // Current approach is flawed since we are enabling button even if state changes for
+    // // any boundary. Issue when multiple boundaries.
+    // const $task_submit_button = $(`#task-${task_id}_submit`);
+    // $task_submit_button.prop("disabled", true);
 
     const row = $corpus_table.bootstrapTable('getRowByUniqueId', verse_id);
 
@@ -545,7 +580,7 @@ function setup_task_word_order(task_id, verse_id) {
         class: "border px-1 pt-1 m-1 rounded connected-sortable extra-token-container clearfix",
         style: "background-color: #eeeeff; border-color: #aaaaff !important;"
     });
-    add_badge("about-boundary-extra", "Manual", "info", $extra);
+    add_badge("about-boundary-extra", "Custom", "info", $extra);
     $task_2_word_order_container.append($extra);
     const extra_tokens = row.sentences['extra'];
     var all_tokens = {};
@@ -567,9 +602,11 @@ function setup_task_word_order(task_id, verse_id) {
     }
     for (const [boundary_id, sentence_tokens] of Object.entries(row.sentences)) {
         var token_order = [];
+        var heuristic_order = [];
         var unused_tokens = [];
         if (boundary_id !== "extra") {
             token_order = row[TASK_WORD_ORDER][boundary_id];
+            heuristic_order = row["heuristics"][TASK_WORD_ORDER][boundary_id];
             for (const [_token_id_string, _token] of Object.entries(sentence_tokens)) {
                 if (!token_order.includes(_token.id)) {
                     unused_tokens.push(_token.id);
@@ -581,7 +618,7 @@ function setup_task_word_order(task_id, verse_id) {
             // order doesn't really matter, just need extra tokens
             token_order = Object.keys(sentence_tokens);
         }
-        console.log("Token Order: " + token_order);
+        console.log(`Token Order (${boundary_id}): ${token_order}`);
 
         const $sentence = $("<div />", {
             id: `boundary-${boundary_id}`,
@@ -595,11 +632,42 @@ function setup_task_word_order(task_id, verse_id) {
             style: "background-color: #ffeeee; border-color: #ffaaaa !important;"
         });
         if (boundary_id != "extra") {
+            const boundary_element_id = `boundary-${boundary_id}`;
+            const boundary_storage_key = `${PREFIX_KEY_BOUNDARY_STATE}_${boundary_element_id}`;
             $task_2_word_order_container.append($sentence);
             $task_2_word_order_container.append($unused);
             add_badge(`about-boundary-${boundary_id}`, "Sentence", "success", $sentence);
-            add_badge(`warning-boundary-${boundary_id}`, "Token Decision", "primary", $sentence, true);
             add_badge(`about-boundary-${boundary_id}`, "Unused", "danger", $unused);
+
+            // add status badge once as hidden, only update later
+            const status_badge_id = `boundary-status-${boundary_element_id}`;
+            add_badge(status_badge_id, "...", "dark", $sentence, true);
+
+            if (heuristic_order && heuristic_order.length > 0) {
+                // presence of heuristic order ==> no annotation for current boundary (logic in `utils/database.py`)
+                storage.setItem(`${PREFIX_KEY_BOUNDARY_HEURISTIC_WORD_ORDER}_${boundary_element_id}`, heuristic_order.join(","));
+                if (!storage.getItem(boundary_storage_key)) {
+                    storage.setItem(boundary_storage_key, BOUNDARY_STATE_TOKEN_DECISION);
+                }
+            } else {
+                // $task_submit_button.prop("disabled", false);
+            }
+            const boundary_state = storage.getItem(boundary_storage_key);
+
+            switch (boundary_state) {
+                case BOUNDARY_STATE_TOKEN_DECISION:
+                    update_badge(status_badge_id, TEXT_BOUNDARY_STATE_TOKEN_DECISION, CLASS_BOUNDARY_STATE_TOKEN_DECISION);
+                    break;
+                case BOUNDARY_STATE_HEURISTIC:
+                    update_badge(status_badge_id, TEXT_BOUNDARY_STATE_HEURISTIC, CLASS_BOUNDARY_STATE_HEURISTIC);
+                    break;
+                case BOUNDARY_STATE_SORT:
+                    update_badge(status_badge_id, TEXT_BOUNDARY_STATE_SORT, CLASS_BOUNDARY_STATE_SORT);
+                    break;
+
+                default:
+                    break;
+            }
         }
 
         for (const token_id of [...token_order, ...unused_tokens]) {
@@ -678,14 +746,15 @@ function setup_task_word_order(task_id, verse_id) {
                 const $token_toggle = $("<button />", {
                     id: `token-toggle-${token.id}`,
                     name: "token-toggle",
-                    class: "btn btn-secondary include-token",
+                    class: "btn btn-secondary exclude-extra-token",
                     html: '<i class="fa fa-times"></i>',
                     disabled: is_extra_unused,
                     on: {
                         click: function() {
-                            $(this).parent().parent().trigger("sortupdate");
+                            const $boundary_element = $(this).parent().parent();
                             $(`#extra-${verse_id}`).append($(this).parent());
                             $(this).prop("disabled", true);
+                            $boundary_element.trigger("sortupdate");
                         }
                     }
                 });
@@ -696,7 +765,47 @@ function setup_task_word_order(task_id, verse_id) {
     setup_sortable();
     for (const boundary_id of Object.keys(row.sentences)) {
         const boundary_element_id = `boundary-${boundary_id}`;
+        const $boundary_element = $(`#${boundary_element_id}`);
+        const boundary_storage_key = `${PREFIX_KEY_BOUNDARY_STATE}_${boundary_element_id}`;
+        const status_badge_id = `boundary-status-${boundary_element_id}`;
+        const $status_badge = $(`#${status_badge_id}`);
         restore_word_order(boundary_element_id);
+        var boundary_state = storage.getItem(boundary_storage_key);
+        switch (boundary_state) {
+            case BOUNDARY_STATE_TOKEN_DECISION:
+                $status_badge.data("boundary-id", boundary_id);
+                $status_badge.click(function () {
+                    const _boundary_id = $(this).data("boundary-id");
+                    const _boundary_element_id = `boundary-${_boundary_id}`;
+                    const _boundary_state = storage.getItem(`${PREFIX_KEY_BOUNDARY_STATE}_${boundary_element_id}`);
+                    // second step: apply heuristic
+                    if (_boundary_state == BOUNDARY_STATE_TOKEN_DECISION) {
+                        const _heuristic_order = storage.getItem(`${PREFIX_KEY_BOUNDARY_HEURISTIC_WORD_ORDER}_${boundary_element_id}`);
+                        console.log("Heuristic Word Order: " + _heuristic_order);
+                        apply_word_order(_boundary_element_id, _heuristic_order.split(","));
+                        update_badge(`boundary-status-${_boundary_element_id}`, "Heuristic", "info");
+                        storage.setItem(`${PREFIX_KEY_BOUNDARY_STATE}_${boundary_element_id}`, BOUNDARY_STATE_HEURISTIC);
+                    } else {
+                        // will this ever be the case?!
+                        console.log("Why is this happening?");
+                    }
+                    // $task_submit_button.prop("disabled", false);
+                    $(this).off('click');
+                });
+                break;
+            case BOUNDARY_STATE_HEURISTIC:
+                // $task_submit_button.prop("disabled", false);
+                const _heuristic_order = storage.getItem(`${PREFIX_KEY_BOUNDARY_HEURISTIC_WORD_ORDER}_${boundary_element_id}`);
+                console.log("Heuristic Word Order: " + _heuristic_order);
+                apply_word_order(boundary_element_id, _heuristic_order.split(","));
+                break;
+            case BOUNDARY_STATE_SORT:
+                // $task_submit_button.prop("disabled", false);
+                break;
+
+            default:
+                break;
+        }
     }
 }
 
@@ -788,7 +897,9 @@ function submit_task_word_order(task_id) {
 
         if (response.success) {
             for (const boundary_element_id of Object.keys(word_order_data)) {
-                storage.removeItem(`${PREFIX_KEY_WORD_ORDER}_${boundary_element_id}`);
+                storage.removeItem(`${PREFIX_KEY_BOUNDARY_WORD_ORDER}_${boundary_element_id}`);
+                storage.removeItem(`${PREFIX_KEY_BOUNDARY_HEURISTIC_WORD_ORDER}_${boundary_element_id}`);
+                storage.removeItem(`${PREFIX_KEY_BOUNDARY_STATE}_${boundary_element_id}`);
                 console.log(`Removed stored word order for ${boundary_element_id} after a successful submit.`);
             }
             refresh_row_data(verse_id);
