@@ -40,11 +40,11 @@ $corpus_table.on('expand-row.bs.table', function (e, index, row, $detail) {
     $show_graph_modal_buttons.prop('disabled', false);
     $refresh_verse_buttons.prop('disabled', false);
 
-    storage.setItem("current_verse_id", parseInt(verse_id));
-    storage.setItem("next_verse_id", parseInt(verse_id) + 1);
+    storage.setItem(KEY_CURRENT_VERSE_ID, parseInt(verse_id));
+    storage.setItem(KEY_NEXT_VERSE_ID, parseInt(verse_id) + 1);
 
-    storage.setItem("current_index", parseInt(index));
-    storage.setItem("next_index", parseInt(index) + 1);
+    storage.setItem(KEY_CURRENT_INDEX, parseInt(index));
+    storage.setItem(KEY_NEXT_INDEX, parseInt(index) + 1);
 
     // Don't need to setup all the tasks, since we initiate them on tab change
     // individually anyway.

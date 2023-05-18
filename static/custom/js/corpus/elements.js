@@ -63,3 +63,10 @@ const $load_context_buttons = $(".load-context-button");
 
 // Globals
 const storage = window.localStorage;
+
+// Storage Keys
+const KEY_NEXT_INDEX = "next_index";
+const KEY_CURRENT_INDEX = "current_index";
+const KEY_CURRENT_VERSE_ID = "current_verse_id";
+const KEY_NEXT_VERSE_ID = "current_verse_id";
+

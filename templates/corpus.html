@@ -169,10 +169,13 @@
 
 <script src="{{url_for('static', filename='plugins/js/vis-network.min.js')}}"></script>
 <script>
+    const CHAPTER_ID = "{{data.chapter_id}}";
+    const CURRENT_USER_ID = "{{current_user.id}}";
+    const CURRENT_USERNAME = "{{current_user.username}}";
+
     // constants used in individual tasks
     const API_URL = "{{url_for('api')}}";
     const SAMPLE_VERSE_DATA_URL = "{{url_for('api_verse', verse_id=0)}}";
-    const CURRENT_USERNAME = "{{current_user.username}}";
 
     const TASK_SENTENCE_BOUNDARY = "{{context_tasks.task_sentence_boundary}}";
     const TASK_WORD_ORDER = "{{context_tasks.task_word_order}}";

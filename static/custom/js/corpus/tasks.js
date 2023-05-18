@@ -100,7 +100,7 @@ function refresh_row_data(unique_id, _callback) {
             replace: true
         });
         $corpus_table.bootstrapTable('collapseRowByUniqueId', unique_id);
-        $corpus_table.bootstrapTable('check', storage.getItem('current_index'));
+        $corpus_table.bootstrapTable('check', storage.getItem(KEY_CURRENT_INDEX));
 
         if (_callback) {
             _callback(unique_id);
@@ -402,7 +402,7 @@ function submit_task_sentence_boundary(task_id) {
             const next_task = response.next_task;
             $tabs[next_task].click();
             if (next_task == first_task) {
-                $corpus_table.bootstrapTable('check', storage.getItem("next_index"));
+                $corpus_table.bootstrapTable('check', storage.getItem(KEY_NEXT_INDEX));
             }
         }
     },
@@ -696,7 +696,7 @@ function submit_task_word_order(task_id) {
             const next_task = response.next_task;
             $tabs[next_task].click();
             if (next_task == first_task) {
-                $corpus_table.bootstrapTable('check', storage.getItem("next_index"));
+                $corpus_table.bootstrapTable('check', storage.getItem(KEY_NEXT_INDEX));
             }
         }
     });
@@ -871,7 +871,7 @@ function submit_task_token_classification(task_id) {
             const next_task = response.next_task;
             $tabs[next_task].click();
             if (next_task == first_task) {
-                $corpus_table.bootstrapTable('check', storage.getItem("next_index"));
+                $corpus_table.bootstrapTable('check', storage.getItem(KEY_NEXT_INDEX));
             }
         }
     });
@@ -1288,7 +1288,7 @@ function submit_task_token_graph(task_id) {
             const next_task = response.next_task;
             $tabs[next_task].click();
             if (next_task == first_task) {
-                $corpus_table.bootstrapTable('check', storage.getItem("next_index"));
+                $corpus_table.bootstrapTable('check', storage.getItem(KEY_NEXT_INDEX));
             }
         }
     });
@@ -1547,7 +1547,7 @@ function submit_task_token_connection(task_id) {
             const next_task = response.next_task;
             $tabs[next_task].click();
             if (next_task == first_task) {
-                $corpus_table.bootstrapTable('check', storage.getItem("next_index"));
+                $corpus_table.bootstrapTable('check', storage.getItem(KEY_NEXT_INDEX));
             }
         }
     });
@@ -1677,7 +1677,7 @@ function submit_task_sentence_classification(task_id) {
             const next_task = response.next_task;
             $tabs[next_task].click();
             if (next_task == first_task) {
-                $corpus_table.bootstrapTable('check', storage.getItem("next_index"));
+                $corpus_table.bootstrapTable('check', storage.getItem(KEY_NEXT_INDEX));
             }
         }
     });
@@ -2132,7 +2132,7 @@ function submit_task_sentence_graph(task_id) {
             const next_task = response.next_task;
             $tabs[next_task].click();
             if (next_task == first_task) {
-                $corpus_table.bootstrapTable('check', storage.getItem("next_index"));
+                $corpus_table.bootstrapTable('check', storage.getItem(KEY_NEXT_INDEX));
             }
         }
     },
@@ -2308,7 +2308,7 @@ function submit_task_token_text_annotation(task_id) {
             const next_task = response.next_task;
             $tabs[next_task].click();
             if (next_task == first_task) {
-                $corpus_table.bootstrapTable('check', storage.getItem("next_index"));
+                $corpus_table.bootstrapTable('check', storage.getItem(KEY_NEXT_INDEX));
             }
         }
     });
