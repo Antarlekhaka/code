@@ -14,6 +14,21 @@ const default_token_class_multitoken = "btn-info token-multitoken";
 const default_token_element = "<span />";
 const default_token_data = {};
 
+// Boundary State
+const BOUNDARY_STATE_TOKEN_DECISION = "boundary_status_token_decision";
+const BOUNDARY_STATE_HEURISTIC = "boundary_status_heuristic";
+const BOUNDARY_STATE_SORT = "boundary_status_sort";
+
+// Text Boundary Status
+const TEXT_BOUNDARY_STATE_TOKEN_DECISION = "Confirm Tokens?";
+const TEXT_BOUNDARY_STATE_HEURISTIC = "Heuristic";
+const TEXT_BOUNDARY_STATE_SORT = "Pending";
+
+// Class Boundary Status
+const CLASS_BOUNDARY_STATE_TOKEN_DECISION = "primary";
+const CLASS_BOUNDARY_STATE_HEURISTIC = "info";
+const CLASS_BOUNDARY_STATE_SORT = "warning";
+
 const sentence_token_graph_input_container_class = "sentence-token-graph-input-container";
 
 /* *************************** Generic Functions *************************** */

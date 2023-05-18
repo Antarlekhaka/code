@@ -70,4 +70,7 @@ const KEY_CURRENT_INDEX = "current_index";
 const KEY_CURRENT_VERSE_ID = "current_verse_id";
 const KEY_NEXT_VERSE_ID = "current_verse_id";
 
-const PREFIX_KEY_WORD_ORDER = "word_order";
+// Prefixes for Storage Keys
+const PREFIX_KEY_BOUNDARY_WORD_ORDER = "boundary_word_order";
+const PREFIX_KEY_BOUNDARY_HEURISTIC_WORD_ORDER = "boundary_heuristic_word_order";
+const PREFIX_KEY_BOUNDARY_STATE = "boundary_state";
