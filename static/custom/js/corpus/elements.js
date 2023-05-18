@@ -70,3 +70,4 @@ const KEY_CURRENT_INDEX = "current_index";
 const KEY_CURRENT_VERSE_ID = "current_verse_id";
 const KEY_NEXT_VERSE_ID = "current_verse_id";
 
+const PREFIX_KEY_WORD_ORDER = "word_order";

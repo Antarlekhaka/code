@@ -7,9 +7,9 @@
 
 const default_token_class_common = "btn";
 const default_token_class_normal = "btn-light";
-const default_token_class_subtoken = "btn-warning";
-const default_token_class_manual = "btn-secondary";
-const default_token_class_multitoken = "btn-info";
+const default_token_class_subtoken = "btn-warning token-subtoken";
+const default_token_class_manual = "btn-secondary token-manual";
+const default_token_class_multitoken = "btn-info token-multitoken";
 
 const default_token_element = "<span />";
 const default_token_data = {};
@@ -438,13 +438,56 @@ function setup_sortable() {
     }).on("sortstop sortreceive", function(e, ui) {
         // ui.item contains the current dragged element.
         // Triggered when the user stopped sorting and the DOM position has changed.
-        var word_order_order = [];
-        $(this).children().each(function (){
-            word_order_order.push(this.id);
-        });
-        $(this).data("word_order", word_order_order);
+        const boundary_element_id = this.id;
+        // store word order to localStorage for restoring (stored as ',' joined list of token-ids)
+        const word_order_order = $(this).sortable("toArray").join(",");
+        storage.setItem(`${PREFIX_KEY_WORD_ORDER}_${boundary_element_id}`, word_order_order);
         console.log("Saved Order: " + word_order_order);
     });
+}
+
+// apply specific word order to a sentence
+function apply_word_order(boundary_element_id, proposed_word_order, force=false) {
+    // proposed_word_order is list of token ids (either <integer> or token-button-<integer>)
+    // force = true   ==> every token_id that is present in proposed_word_order will be used
+    // force = false  ==> only those token_id from proposed_word_order that are already in $sentence_container will be used
+
+    const $extra_container = $task_2_word_order_container.find("div.extra-token-container");
+    const $sentence_container = $(`#${boundary_element_id}`);
+    const $unused_container = $(`#${boundary_element_id.replace("boundary", "unused")}`);
+    var sentence_tokens = [];
+
+    // temporarily disable sortable
+    $sentence_container.sortable("cancel");
+    // first move all tokens to unused or extra
+    $sentence_container.children().each(function(token_button_idx, token_button) {
+        sentence_tokens.push(token_button.id);
+        const $token_button = $(token_button);
+        if ($token_button.hasClass("token-manual")) {
+            $token_button.appendTo($extra_container);
+        } else {
+            $token_button.appendTo($unused_container);
+        }
+    });
+    // move sentence tokens to sentence container
+    proposed_word_order.forEach(token_id => {
+        const token_button_id = (Number.isInteger(Number(token_id))) ? `token-button-${token_id}` : token_id;
+        const $token_button = $(`#${token_button_id}`);
+        if (sentence_tokens.includes(token_button_id) || force) {
+            $token_button.appendTo($sentence_container);
+        }
+    });
+    // refresh sortable
+    $sentence_container.sortable("refresh");
+}
+
+// restore saved word order
+function restore_word_order(boundary_element_id) {
+    const saved_order = storage.getItem(`${PREFIX_KEY_WORD_ORDER}_${boundary_element_id}`);
+    if (saved_order) {
+        apply_word_order(boundary_element_id, saved_order.split(","), true);
+        console.log(`Restored Saved Word Order to ${boundary_element_id}`);
+    }
 }
 
 function setup_task_word_order(task_id, verse_id) {
@@ -455,7 +498,7 @@ function setup_task_word_order(task_id, verse_id) {
     $task_2_word_order_container.html("");
     const $extra = $("<div />", {
         id: `extra-${verse_id}`,
-        class: "border px-1 pt-1 m-1 rounded connected-sortable",
+        class: "border px-1 pt-1 m-1 rounded connected-sortable extra-token-container",
         style: "background-color: #eeeeff; border-color: #aaaaff !important;"
     });
     $task_2_word_order_container.append($extra);
@@ -497,12 +540,12 @@ function setup_task_word_order(task_id, verse_id) {
 
         const $sentence = $("<div />", {
             id: `boundary-${boundary_id}`,
-            class: "sortable border px-1 pt-1 m-1 rounded",
+            class: "sortable border px-1 pt-1 m-1 rounded sentence-token-container",
             style: "background-color: #eeffee; border-color: #aaffaa !important;"
         });
         const $unused = $("<div />", {
             id: `unused-${boundary_id}`,
-            class: "border px-1 pt-1 m-1 rounded",
+            class: "border px-1 pt-1 m-1 rounded unused-token-container",
             style: "background-color: #ffeeee; border-color: #ffaaaa !important;"
         });
         if (boundary_id != "extra") {
@@ -602,6 +645,10 @@ function setup_task_word_order(task_id, verse_id) {
         };
     }
     setup_sortable();
+    for (const boundary_id of Object.keys(row.sentences)) {
+        const boundary_element_id = `boundary-${boundary_id}`;
+        restore_word_order(boundary_element_id);
+    }
 }
 
 /* Task: Word Order: Actions */
@@ -672,7 +719,7 @@ function submit_task_word_order(task_id) {
     var word_order_data = {}
     $('.sortable').each(function(sentence_index, sentence_element) {
         const boundary_id = sentence_element.id;
-        word_order_data[boundary_id] = $(sentence_element).data("word_order");
+        word_order_data[boundary_id] = $(sentence_element).sortable("toArray");
     });
     // console.log("Word Order Data: ");
     // console.log(word_order_data);
@@ -691,6 +738,10 @@ function submit_task_word_order(task_id) {
         });
 
         if (response.success) {
+            for (const boundary_element_id of Object.keys(word_order_data)) {
+                storage.removeItem(`${PREFIX_KEY_WORD_ORDER}_${boundary_element_id}`);
+                console.log(`Removed stored word order for ${boundary_element_id} after a successful submit.`);
+            }
             refresh_row_data(verse_id);
             const first_task = response.first_task;
             const next_task = response.next_task;
