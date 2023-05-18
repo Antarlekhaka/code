@@ -156,6 +156,11 @@
             -ms-user-select: none; /* IE 10 and IE 11 */
             user-select: none; /* Standard syntax */
         }
+        .clearfix::after {
+            content: "";
+            display: table;
+            clear: both;
+        }
         .overlay {
             position: absolute;
             width: 100%;

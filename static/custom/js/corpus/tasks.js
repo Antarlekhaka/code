@@ -18,6 +18,31 @@ const sentence_token_graph_input_container_class = "sentence-token-graph-input-c
 
 /* *************************** Generic Functions *************************** */
 
+function add_badge(badge_id, badge_text, badge_style, $parent, hidden=false) {
+    const $badge = $("<span />", {
+        id: badge_id,
+        class: `badge badge-${badge_style} float-right mb-1 ml-1`,
+        html: badge_text
+    });
+    $badge.appendTo($parent);
+    if (hidden) {
+        $badge.hide();
+    }
+};
+
+function update_badge(badge_id, badge_text, badge_style="info") {
+    const $badge = $(`#${badge_id}`);
+    const badge_class = `badge-${badge_style}`;
+    if (!$badge.hasClass(badge_class)) {
+        $badge.removeClass(function(index, class_name) {
+            return (class_name.match(/\bbadge-\S+/g) || []).join(" ");
+        });
+        $badge.addClass(badge_class);
+    }
+    $badge.text(badge_text);
+    $badge.show();
+}
+
 function generate_token_button(options) {
     const token = options.token;
     const id_prefix = options.id_prefix;
@@ -419,6 +444,7 @@ function setup_sortable() {
     console.log(`Called ${arguments.callee.name}(${Object.values(arguments).join(", ")});`);
 
     $('.connected-sortable').sortable({
+        items: "> div",
         opacity: 0.75,
         revert: true,
         cursor: "move",
@@ -430,18 +456,20 @@ function setup_sortable() {
         $(`#${toggle_id}`).prop('disabled', false);
     });
     $('.sortable').sortable({
+        items: "> div",
         opacity: 0.75,
         revert: true,
         cursor: "move",
         tolerance: "pointer",
         placeholder: 'btn btn-secondary py-3 px-5 mb-1 mr-1',
-    }).on("sortstop sortreceive", function(e, ui) {
+    }).on("sortupdate sortreceive", function(e, ui) {
         // ui.item contains the current dragged element.
         // Triggered when the user stopped sorting and the DOM position has changed.
         const boundary_element_id = this.id;
         // store word order to localStorage for restoring (stored as ',' joined list of token-ids)
         const word_order_order = $(this).sortable("toArray").join(",");
         storage.setItem(`${PREFIX_KEY_WORD_ORDER}_${boundary_element_id}`, word_order_order);
+        update_badge(`warning-${boundary_element_id}`, "Pending", "warning");
         console.log("Saved Order: " + word_order_order);
     });
 }
@@ -460,7 +488,7 @@ function apply_word_order(boundary_element_id, proposed_word_order, force=false)
     // temporarily disable sortable
     $sentence_container.sortable("cancel");
     // first move all tokens to unused or extra
-    $sentence_container.children().each(function(token_button_idx, token_button) {
+    $sentence_container.children("div").each(function(token_button_idx, token_button) {
         sentence_tokens.push(token_button.id);
         const $token_button = $(token_button);
         if ($token_button.hasClass("token-manual")) {
@@ -486,6 +514,7 @@ function restore_word_order(boundary_element_id) {
     const saved_order = storage.getItem(`${PREFIX_KEY_WORD_ORDER}_${boundary_element_id}`);
     if (saved_order) {
         apply_word_order(boundary_element_id, saved_order.split(","), true);
+        update_badge(`warning-${boundary_element_id}`, "Pending", "warning");
         console.log(`Restored Saved Word Order to ${boundary_element_id}`);
     }
 }
@@ -498,9 +527,10 @@ function setup_task_word_order(task_id, verse_id) {
     $task_2_word_order_container.html("");
     const $extra = $("<div />", {
         id: `extra-${verse_id}`,
-        class: "border px-1 pt-1 m-1 rounded connected-sortable extra-token-container",
+        class: "border px-1 pt-1 m-1 rounded connected-sortable extra-token-container clearfix",
         style: "background-color: #eeeeff; border-color: #aaaaff !important;"
     });
+    add_badge("about-boundary-extra", "Manual", "info", $extra);
     $task_2_word_order_container.append($extra);
     const extra_tokens = row.sentences['extra'];
     var all_tokens = {};
@@ -540,17 +570,21 @@ function setup_task_word_order(task_id, verse_id) {
 
         const $sentence = $("<div />", {
             id: `boundary-${boundary_id}`,
-            class: "sortable border px-1 pt-1 m-1 rounded sentence-token-container",
+            class: "sortable border px-1 pt-1 m-1 rounded sentence-token-container clearfix",
             style: "background-color: #eeffee; border-color: #aaffaa !important;"
         });
+
         const $unused = $("<div />", {
             id: `unused-${boundary_id}`,
-            class: "border px-1 pt-1 m-1 rounded unused-token-container",
+            class: "border px-1 pt-1 m-1 rounded unused-token-container clearfix",
             style: "background-color: #ffeeee; border-color: #ffaaaa !important;"
         });
         if (boundary_id != "extra") {
             $task_2_word_order_container.append($sentence);
             $task_2_word_order_container.append($unused);
+            add_badge(`about-boundary-${boundary_id}`, "Sentence", "success", $sentence);
+            add_badge(`warning-boundary-${boundary_id}`, "Token Decision", "primary", $sentence, true);
+            add_badge(`about-boundary-${boundary_id}`, "Unused", "danger", $unused);
         }
 
         for (const token_id of [...token_order, ...unused_tokens]) {
@@ -620,7 +654,7 @@ function setup_task_word_order(task_id, verse_id) {
                                 $(this).html('<i class="fa fa-times"></i>');
                                 $(`#boundary-${boundary_id}`).append($(this).parent());
                             }
-                            $(".sortable").trigger("sortstop");
+                            $(`#boundary-${boundary_id}`).trigger("sortupdate");
                         }
                     }
                 });
@@ -634,9 +668,9 @@ function setup_task_word_order(task_id, verse_id) {
                     disabled: is_extra_unused,
                     on: {
                         click: function() {
+                            $(this).parent().parent().trigger("sortupdate");
                             $(`#extra-${verse_id}`).append($(this).parent());
                             $(this).prop("disabled", true);
-                            $(".sortable").trigger("sortstop");
                         }
                     }
                 });
