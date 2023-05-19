@@ -117,8 +117,11 @@ from models_admin import (SecureAdminIndexView,
 from settings import app
 
 from utils.reverseproxied import ReverseProxied
-from utils.database import export_data, get_verse_data, get_chapter_data
-from utils.database import add_chapter
+from utils.database import (
+    add_chapter,
+    get_verse_data, get_chapter_data, export_data,
+    get_annotation_progress
+)
 from utils.export import simple_format, standard_format
 from utils.conllu import CoNLLUParser
 from utils.plaintext import PlaintextProcessor
@@ -666,6 +669,16 @@ def show_admin():
         data['result'] = admin_result
         del session['admin_result']
     return render_template('admin.html', data=data)
+
+
+@webapp.route("/admin/progress")
+@auth_required()
+@permissions_required(PERMISSION_VIEW_ACP)
+def show_progress():
+    return jsonify(get_annotation_progress())
+
+
+# --------------------------------------------------------------------------- #
 
 
 @webapp.route("/export", methods=["GET", "POST"])

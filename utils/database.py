@@ -11,7 +11,7 @@ Note: Functions are usable only in an application context.
 ###############################################################################
 
 import logging
-from typing import Dict, List
+from typing import Dict, List, Any
 from collections import defaultdict
 
 from sqlalchemy import func
@@ -1024,3 +1024,94 @@ def get_sentences(
         previous_boundary_token_id = boundary.token_id
 
     return sentences
+
+
+###############################################################################
+# Progress
+
+def get_annotation_progress(annotator_ids: List[int] = None) -> Any:
+    fetch_all_users = annotator_ids is None
+    # ----------------------------------------------------------------------- #
+    # progress query
+    # one entry per user per verse
+    progress_query = SubmitLog.query.with_entities(
+        SubmitLog.annotator_id,
+        Verse.chapter_id,
+        SubmitLog.verse_id,
+        func.group_concat(SubmitLog.task_id.distinct()).label("task_list"),
+        func.count(SubmitLog.task_id.distinct()).label("task_count"),
+        func.min(SubmitLog.updated_at).label("first_update_at"),
+        func.max(SubmitLog.updated_at).label("last_update_at"),
+    ).filter(
+        True if fetch_all_users else SubmitLog.annotator_id.in_(annotator_ids),
+        Task.is_deleted == False  # noqa
+    ).join(
+        Task, Verse
+    ).group_by(
+        SubmitLog.annotator_id, SubmitLog.verse_id
+    ).order_by(
+        SubmitLog.annotator_id, SubmitLog.verse_id, SubmitLog.task_id,
+    )
+    # ----------------------------------------------------------------------- #
+    # progress record
+    progress_record = defaultdict(lambda: defaultdict(list))
+    for row in progress_query.all():
+        (
+            annotator_id, chapter_id, verse_id,
+            task_list, task_count,
+            first_update_at, last_update_at
+        ) = row
+        progress_record[annotator_id][chapter_id].append(
+            {
+                "verse_id": verse_id,
+                "task_list": task_list.split(","),
+                "task_count": task_count,
+                "first_update_at": first_update_at,
+                "last_update_at": last_update_at
+            }
+        )
+    # ----------------------------------------------------------------------- #
+    # task detail
+    task_detail = {
+        task.id: {
+            "category": task.category,
+        }
+        for task in Task.query.all()
+    }
+    # ----------------------------------------------------------------------- #
+    # user detail
+    user_detail = {
+        user.id: {
+            "email": user.email,
+            "username": user.username,
+        }
+        for user in User.query.filter(
+            True if fetch_all_users else User.id.in_(annotator_ids),
+        ).all()
+    }
+    # ----------------------------------------------------------------------- #
+    # chapter detail
+    chapter_detail = {
+        chapter_id: {
+            "chapter_id": chapter_id,
+            "chapter_name": chapter_name,
+            "book_name": chapter_name.split()[0],
+            "verse_count": verse_count
+        }
+        for chapter_id, chapter_name, verse_count in Verse.query.with_entities(
+            Verse.chapter_id,
+            Chapter.name,
+            func.count(Chapter.id).label("verse_count")
+        ).join(Chapter).group_by(Verse.chapter_id).all()
+    }
+    # ----------------------------------------------------------------------- #
+
+    return {
+        "progress_record": progress_record,
+        "task_detail": task_detail,
+        "chapter_detail": chapter_detail,
+        "user_detail": user_detail,
+    }
+
+
+###############################################################################
