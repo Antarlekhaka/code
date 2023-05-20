@@ -1,20 +1,29 @@
-## TODO
+## Features
 
-- [ ] Update Word Order task pipeline
-  - [ ] Present it as a two-step task
-  - [ ] Step 1: Decide which tokens to keep or get rid of
-  - [ ] Step 2: Decide word order (current full task)
+- [ ] (Admin) Clone Annotations
+  - [ ] Required schema changes (boolean `is_clone` and integer `cloned_from_id` to keep track of source)
+    - [ ] Change models in `model_sqla.py`
+    - [ ] Add `.sql` in `misc/` that contains SQL migration commands
+  - [ ] Database function to clone annotations from one annotator to another
+  - [ ] Admin GUI to perform transfer
+
+- [ ] (Admin) Show Annoation Progress
+  - [x] Database utility function to fetch annotation progress (`utils.database.get_annotation_progress`)
+  - [x] (tempoarary) Basic `jsonify()` frontend
+  - [ ] Admin GUI to neatly display annotation progress
 
 - [ ] Accept plaintext input
   - [x] Simple plaintext processor (regex split)
   - [ ] Stanza or some similar processors
   - [ ] Input/Output Transliteration option at the time of chapter file upload
 
-- [ ] Use localStorage
+- [ ] Use `localStorage` for QoL Improvement Changes
   - [ ] (corpus) split.js percentages
-  - [ ] (corpus) unconfirmed annotations
-    - [ ] different style for unconfirmed annotations
-    - [x] store unsubmitted word-order annotations
+  - [ ] (corpus) custom style for unconfirmed annotations from each task
+    - [x] (word-order) store unsubmitted word-order annotations (saved entities: `state`, `unsubmitted-order`, `heuristic-order`)
+    - [x] (word-order) add badges to describe fixed annotation areas (sentence tokens, unused area, custom tokens)
+    - [x] (word-order) display `state` badge to show the phase of annotation of each boundary element
+
   - [x] (admin) remember last open tab
     - [x] data management accordion
     - [x] ontology tabs
@@ -25,15 +34,12 @@
     - [x] annotator visualization
     - [ ] (admin) suitable for programmers
     - [ ] decide a standard format
-- [ ] Connect to Sangrahaka
-  - [ ] Import entities (do it manually in database)
 
-- [ ] "Submit and go to next verse" ?
+- [ ] (Admin) Download (Export) Data
 
-- [ ] Admin
-  - [ ] Download Data
-  - [x] Task Reorder/Enable/Disable
-  - [ ] View as another user
+- [x] (Admin) Task Reorder/Enable/Disable
+
+- [ ] (Admin) View as another user
 
 - [ ] Improvements to "Add Token" Interface
   - [x] Front-end with multiple fields for Analysis and Features
@@ -53,13 +59,25 @@
   - [x] Task related elements etc in JS
   - [ ] `export.py` hard-coding for Sentence Boundary and Word Order task
 
+---
+
+## Minor
+
 - [ ] Custom key-events
   - [ ] Next/Previous Verse
   - [ ] Next/Previous Page
   - [ ] Submit
 
+- [ ] "Submit and go to next verse" ?
+
 ---
 
+## Implemented
+
+- [x] Update Word Order task pipeline
+  - [x] Present it as a two-step task
+  - [x] Step 1: Decide which tokens to keep or get rid of
+  - [x] Step 2: Decide word order (current full task)
 - [x] Allow display of additional context when required
 - [x] Task Category System (allow multiple tasks from same category)
   - [x] Global `TASK_CATEGORY` Constants
@@ -86,17 +104,17 @@
 
 ## Bugs
 
+- [ ] Multiple chapters selection in `export/` interface doesn't work, either force a single chapter, or figure out why the error is occurring
+- [ ] If there are deleted items, it triggers a "Successfully updated" message even if there are no changes. Refer to `server_sqla.py` for further details.
+
 - [x] TokenConnection/SentenceGraph connections/relations show incomplete rows when one of the tokens is out of context.
 - [x] Export - boundary not shown in some cases
   - (details: bug was when boundary token does not have text (or equals `_`))
-
-- [ ] If there are deleted items, it triggers a "Successfully updated" message even if there are no changes. Refer to `server_sqla.py` for further details.
-
 - [x] If sentence boundary is marked for a verse in the next chapter, all the nodes in between get counted as sentences
 - [x] Task 4 not recording
 - [x] Task 4 display only displays single relation out of existing ones
 - [x] After marking sentence boundary, transition to word-order task doesn't take proper sentence as word-order, need to call `setup_word_order()` again. Probably async issue.
-- [x] When new boundaries are marked, it may affect next sentence as well, need to do something about that. (e.g. If token 12 was boundary, and token 24 was another, and token 12 gets deleted, now, if token 24 had word_order, that needs to be re-done)
+- [x] When new boundaries are marked, it may affect next sentence as well, need to do something about that. (e.g. If token 12 was boundary, and token 24 was another, and token 12 gets deleted, now, if token 24 had `word_order`, that needs to be re-done)
 
 ## Core
 
@@ -127,8 +145,14 @@
 
 ## Future
 
+- [ ] Connect to Sangrahaka
+  - [ ] Import entities (do it manually in database)
 - [ ] Allow selecting if DCS etc in case that conllu allowed
 - [ ] Run SSCS for splitting (for general Sanskrit corpus when not in CoNLLU) (Think!)
 - [ ] Edit in table??
 - [ ] Allow multiple selection in classification tasks -- handle it on JS side, generating multiple entries from a single selector -- Issue: when it is actually
 single select, multi-select adds one extra click for changing.
+- [ ] User-wise task allocation?
+
+- [ ] Conflict Resolution Strategy
+  -  [ ] Task-specific
