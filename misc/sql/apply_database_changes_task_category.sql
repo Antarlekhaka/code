@@ -47,13 +47,13 @@ DROP INDEX word_order_boundary_id_annotator_id_token_id;
 DROP INDEX token_text_annotation_token_id_annotator_id;
 DROP INDEX token_classification_token_id_annotator_id;
 DROP INDEX token_graph_annotator_id_src_id_dst_id;
-DROP INDEX token_connetion_annotator_id_src_id_dst_id;
+DROP INDEX token_connection_annotator_id_src_id_dst_id;
 DROP INDEX sentence_classification_annotator_id_boundary_id;
 DROP INDEX sentence_graph_annotator_id_src_boundary_id_dst_boundary_id_src_token_id_dst_token_id_relation_type;
 
 /* BEFORE PROCEEDING FURTHER, */
 /* ACTION: START SERVER */
-/* ACTION: VISIT ANY PATH (THIS WILL RECREATE MISSING TABLES AS PER NEW SCHEMA) */
+/* ACTION: REQUEST ANY ROUTE (THIS WILL RECREATE MISSING TABLES AS PER NEW SCHEMA) */
 
 /* ******************************* Copy Data ******************************* */
 
