@@ -120,7 +120,7 @@ from utils.reverseproxied import ReverseProxied
 from utils.database import (
     add_chapter,
     get_verse_data, get_chapter_data, export_data,
-    get_annotation_progress
+    get_annotation_progress, clone_user_annotations
 )
 from utils.export import simple_format, standard_format
 from utils.conllu import CoNLLUParser
@@ -1898,8 +1898,9 @@ def perform_action():
             # Data
             'corpus_add', 'chapter_add',
 
-            # Export
+            # Annotations
             'annotation_download',
+            'annotation_clone',
         ],
         ROLE_CURATOR: [],
         ROLE_ANNOTATOR: [],
@@ -2314,6 +2315,43 @@ def perform_action():
             # --------------------------------------------------------------- #
         else:
             flash("Invalid file or file extension.", "error")
+
+        return redirect(request.referrer)
+
+    # ----------------------------------------------------------------------- #
+    # Annotations
+
+    if action == 'annotation_clone':
+        source_annotator_ids = request.form.getlist('source_annotator')
+        target_annotator_id = request.form['target_annotator']
+        task_ids = request.form.getlist('task_id')
+        chapter_ids = request.form.getlist('chapter_id')
+
+        source_annotator_ids = list(map(int, source_annotator_ids))
+        task_ids = list(map(int, task_ids)) or None
+        chapter_ids = list(map(int, chapter_ids)) or None
+
+        try:
+            clone_result = clone_user_annotations(
+                source_user_ids=source_annotator_ids,
+                target_user_id=target_annotator_id,
+                task_ids=task_ids,
+                chapter_ids=chapter_ids
+            )
+        except Exception as e:
+            webapp.logger.exception(e)
+            webapp.logger.info(request.form)
+            flash("Something went wrong.", "error")
+
+        if clone_result["errors"]:
+            for error_message in clone_result["errors"]:
+                flash(error_message)
+        else:
+            # NOTE: clone_count is total number of rows copied
+            # Such a count is inaccurate for WordOrder
+            # (Since each "order" corresponds to several entries)
+            clone_count = sum(clone_result["count"].values())
+            flash(f"Successfully cloned {clone_count} annotations.", "success")
 
         return redirect(request.referrer)
 
