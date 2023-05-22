@@ -1,14 +1,15 @@
 ## Features
 
-- [ ] (Admin) Clone Annotations
-  - [ ] Required schema changes (boolean `is_clone` and integer `cloned_from_id` to keep track of source)
-    - [ ] Change models in `model_sqla.py`
-    - [ ] Add `.sql` in `misc/` that contains SQL migration commands
-  - [ ] Database function to clone annotations from one annotator to another
-  - [ ] Admin GUI to perform transfer
+- [x] (Admin) Clone Annotations
+  - [x] Required schema changes (boolean `is_clone` and integer `cloned_from_id` to keep track of source)
+    - [x] Change models in `model_sqla.py`
+    - [x] Add `.sql` in `misc/` that contains SQL migration commands
+  - [x] Database function to clone annotations from one annotator to another
+  - [x] Admin GUI to perform transfer
 
 - [ ] (Admin) Show Annoation Progress
   - [x] Database utility function to fetch annotation progress (`utils.database.get_annotation_progress`)
+    - [ ] Utilize `is_cloned` column to ensure cloned annotation stats are not credited to the user
   - [x] (tempoarary) Basic `jsonify()` frontend
   - [ ] Admin GUI to neatly display annotation progress
 
