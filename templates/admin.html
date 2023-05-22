@@ -219,6 +219,104 @@
                         </div>
                     </div>
                 </div>
+
+                <div class="card" style="border-top-left-radius: 0; border-top-right-radius: 0;">
+                    <div class="card-header collapsed" data-toggle="collapse" data-target="#clone_container"
+                        aria-expanded="false" aria-controls="clone_container">
+                        Clone Annotations
+                    </div>
+                    <div id="clone_container" role="tabpanel" class="collapse" data-parent="#manage_data">
+                        <div class="card-body">
+                            <form method=POST enctype=multipart/form-data action="{{url_for('perform_action')}}">
+                                <input type="hidden" name="csrf_token" value={{csrf_token()}}>
+
+                                <div class="form-group row">
+                                    <label class="col-sm-2  col-form-label" for="source_annotator_ids">Source Annotator(s)</label>
+                                    <div class="col-sm-6">
+                                        <select class="lead selectpicker" name="source_annotator" id="source_annotator_ids"
+                                            data-container="body"
+                                            data-width="100%"
+                                            data-live-search="true"
+                                            data-actions-box="true"
+                                            data-select-all-text="All"
+                                            data-deselect-all-text="None"
+                                            data-selected-text-format="count"
+                                            multiple required>
+                                            {% for user in data.annotators %}
+                                            <option value="{{user.id}}">{{user.email}}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="form-group row">
+                                    <label class="col-sm-2  col-form-label" for="target_annotator_id">Target Annotator</label>
+                                    <div class="col-sm-6">
+                                        <select class="lead selectpicker" name="target_annotator" id="target_annotator_id"
+                                            data-container="body"
+                                            data-width="100%"
+                                            data-live-search="true"
+                                            data-actions-box="true"
+                                            data-select-all-text="All"
+                                            data-deselect-all-text="None"
+                                            data-selected-text-format="count"
+                                            required>
+                                            {% for user in data.annotators %}
+                                            <option value="{{user.id}}">{{user.email}}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="form-group row">
+                                    <label class="col-sm-2 col-form-label" for="clone_task_id">Task(s)</label>
+                                    <div class="col-sm-6">
+                                        <select class="lead selectpicker" name="task_id" id="clone_task_id"
+                                            data-container="body"
+                                            data-width="100%"
+                                            data-live-search="true"
+                                            data-actions-box="true"
+                                            data-select-all-text="All"
+                                            data-deselect-all-text="None"
+                                            data-selected-text-format="count"
+                                            multiple>
+                                            {% for task_id, task in context_tasks.active_tasks.items() %}
+                                            <option value="{{task.id}}">{{task.title}}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="form-group row">
+                                    <label class="col-sm-2 col-form-label" for="clone_chapter_id">Chapter(s)</label>
+                                    <div class="col-sm-6">
+                                        <select class="lead selectpicker" name="chapter_id" id="clone_chapter_id"
+                                            data-container="body"
+                                            data-width="100%"
+                                            data-live-search="true"
+                                            data-actions-box="true"
+                                            data-select-all-text="All"
+                                            data-deselect-all-text="None"
+                                            data-selected-text-format="count"
+                                            multiple>
+                                            {% for corpus in data.corpus_list %}
+                                            {% for chapter in corpus.chapters %}
+                                            <option value="{{chapter.id}}">{{corpus.name}} - {{chapter.name}}</option>
+                                            {% endfor %}
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-sm-2">
+                                        <button type="submit" name="action" value="annotation_clone" class="btn btn-primary float-right" title="Clone Annotations">
+                                            Clone &nbsp; <i class="fa fa-clone"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="card" style="border-top-left-radius: 0; border-top-right-radius: 0;">
                     <div class="card-header collapsed" data-toggle="collapse" data-target="#download_container"
                         aria-expanded="false" aria-controls="download_container">
