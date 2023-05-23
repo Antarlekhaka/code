@@ -75,7 +75,7 @@ class BaseModelView(SecureModelView):
 
 class UserModelView(BaseModelView):
     column_exclude_list = ("password", "fs_uniquifier")
-    column_searchable_list = ("username",)
+    column_searchable_list = ("username", "email")
     form_excluded_columns = (
         "confirmed_at",
         "last_login_at", "current_login_at",

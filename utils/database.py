@@ -1247,7 +1247,7 @@ def clone_user_annotations(
                     cloned_task_annotations, return_defaults=True
                 )
             except Exception as e:
-                print(e)
+                LOGGER.exception(e)
                 db.session.rollback()
                 result["status"] = False
                 result["errors"].append(
@@ -1276,7 +1276,7 @@ def clone_user_annotations(
             try:
                 db.session.bulk_save_objects(cloned_task_annotations)
             except Exception as e:
-                print(e)
+                LOGGER.exception(e)
                 db.session.rollback()
                 result["status"] = False
                 result["errors"].append(

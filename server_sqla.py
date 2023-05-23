@@ -979,7 +979,7 @@ def api():
                 Boundary.verse_id > verse_id,
                 Boundary.annotator_id == annotator_id,
             ).order_by(Boundary.token_id).first()
-            print(next_boundary)
+            # print("Next Boundary:", next_boundary)
 
             # NOTE: We do not check with task_id because, currently, only
             # single word order task is supported (as there needs to be a
@@ -2358,7 +2358,7 @@ def perform_action():
         return redirect(request.referrer)
 
     if action == 'annotation_download':
-        flash("Work in progress.")
+        flash("Please use 'Export' interface for now.")
         print(request.form)
         return redirect(request.referrer)
 
