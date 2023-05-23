@@ -210,7 +210,8 @@ class Boundary(db.Model):
                      nullable=False, index=True)
     verse_id = Column(Integer, ForeignKey('verse.id', ondelete='CASCADE'),
                       nullable=False, index=True)
-    token_id = Column(Integer, ForeignKey('token.id'), nullable=False)
+    token_id = Column(Integer, ForeignKey('token.id'),
+                      nullable=False, index=True)
     # ----------------------------------------------------------------------- #
     annotator_id = Column(Integer, ForeignKey('user.id'), nullable=False)
     updated_at = Column(DateTime, default=dt.utcnow, onupdate=dt.utcnow)
@@ -251,7 +252,8 @@ class WordOrder(db.Model):
     task_id = Column(Integer, ForeignKey('task.id', ondelete='CASCADE'),
                      nullable=False, index=True)
     boundary_id = Column(
-        Integer, ForeignKey('boundary.id', ondelete='CASCADE'), nullable=False
+        Integer, ForeignKey('boundary.id', ondelete='CASCADE'), nullable=False,
+        index=True
     )
     token_id = Column(Integer, ForeignKey('token.id'), nullable=False)
     order = Column(Integer, nullable=False)
@@ -298,7 +300,8 @@ class TokenTextAnnotation(db.Model):
     task_id = Column(Integer, ForeignKey('task.id', ondelete='CASCADE'),
                      nullable=False, index=True)
     boundary_id = Column(
-        Integer, ForeignKey('boundary.id', ondelete='CASCADE'), nullable=False
+        Integer, ForeignKey('boundary.id', ondelete='CASCADE'), nullable=False,
+        index=True
     )
     token_id = Column(Integer, ForeignKey('token.id'), nullable=False)
     text = Column(String(255), nullable=False)
@@ -345,7 +348,8 @@ class TokenClassification(db.Model):
     task_id = Column(Integer, ForeignKey('task.id', ondelete='CASCADE'),
                      nullable=False, index=True)
     boundary_id = Column(
-        Integer, ForeignKey('boundary.id', ondelete='CASCADE'), nullable=False
+        Integer, ForeignKey('boundary.id', ondelete='CASCADE'), nullable=False,
+        index=True
     )
     token_id = Column(Integer, ForeignKey('token.id'), nullable=False)
     label_id = Column(Integer, ForeignKey('token_label.id'), nullable=False)
@@ -390,7 +394,8 @@ class TokenGraph(db.Model):
     task_id = Column(Integer, ForeignKey('task.id', ondelete='CASCADE'),
                      nullable=False, index=True)
     boundary_id = Column(
-        Integer, ForeignKey('boundary.id', ondelete='CASCADE'), nullable=False
+        Integer, ForeignKey('boundary.id', ondelete='CASCADE'), nullable=False,
+        index=True
     )
     src_id = Column(Integer, ForeignKey('token.id'), nullable=False)
     label_id = Column(
@@ -440,8 +445,9 @@ class TokenGraph(db.Model):
     # (which is pretty much same as not having a unique index)
 
     # __table_args__ = (
-    #      Index('token_graph_annotator_id_src_id_label_id_dst_id',
-    #            'annotator_id', 'src_id', 'label_id', 'dst_id', unique=True),
+    #      Index('token_graph_task_id_annotator_id_src_id_label_id_dst_id',
+    #            'task_id', 'annotator_id', 'src_id', 'label_id', 'dst_id',
+    #            unique=True),
     # )
 
 
@@ -451,7 +457,8 @@ class TokenConnection(db.Model):
     task_id = Column(Integer, ForeignKey('task.id', ondelete='CASCADE'),
                      nullable=False, index=True)
     boundary_id = Column(
-        Integer, ForeignKey('boundary.id', ondelete='CASCADE'), nullable=False
+        Integer, ForeignKey('boundary.id', ondelete='CASCADE'), nullable=False,
+        index=True
     )
     # TODO:
     # Do we need `src_boundary_id` and `dst_boundary_id` both?
@@ -502,7 +509,8 @@ class SentenceClassification(db.Model):
     task_id = Column(Integer, ForeignKey('task.id', ondelete='CASCADE'),
                      nullable=False, index=True)
     boundary_id = Column(
-        Integer, ForeignKey('boundary.id', ondelete='CASCADE'), nullable=False
+        Integer, ForeignKey('boundary.id', ondelete='CASCADE'), nullable=False,
+        index=True
     )
     label_id = Column(Integer, ForeignKey('sentence_label.id'), nullable=False)
     # ----------------------------------------------------------------------- #
@@ -545,10 +553,12 @@ class SentenceGraph(db.Model):
     task_id = Column(Integer, ForeignKey('task.id', ondelete='CASCADE'),
                      nullable=False, index=True)
     src_boundary_id = Column(
-        Integer, ForeignKey('boundary.id', ondelete='CASCADE'), nullable=False
+        Integer, ForeignKey('boundary.id', ondelete='CASCADE'), nullable=False,
+        index=True
     )
     dst_boundary_id = Column(
-        Integer, ForeignKey('boundary.id', ondelete='CASCADE'), nullable=False
+        Integer, ForeignKey('boundary.id', ondelete='CASCADE'), nullable=False,
+        index=True
     )
     # TODO:
     # Why do we need `src_boundary_id` and `dst_boundary_id` both?
