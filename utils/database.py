@@ -835,7 +835,7 @@ def get_verse_data(
             TokenRelationLabel.is_deleted == False  # noqa
         )
         token_relation_map = {
-            token_relation_label.description: token_relation_label.id
+            token_relation_label.label: token_relation_label.id
             for token_relation_label in token_relation_label_query.all()
         }
 

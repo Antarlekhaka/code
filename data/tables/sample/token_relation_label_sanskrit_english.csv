@@ -1,0 +1,45 @@
+id,label,description,is_deleted
+,KARTA,कर्ता / Agent (Subject),0
+,PRAYOJYA_KARTA,प्रयोज्यकर्ता / Causal agent,0
+,MADHYASTHA_KARTA,मध्यस्थकर्ता  / Middle agent,0
+,PRAYOJAKA_KARTA,प्रयोजककर्ता / Causative agent,0
+,KARMA,कर्म / Object,0
+,GAUNA_KARMA,गौणकर्म / Indirect object,0
+,GATI_KARMA,गतिकर्म / Goal of movement and abstract activities,0
+,KARANA,करणम् / Instrument,0
+,SAMPRADANA,सम्प्रदानम् / Recipient / Beneficiary,0
+,APADANA,अपादानम् / Source of separation,0
+,SHASHTHI_SAMBANDHA,षष्ठीसम्बन्धः / Relation with another noun,0
+,DESHADHIKARANA_AUPASHLESHIKA,देशाधिकरणम् (औपश्लेषिकम्) / Location (contact) (on),0
+,DESHADHIKARANA_SAMIPYE,देशाधिकरणम् (सामीप्ये) / Location (nearby),0
+,DESHADHIKARANA_ABHIVYAPAKA,देशाधिकरणम् (अभिव्यापक) / Location (covering) (in),0
+,DESHADHIKARANA_VAISHAYIKA,देशाधिकरणम् (वैषयिक) / Location (topic),0
+,KALADHIKARANA,कालाधिकरणम् / Location (time),0
+,KARTRIKARAKA_SHASHTHI,कर्तृकारकषष्ठी / Genetive case for subject,0
+,KARMAKARAKA_SHASHTHI,कर्मकारकषष्ठी  / Genetive case for object,0
+,SAMANADHIKARANA,समानाधिकरणम् / Co-ordinate words (words refering to same entity),0
+,PURVA_KALA,पूर्वकालः / Preceding activity,0
+,ANANTARA_KALA,अनन्तरकालः / Following activity,0
+,SAMANA_KALA,समानकालः / Happening at the "same" time,0
+,BHAVALAKSHANA_SAPTAMI,भावलक्षणसप्तमी (सति सप्तमी) / Absolute locative,0
+,BHAVALAKSHANA_SHASHTHI,भावलक्षणषष्ठी (सतः षष्ठी) / Absolute genitive,0
+,UPAPADA_VIBHAKTI,उपपदविभक्तिः / Postposition governed case,0
+,UPAPADA,उपपदम् / Postposition marker,0
+,KRIYAVISHESHANA,क्रियाविशेषणम् / Adverb,0
+,SAMUCHCHAYA_BODHAKA,समुच्चयबोधकम् / Conjunction,0
+,SAMUCHCHITA,समुच्चितम् / Conjunct ???,0
+,VAKYAKARMA,वाक्यकर्म / Sentence as object,0
+,VAKYAKARMA_DYOTAKA,वाक्यकर्मद्योतकम् / Quotative marker,0
+,PRATISHEDHA,प्रतिषेधः / Prohibition,0
+,PARYUDASA,पर्युदासः / Exclusion,0
+,SAMBANDHA,सम्बन्धः / Relation,0
+,HETU,हेतुः / Reason (Cause),0
+,PRAYOJANA,प्रयोजनम् / Motive or Purpose,0
+,NIRDHARANA,निर्धारणम् / Selection of  some out of many,0
+,TIVRATADARSHI,तीव्रतादर्शी / Intensifier ,0
+,VISHESHANA,विशेषणम् / Adjective,0
+,VISHESHANA_VISHESHANA,विशेषण-विशेषणम् / Modifiers of the Adjectives,0
+,VIDHEYA_VISHESHANA,विधेय-विशेषणम् (उपाधिः) / Predicate Adjective,0
+,UPAMANAM,उपमानम् / Analogy,0
+,UPAMANA_DYOTAKA,उपमानद्योतकम् / Analogy marker,0
+,VISHESHANA_APEKSHIKA,विशेषण-आपेक्षिकम् / Attribution of same properties,0

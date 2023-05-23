@@ -125,43 +125,48 @@ def get_token_graph(
     from functools import reduce
 
     relations = []
+
+    # ----------------------------------------------------------------------- #
+
     rules = [
         {
             "src_condition": [("upos", "==", "VERB"), ("feats.Voice", "!=", "Pass")],
             "dst_condition": [("feats.Case", "==", "Nom"), ("upos", "==", "NOUN")],
-            "relation_label": ["कर्ता"]
+            "relation_label": ["KARTA"]
         },
         {
             "src_condition": [("upos", "==", "VERB"), ("feats.Voice", "==", "Pass")],
             "dst_condition": [("feats.Case", "==", "Ins"), ("upos", "==", "NOUN")],
-            "relation_label": ["कर्ता"]
+            "relation_label": ["KARTA"]
         },
         {
             "src_condition": [("upos", "==", "VERB"), ("feats.Voice", "!=", "Pass")],
             "dst_condition": [("feats.Case", "==", "Acc"), ("upos", "==", "NOUN")],
-            "relation_label": ["कर्म"]
+            "relation_label": ["KARMA"]
         },
         {
             "src_condition": [("upos", "==", "VERB"), ("feats.Voice", "==", "Pass")],
             "dst_condition": [("feats.Case", "==", "Nom"), ("upos", "==", "NOUN")],
-            "relation_label": ["कर्म"]
+            "relation_label": ["KARMA"]
         },
         {
             "src_condition": [("upos", "==", "VERB")],
             "dst_condition": [("feats.Case", "==", "Dat"), ("upos", "==", "NOUN")],
-            "relation_label": ["सम्प्रदानम्"]
+            "relation_label": ["SAMPRADANA"]
         },
         {
             "src_condition": [("upos", "==", "VERB")],
             "dst_condition": [("feats.Case", "==", "Abl"), ("upos", "==", "NOUN")],
-            "relation_label": ["अपादानम्"]
+            "relation_label": ["APADANA"]
         },
         {
             "src_condition": [("upos", "==", "VERB")],
             "dst_condition": [("feats.Case", "==", "Loc"), ("upos", "==", "NOUN")],
-            "relation_label": []
+            "relation_label": [""]
         }
     ]
+
+    # ----------------------------------------------------------------------- #
 
     def check_rule(_rule, _src_token, _dst_token):
         tokens = {
@@ -184,11 +189,20 @@ def get_token_graph(
                     conditions.append(key != _value)
         return all(conditions)
 
+    # ----------------------------------------------------------------------- #
+
     src_token_list = list(token_list.items())
     dst_token_list = list(token_list.items())
 
-    for dst_id, dst_token in dst_token_list:
-        for src_id, src_token in src_token_list:
+    token_proximity = {
+        (src_id, dst_id): src_idx - dst_idx
+        for src_idx, src_id in enumerate(token_list)
+        for dst_idx, dst_id in enumerate(token_list)
+        if src_id != dst_id
+    }
+
+    for dst_idx, (dst_id, dst_token) in enumerate(dst_token_list):
+        for src_idx, (src_id, src_token) in enumerate(src_token_list):
             if src_id == dst_id:
                 continue
 

@@ -1,0 +1,45 @@
+id,label,description,is_deleted
+,KARTA,कर्ता,0
+,PRAYOJYA_KARTA,प्रयोज्यकर्ता,0
+,MADHYASTHA_KARTA,मध्यस्थकर्ता ,0
+,PRAYOJAKA_KARTA,प्रयोजककर्ता,0
+,KARMA,कर्म,0
+,GAUNA_KARMA,गौणकर्म,0
+,GATI_KARMA,गतिकर्म,0
+,KARANA,करणम्,0
+,SAMPRADANA,सम्प्रदानम्,0
+,APADANA,अपादानम्,0
+,SHASHTHI_SAMBANDHA,षष्ठीसम्बन्धः,0
+,DESHADHIKARANA_AUPASHLESHIKA,देशाधिकरणम् (औपश्लेषिकम्),0
+,DESHADHIKARANA_SAMIPYE,देशाधिकरणम् (सामीप्ये),0
+,DESHADHIKARANA_ABHIVYAPAKA,देशाधिकरणम् (अभिव्यापक),0
+,DESHADHIKARANA_VAISHAYIKA,देशाधिकरणम् (वैषयिक),0
+,KALADHIKARANA,कालाधिकरणम्,0
+,KARTRIKARAKA_SHASHTHI,कर्तृकारकषष्ठी,0
+,KARMAKARAKA_SHASHTHI,कर्मकारकषष्ठी ,0
+,SAMANADHIKARANA,समानाधिकरणम्,0
+,PURVA_KALA,पूर्वकालः,0
+,ANANTARA_KALA,अनन्तरकालः,0
+,SAMANA_KALA,समानकालः,0
+,BHAVALAKSHANA_SAPTAMI,भावलक्षणसप्तमी (सति सप्तमी),0
+,BHAVALAKSHANA_SHASHTHI,भावलक्षणषष्ठी (सतः षष्ठी),0
+,UPAPADA_VIBHAKTI,उपपदविभक्तिः,0
+,UPAPADA,उपपदम्,0
+,KRIYAVISHESHANA,क्रियाविशेषणम्,0
+,SAMUCHCHAYA_BODHAKA,समुच्चयबोधकम्,0
+,SAMUCHCHITA,समुच्चितम्,0
+,VAKYAKARMA,वाक्यकर्म,0
+,VAKYAKARMA_DYOTAKA,वाक्यकर्मद्योतकम्,0
+,PRATISHEDHA,प्रतिषेधः,0
+,PARYUDASA,पर्युदासः,0
+,SAMBANDHA,सम्बन्धः,0
+,HETU,हेतुः,0
+,PRAYOJANA,प्रयोजनम्,0
+,NIRDHARANA,निर्धारणम्,0
+,TIVRATADARSHI,तीव्रतादर्शी,0
+,VISHESHANA,विशेषणम्,0
+,VISHESHANA_VISHESHANA,विशेषण-विशेषणम्,0
+,VIDHEYA_VISHESHANA,विधेय-विशेषणम् (उपाधिः),0
+,UPAMANAM,उपमानम्,0
+,UPAMANA_DYOTAKA,उपमानद्योतकम्,0
+,VISHESHANA_APEKSHIKA,विशेषण-आपेक्षिकम्,0
