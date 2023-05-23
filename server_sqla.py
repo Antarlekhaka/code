@@ -622,7 +622,7 @@ def show_admin():
 
     user_model = user_datastore.user_model
     role_model = user_datastore.role_model
-    user_query = user_model.query
+    user_query = user_model.query.filter(User.id != AUTO_ANNOTATION_USER_ID)
     role_query = role_model.query
 
     data['filetypes'] = {
@@ -690,7 +690,9 @@ def show_export():
 
     if current_user.has_role(ROLE_CURATOR):
         user_model = user_datastore.user_model
-        user_query = user_model.query
+        user_query = user_model.query.filter(
+            User.id != AUTO_ANNOTATION_USER_ID
+        )
         data['users'] = [
             {
                 "id": user.id,

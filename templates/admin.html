@@ -13,7 +13,7 @@
                     <div class="col-sm-3">
                         <select class="lead m-1 selectpicker" name="target_user" id="target_user" data-live-search="true">
                             {% for user in data.users %}
-                            <option value="{{user.username}}">{{user.username}}</option>
+                            <option value="{{user.username}}">{{user.email}}</option>
                             {% endfor %}
                         </select>
                     </div>
@@ -317,6 +317,7 @@
                     </div>
                 </div>
 
+                <!--
                 <div class="card" style="border-top-left-radius: 0; border-top-right-radius: 0;">
                     <div class="card-header collapsed" data-toggle="collapse" data-target="#download_container"
                         aria-expanded="false" aria-controls="download_container">
@@ -340,7 +341,7 @@
                                             data-selected-text-format="count"
                                             multiple required>
                                             {% for user in data.annotators %}
-                                            <option value="{{user.id}}">{{user.username}}</option>
+                                            <option value="{{user.id}}">{{user.email}}</option>
                                             {% endfor %}
                                         </select>
                                     </div>
@@ -385,7 +386,7 @@
                                         </select>
                                     </div>
                                     <div class="col-sm-1">
-                                        <button type="submit" name="action" value="annotation_download" class="btn btn-secondary float-right">
+                                        <button type="submit" name="action" value="annotation_download" class="btn btn-primary float-right" title="Download Annotations">
                                             <i class="fa fa-download"></i>
                                         </button>
                                     </div>
@@ -394,6 +395,7 @@
                         </div>
                     </div>
                 </div>
+                -->
             </div>
         </div>
     </div>
