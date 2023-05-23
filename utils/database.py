@@ -1115,3 +1115,180 @@ def get_annotation_progress(annotator_ids: List[int] = None) -> Any:
 
 
 ###############################################################################
+# Clone Annotations
+
+
+def clone_user_annotations(
+    source_user_ids: List[int],
+    target_user_id: int,
+    task_ids: List[int] = None,
+    chapter_ids: List[int] = None,
+) -> Dict[str, Any]:
+    """Clone annotations from one or more annotators to a target annotator
+
+    Parameters
+    ----------
+    source_user_ids : List[int]
+        ID of the annotator(s) whose annotations are to be copied
+    target_user_id : int
+        ID of the annotator to whom the annotations are to be copied
+
+    Returns
+    -------
+    Dict[str, Any]
+        Result of the copy operation
+    """
+    task_table_models = {
+        TASK_SENTENCE_BOUNDARY: Boundary,
+        TASK_WORD_ORDER: WordOrder,
+        TASK_TOKEN_TEXT_ANNOTATION: TokenTextAnnotation,
+        TASK_TOKEN_CLASSIFICATION: TokenClassification,
+        TASK_TOKEN_GRAPH: TokenGraph,
+        TASK_TOKEN_CONNECTION: TokenConnection,
+        TASK_SENTENCE_CLASSIFICATION: SentenceClassification,
+        TASK_SENTENCE_GRAPH: SentenceGraph
+    }
+
+    # NOTE: TASK_SENTENCE_BOUNDARY is always included in cloning,
+    # even if `task_ids` do not contain a boundary task.
+    # REASON: As all other annotation tasks refer to `boundary_id`,
+    # not copying boundary task would imply we have to refer  to original
+    # `boundary_id` and if any of the original annotation changes,
+    # it'll CASCADE delete. Thus, not copying boundary could result in some
+    # annotator's actions affecting someone else's annotations.
+
+    # NOTE: Assumption is that there's only one SentenceBoundary task
+    # TODO: Do we want to somehow obtain task id of SentenceBoundary task?
+    # NOTE: The sorted() call is to ensure that we clone boundary task first
+    task_id_sentence_boundary = 1
+    if task_ids is not None and task_id_sentence_boundary not in task_ids:
+        task_ids = sorted(
+            set([task_id_sentence_boundary, *(map(int, task_ids))])
+        )
+
+    clone_tasks = {
+        task.id: task.category
+        for task in Task.query.filter(
+            True if task_ids is None else Task.id.in_(task_ids),
+            Task.is_deleted == False,  # noqa
+        ).all()
+    }
+
+    # We maintain a `boundary_id_map`, a map of old boundary ids to the
+    # new boundary ids (generating new ids requires us to `flush()`).
+    boundary_id_map = {}
+
+    # data corresponding to columns in `exclude_columns` is not copied
+    # they are updated using various strategies
+    exclude_columns = ['id', 'annotator_id', 'is_clone', 'cloned_from_id']
+    # NOTE: boundary_columns do need to be copied at first so that we retain
+    # a reference of what to replace it with
+    boundary_columns = ['boundary_id', 'src_boundary_id', 'dst_boundary_id']
+    # those belonging to `update_columns` are set to the fixed values
+    update_columns = {
+        'annotator_id': target_user_id,
+        'is_clone': True
+    }
+    # `boundary_id_map` is used to update boundary_columns
+    # `cloned_from_id` is set to `id` of original row
+
+    # ----------------------------------------------------------------------- #
+    # clone tasks
+
+    result = {
+        "status": True,
+        "errors": [],
+        "count": {}
+    }
+
+    for task_id, task_category in clone_tasks.items():
+        task_key = (task_id, task_category)
+        task_model = task_table_models[task_category]
+        column_names = [
+            column.name for column in task_model.__table__.columns
+        ]
+        if chapter_ids is not None:
+            if task_category == TASK_SENTENCE_BOUNDARY:
+                chapter_condition = task_model.verse.has(
+                    Verse.chapter_id.in_(chapter_ids)
+                )
+            else:
+                chapter_condition = task_model.boundary.has(
+                    Boundary.verse.has(
+                        Verse.chapter_id.in_(chapter_ids)
+                    )
+                )
+        else:
+            chapter_condition = True
+
+        cloned_task_annotations = [
+            task_model(
+                **{
+                    column_name: getattr(row, column_name)
+                    for column_name in column_names
+                    if column_name not in exclude_columns
+                },
+                **update_columns,
+                cloned_from_id=row.id
+            )
+            for row in task_model.query.filter(
+                task_model.annotator_id.in_(source_user_ids),
+                task_model.task_id == task_id,
+                task_model.is_deleted == False if hasattr(task_model, "is_deleted") else True,  # noqa
+                chapter_condition,
+            ).all()
+        ]
+        if task_category == TASK_SENTENCE_BOUNDARY:
+            # NOTE: This MUST happen first before any other task.
+            try:
+                # NOTE: we need `return_defaults=True` in order to ensure that
+                # `id` values get populated after flush() is called.
+                db.session.bulk_save_objects(
+                    cloned_task_annotations, return_defaults=True
+                )
+            except Exception as e:
+                print(e)
+                db.session.rollback()
+                result["status"] = False
+                result["errors"].append(
+                    f"Error in copying {task_key} annotations."
+                )
+                # abort if we fail in copying boundary annotations
+                return result
+            else:
+                # after `flush()`, we have `id` columns populated
+                # store `boundary_id_map`
+                db.session.flush()
+                result["count"][task_key] = len(cloned_task_annotations)
+
+                for annotation_object in cloned_task_annotations:
+                    old_boundary_id = annotation_object.cloned_from_id
+                    new_boundary_id = annotation_object.id
+                    boundary_id_map[old_boundary_id] = new_boundary_id
+        else:
+            for annotation_object in cloned_task_annotations:
+                for column in boundary_columns:
+                    if hasattr(annotation_object, column):
+                        current_id = getattr(annotation_object, column)
+                        replacement_id = boundary_id_map[current_id]
+                        setattr(annotation_object, column, replacement_id)
+
+            try:
+                db.session.bulk_save_objects(cloned_task_annotations)
+            except Exception as e:
+                print(e)
+                db.session.rollback()
+                result["status"] = False
+                result["errors"].append(
+                    f"Error in copying {task_key} annotations."
+                )
+                return result
+            else:
+                result["count"][task_key] = len(cloned_task_annotations)
+
+    # we reach this point means there were no errors
+    db.session.commit()
+    return result
+
+
+###############################################################################

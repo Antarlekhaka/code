@@ -214,6 +214,12 @@ class Boundary(db.Model):
     # ----------------------------------------------------------------------- #
     annotator_id = Column(Integer, ForeignKey('user.id'), nullable=False)
     updated_at = Column(DateTime, default=dt.utcnow, onupdate=dt.utcnow)
+    # ----------------------------------------------------------------------- #
+    is_clone = Column(Boolean, default=False, nullable=False)
+    cloned_from_id = Column(Integer, ForeignKey('boundary.id'), nullable=True)
+    # ----------------------------------------------------------------------- #
+    cloned_from = relationship('Boundary', remote_side=[id])
+    # ----------------------------------------------------------------------- #
 
     task = relationship(
         'Task',
@@ -252,6 +258,14 @@ class WordOrder(db.Model):
     # ----------------------------------------------------------------------- #
     annotator_id = Column(Integer, ForeignKey('user.id'), nullable=False)
     updated_at = Column(DateTime, default=dt.utcnow, onupdate=dt.utcnow)
+    # ----------------------------------------------------------------------- #
+    is_clone = Column(Boolean, default=False, nullable=False)
+    cloned_from_id = Column(
+        Integer, ForeignKey('word_order.id'), nullable=True
+    )
+    # ----------------------------------------------------------------------- #
+    cloned_from = relationship('WordOrder', remote_side=[id])
+    # ----------------------------------------------------------------------- #
 
     task = relationship(
         'Task',
@@ -292,6 +306,14 @@ class TokenTextAnnotation(db.Model):
     annotator_id = Column(Integer, ForeignKey('user.id'), nullable=False)
     is_deleted = Column(Boolean, default=False, nullable=False)
     updated_at = Column(DateTime, default=dt.utcnow, onupdate=dt.utcnow)
+    # ----------------------------------------------------------------------- #
+    is_clone = Column(Boolean, default=False, nullable=False)
+    cloned_from_id = Column(
+        Integer, ForeignKey('token_text_annotation.id'), nullable=True
+    )
+    # ----------------------------------------------------------------------- #
+    cloned_from = relationship('TokenTextAnnotation', remote_side=[id])
+    # ----------------------------------------------------------------------- #
 
     task = relationship(
         'Task',
@@ -331,6 +353,14 @@ class TokenClassification(db.Model):
     annotator_id = Column(Integer, ForeignKey('user.id'), nullable=False)
     is_deleted = Column(Boolean, default=False, nullable=False)
     updated_at = Column(DateTime, default=dt.utcnow, onupdate=dt.utcnow)
+    # ----------------------------------------------------------------------- #
+    is_clone = Column(Boolean, default=False, nullable=False)
+    cloned_from_id = Column(
+        Integer, ForeignKey('token_classification.id'), nullable=True
+    )
+    # ----------------------------------------------------------------------- #
+    cloned_from = relationship('TokenClassification', remote_side=[id])
+    # ----------------------------------------------------------------------- #
 
     task = relationship(
         'Task',
@@ -371,6 +401,14 @@ class TokenGraph(db.Model):
     annotator_id = Column(Integer, ForeignKey('user.id'), nullable=False)
     is_deleted = Column(Boolean, default=False, nullable=False)
     updated_at = Column(DateTime, default=dt.utcnow, onupdate=dt.utcnow)
+    # ----------------------------------------------------------------------- #
+    is_clone = Column(Boolean, default=False, nullable=False)
+    cloned_from_id = Column(
+        Integer, ForeignKey('token_graph.id'), nullable=True
+    )
+    # ----------------------------------------------------------------------- #
+    cloned_from = relationship('TokenGraph', remote_side=[id])
+    # ----------------------------------------------------------------------- #
 
     task = relationship(
         'Task',
@@ -425,6 +463,14 @@ class TokenConnection(db.Model):
     annotator_id = Column(Integer, ForeignKey('user.id'), nullable=False)
     is_deleted = Column(Boolean, default=False, nullable=False)
     updated_at = Column(DateTime, default=dt.utcnow, onupdate=dt.utcnow)
+    # ----------------------------------------------------------------------- #
+    is_clone = Column(Boolean, default=False, nullable=False)
+    cloned_from_id = Column(
+        Integer, ForeignKey('token_connection.id'), nullable=True
+    )
+    # ----------------------------------------------------------------------- #
+    cloned_from = relationship('TokenConnection', remote_side=[id])
+    # ----------------------------------------------------------------------- #
 
     task = relationship(
         'Task',
@@ -463,6 +509,14 @@ class SentenceClassification(db.Model):
     annotator_id = Column(Integer, ForeignKey('user.id'), nullable=False)
     is_deleted = Column(Boolean, default=False, nullable=False)
     updated_at = Column(DateTime, default=dt.utcnow, onupdate=dt.utcnow)
+    # ----------------------------------------------------------------------- #
+    is_clone = Column(Boolean, default=False, nullable=False)
+    cloned_from_id = Column(
+        Integer, ForeignKey('sentence_classification.id'), nullable=True
+    )
+    # ----------------------------------------------------------------------- #
+    cloned_from = relationship('SentenceClassification', remote_side=[id])
+    # ----------------------------------------------------------------------- #
 
     task = relationship(
         'Task',
@@ -514,6 +568,14 @@ class SentenceGraph(db.Model):
     annotator_id = Column(Integer, ForeignKey('user.id'), nullable=False)
     is_deleted = Column(Boolean, default=False, nullable=False)
     updated_at = Column(DateTime, default=dt.utcnow, onupdate=dt.utcnow)
+    # ----------------------------------------------------------------------- #
+    is_clone = Column(Boolean, default=False, nullable=False)
+    cloned_from_id = Column(
+        Integer, ForeignKey('sentence_graph.id'), nullable=True
+    )
+    # ----------------------------------------------------------------------- #
+    cloned_from = relationship('SentenceGraph', remote_side=[id])
+    # ----------------------------------------------------------------------- #
 
     task = relationship(
         'Task',
