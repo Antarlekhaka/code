@@ -66,9 +66,9 @@
                             data-deselect-all-text="None"
                             data-selected-text-format="count"
                             multiple required>
-                            {% for chapter in data.chapters %}
+                            {% for chapter_id, chapter in data.chapters.items() %}
                             {% set corpus_name = data.corpora[chapter.corpus_id] %}
-                            <option value="{{chapter.id}}">{{corpus_name}} - {{chapter.name}}</option>
+                            <option value="{{chapter_id}}">{{corpus_name}} - {{chapter.name}}</option>
                             {% endfor %}
                         </select>
                     </div>
