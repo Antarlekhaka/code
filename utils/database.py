@@ -644,7 +644,8 @@ def get_verse_data(
                         SubmitLog.annotator_id.in_(annotator_ids),
                         Task.is_deleted == False  # noqa
                     ).group_by(
-                        SubmitLog.task_id
+                        SubmitLog.task_id,
+                        SubmitLog.annotator_id
                     ).join(
                         Task
                     ).order_by(Task.order).all()
@@ -812,9 +813,9 @@ def get_verse_data(
 
         sentence_tokens = data[verse_id]["sentences"][boundary.id]
         used_tokens = {
-            _token_id: _token
-            for _token_id, _token in sentence_tokens.items()
-            if _token_id in data[verse_id][TASK_WORD_ORDER][boundary.id]
+            _token_id: sentence_tokens[_token_id]
+            for _token_id in data[verse_id][TASK_WORD_ORDER][boundary.id]
+            if _token_id in sentence_tokens
         }
 
         # TODO: Need better heuristic management.
