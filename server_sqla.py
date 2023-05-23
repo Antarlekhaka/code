@@ -701,20 +701,17 @@ def show_export():
             }
             for user in user_query.all()
         ]
-    data['corpus_list'] = [
-        {
-            'id': corpus.id,
-            'name': corpus.name,
-            'chapters': [
-                {
-                    'id': chapter.id,
-                    'name': chapter.name
-                }
-                for chapter in corpus.chapters.all()
-            ]
-        }
+    data['corpora'] = {
+        corpus.id: corpus.name
         for corpus in Corpus.query.all()
-    ]
+    }
+    data['chapters'] = {
+       chapter.id: {
+           'corpus_id': chapter.corpus_id,
+           'name': chapter.name
+       }
+       for chapter in Chapter.query.all()
+    }
 
     if request.method == "POST":
         annotator_id = None
@@ -726,24 +723,25 @@ def show_export():
 
         chapter_ids = request.form.getlist('chapter_id')
 
+        # CAUTION: Although the function export_data() is designed to support
+        # querying over multiple annotators and multiple chapters, it is
+        # infeasible and downright confusing to show annotations by multiple
+        # users at once. Therefore, it should be noted that there is (and
+        # most likely will be) NO SUPPORT for multiple user selection.
         annotation_data = export_data(
             annotator_ids=[int(annotator_id)],
             chapter_ids=[int(chapter_id) for chapter_id in chapter_ids],
             task_ids=[]
         )
-        simple_data = simple_format(
+        annotation_result_simple = simple_format(
             annotation_data,
             token_text_preference=EXPORT_CONFIG["token_text_preference"]
         )
-        annotation_result = {
-            k[0]: v
-            for k, v in simple_data.items()
-        }
         data['form'] = {
             'annotator_id': annotator_id,
             'chapter_ids': chapter_ids
         }
-        data["result"] = annotation_result
+        data["result"] = annotation_result_simple
 
     return render_template('export.html', data=data)
 

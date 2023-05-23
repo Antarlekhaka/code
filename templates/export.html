@@ -66,16 +66,15 @@
                             data-deselect-all-text="None"
                             data-selected-text-format="count"
                             multiple required>
-                            {% for corpus in data.corpus_list %}
-                            {% for chapter in corpus.chapters %}
-                            <option value="{{chapter.id}}">{{corpus.name}} - {{chapter.name}}</option>
-                            {% endfor %}
+                            {% for chapter in data.chapters %}
+                            {% set corpus_name = data.corpora[chapter.corpus_id] %}
+                            <option value="{{chapter.id}}">{{corpus_name}} - {{chapter.name}}</option>
                             {% endfor %}
                         </select>
                     </div>
-                    <div class="col-sm-1">
-                        <button type="submit" name="action" value="show_user_annotation" title="Show" class="btn btn-secondary float-right">
-                            <i class="fa fa-eye"></i>
+                    <div class="col-sm-2">
+                        <button type="submit" name="action" value="show_user_annotation" title="Show" class="btn btn-primary float-right">
+                            Show &nbsp; <i class="fa fa-eye"></i>
                         </button>
                     </div>
                 </div>

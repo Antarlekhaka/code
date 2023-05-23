@@ -1,12 +1,12 @@
 {% block body %}
-{% for chapter_id, chapter_result in data.result.items() %}
+{% for (chapter_id, annotator_id), chapter_result in data.result.items() %}
 <div class="border rounded">
-    <button id="download_{{task.id}}_{{chapter_id}}" data-chapter="{{chapter_id}}" data-task-id="{{task.id}}" data-task-category="{{task.category}}" data-target="pre_{{task.id}}_{{chapter_id}}" class="btn btn-secondary float-right task-download">
+    <button id="download_{{task.id}}_{{chapter_id}}" data-chapter="{{chapter_id}}" data-task-id="{{task.id}}" data-task-category="{{task.category}}" data-target="pre_{{task.id}}_{{chapter_id}}" class="btn btn-primary float-right task-download">
         <i class="fa fa-download"></i>
     </button>
-    <pre id="pre_{{task.id}}_{{chapter_id}}" class="pre-scrollable p-3 text-info">{{chapter_result[task.category][task.id]}}</pre>
+    <span class="badge badge-secondary p-2">{{data.chapters[chapter_id].name}}</span>
+    <pre id="pre_{{task.id}}_{{chapter_id}}" class="pre-scrollable p-3 text-info">{{chapter_result[task.category].get(task.id)}}</pre>
 </div>
 <hr>
-
 {% endfor %}
 {% endblock %}
