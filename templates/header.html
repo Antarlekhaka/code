@@ -182,6 +182,9 @@
     {% set annotator_navigation = {
         'export': ('show_export', 'Export')
     }-%}
+    {% set curator_navigation = {
+        'progress': ('show_progress', 'Progress')
+    }-%}
     {% set user_navigation = {
         'settings': ('show_settings', 'Settings')
     }-%}
@@ -194,6 +197,10 @@
             {% set current_user_name = current_user.settings.display_name %}
         {% else %}
             {% set current_user_name = current_user.username %}
+        {% endif %}
+
+        {% if current_user.has_role(context_roles.curator) %}
+            {% set _dummy = navigation_bar.update(curator_navigation) %}
         {% endif %}
 
         {% if current_user.has_role(context_roles.annotator) %}
