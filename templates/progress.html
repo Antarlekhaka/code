@@ -7,5 +7,11 @@
         </h4>
     </div>
     <table id="annotation-progress-viewer"></table>
+    <script>
+        const PROGRESS = JSON.parse('{{data.progress | tojson}}');
+        const USER = JSON.parse('{{data.user | tojson}}');
+        const TASK = JSON.parse('{{data.task | tojson}}');
+        const CHAPTER = JSON.parse('{{data.chapter | tojson}}');
+    </script>
 </div>
 {% include "footer.html" %}
