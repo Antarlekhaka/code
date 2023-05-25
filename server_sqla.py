@@ -72,6 +72,7 @@ from constants import (
 
     PERMISSION_VIEW_ACP,
     PERMISSION_ANNOTATE,
+    PERMISSION_CURATE,
     PERMISSION_VIEW_UCP,
     PERMISSION_VIEW_CORPUS,
 
@@ -671,11 +672,15 @@ def show_admin():
     return render_template('admin.html', data=data)
 
 
-@webapp.route("/admin/progress")
+@webapp.route("/progress")
 @auth_required()
-@permissions_required(PERMISSION_VIEW_ACP)
+@permissions_required(PERMISSION_CURATE)
 def show_progress():
-    return jsonify(get_annotation_progress())
+    data = {
+        "title": "Annotation Progress",
+        **get_annotation_progress()
+    }
+    return render_template("progress.html", data=data)
 
 
 # --------------------------------------------------------------------------- #
