@@ -1040,6 +1040,10 @@ def get_annotation_progress(annotator_ids: List[int] = None) -> Any:
         Verse.chapter_id,
         SubmitLog.verse_id,
         func.group_concat(SubmitLog.task_id.distinct()).label("task_list"),
+        # NOTE: task_count isn't really required if there's another processing
+        # phase. (`task_count = len(task_list.split(","))`)
+        # processing is currently done on the JS side,
+        # making task_count further unnecessary
         func.count(SubmitLog.task_id.distinct()).label("task_count"),
         func.min(SubmitLog.updated_at).label("first_update_at"),
         func.max(SubmitLog.updated_at).label("last_update_at"),
@@ -1065,7 +1069,7 @@ def get_annotation_progress(annotator_ids: List[int] = None) -> Any:
         progress_record[annotator_id][chapter_id].append(
             {
                 "verse_id": verse_id,
-                "task_list": task_list.split(","),
+                "task_list": task_list,
                 "task_count": task_count,
                 "first_update_at": first_update_at,
                 "last_update_at": last_update_at
@@ -1075,6 +1079,8 @@ def get_annotation_progress(annotator_ids: List[int] = None) -> Any:
     # task detail
     task_detail = {
         task.id: {
+            "title": task.title,
+            "short": task.short,
             "category": task.category,
         }
         for task in Task.query.all()
@@ -1108,10 +1114,10 @@ def get_annotation_progress(annotator_ids: List[int] = None) -> Any:
     # ----------------------------------------------------------------------- #
 
     return {
-        "progress_record": progress_record,
-        "task_detail": task_detail,
-        "chapter_detail": chapter_detail,
-        "user_detail": user_detail,
+        "progress": progress_record,
+        "task": task_detail,
+        "chapter": chapter_detail,
+        "user": user_detail,
     }
 
 
