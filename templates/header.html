@@ -124,7 +124,19 @@
 
         .dropdown-menu {
             max-width: 200%;
-            overflow-x: clip;
+            /* overflow-x: clip; */
+            /* setting `overflow-x: clip` is somehow hiding the content in
+               bootstrap-table's pagination selector */
+        }
+
+        tr.detail-view > td > div > div.fixed-table-toolbar {
+            margin-left: 5pt;
+            margin-right: 5pt;
+        }
+
+        tr.detail-view > td > div > div.fixed-table-pagination {
+            margin-left: 5pt;
+            margin-right: 5pt;
         }
 
         .animated {
