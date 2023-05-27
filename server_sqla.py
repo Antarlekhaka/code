@@ -284,7 +284,7 @@ PLAINTEXT_PROCESSOR = PlaintextProcessor(
 # Database Utility Functions
 
 
-def record_submit(verse_id: int, annotator_id: int, task_id: int):
+def record_submit(verse_id: int, annotator_id: int, task_id: int) -> bool:
     """Record Submit
 
     Parameters
@@ -302,6 +302,7 @@ def record_submit(verse_id: int, annotator_id: int, task_id: int):
     submit_log.task_id = task_id
     db.session.add(submit_log)
     db.session.commit()
+    return True
 
 
 ###############################################################################
