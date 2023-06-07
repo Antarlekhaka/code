@@ -1365,6 +1365,14 @@ def api():
             request.form.get("token_graph_data", "[]")
         )
 
+        # NOTE: we use find existing (src_id, dst_id) 2-tuples,
+        # and not (src_id, label_id, dst_id) 3-tuples in order to allow change
+        # of label type without violating unique constraint.
+        # so, if a triple (s, l1, d) exists and we want to make it (s, l2, d),
+        # we need to be able to find (s, l1, d) as "existing"
+        # otherwise, we have to remove the "unique" constraint on src_id, dst_id
+        # and include label_id in it too.
+
         objects_to_update = []
         try:
             # validate token_graph_data: List[Dict]
@@ -1373,7 +1381,7 @@ def api():
             token_graph_data = {
                 (
                     int(tokrel["src_id"]),
-                    int(tokrel["label_id"]),
+                    # int(tokrel["label_id"]),
                     int(tokrel["dst_id"])
                 ): {
                     k: int(v)
@@ -1395,24 +1403,28 @@ def api():
 
         existing_tokrels = existing_tokrels_query.all()
         existing_tokrel_tuples = [
-            (tokrel.src_id, tokrel.label_id, tokrel.dst_id)
+            # (tokrel.src_id, tokrel.label_id, tokrel.dst_id)
+            (tokrel.src_id, tokrel.dst_id)
             for tokrel in existing_tokrels
         ]
 
         for tokrel in existing_tokrels:
-            tokrel_tuple = (tokrel.src_id, tokrel.label_id, tokrel.dst_id)
+            # tokrel_tuple = (tokrel.src_id, tokrel.label_id, tokrel.dst_id)
+            tokrel_tuple = (tokrel.src_id, tokrel.dst_id)
             if tokrel_tuple not in token_graph_data:
                 # tokrel exists but was not submitted (i.e. removed)
                 tokrel.is_deleted = True
                 objects_to_update.append(tokrel)
             else:
-                # tokrel exists and is submitted (i.e. retained)
+                # tokrel exists and is submitted (i.e. retained or changed)
                 # check if there are any changes to the tokrel
                 if any([
                     tokrel.boundary_id != token_graph_data[tokrel_tuple]["boundary_id"],
+                    tokrel.label_id != token_graph_data[tokrel_tuple]["label_id"],
                     tokrel.is_deleted is True
                 ]):
                     tokrel.boundary_id = token_graph_data[tokrel_tuple]["boundary_id"]
+                    tokrel.label_id = token_graph_data[tokrel_tuple]["label_id"]
                     tokrel.is_deleted = False
                     objects_to_update.append(tokrel)
 
