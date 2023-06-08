@@ -68,7 +68,7 @@ const storage = window.localStorage;
 const KEY_NEXT_INDEX = "next_index";
 const KEY_CURRENT_INDEX = "current_index";
 const KEY_CURRENT_VERSE_ID = "current_verse_id";
-const KEY_NEXT_VERSE_ID = "current_verse_id";
+const KEY_NEXT_VERSE_ID = "next_verse_id";
 
 // Prefixes for Storage Keys
 const PREFIX_KEY_BOUNDARY_WORD_ORDER = "boundary_word_order";
