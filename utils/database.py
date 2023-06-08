@@ -278,10 +278,10 @@ def export_data(
                     "annotator_id": token.annotator_id
                 }
                 for token in line.tokens.all()
-                if (
-                    token.annotator_id is None or
-                    token.annotator_id in annotator_ids
-                )
+                # if (
+                #     token.annotator_id is None or
+                #     token.annotator_id in annotator_ids
+                # )
             }
             chapter_data["tokens"].update(line_tokens)
             chapter_data["verse_tokens"][verse_id].append(list(line_tokens))
@@ -598,10 +598,10 @@ def get_verse_data(
                         "annotator_id": token.annotator_id
                     }
                     for token in line.tokens.all()
-                    if (
-                        token.annotator_id is None or
-                        token.annotator_id in annotator_ids
-                    )
+                    # if (
+                    #     token.annotator_id is None or
+                    #     token.annotator_id in annotator_ids
+                    # )
                     # NOTE: now tokens also have annotator_id,
                     # so, may be directly fetch with annotator_id or null
                     # (instead of doing this in Python)
@@ -673,10 +673,10 @@ def get_verse_data(
                     "annotator_id": token.annotator_id
                 }
                 for token in line.tokens.all()
-                if (
-                    token.annotator_id is None or
-                    token.annotator_id in annotator_ids
-                )
+                # if (
+                #     token.annotator_id is None or
+                #     token.annotator_id in annotator_ids
+                # )
             ])
 
     if sentence_boundary_task_active:
