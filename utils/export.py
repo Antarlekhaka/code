@@ -127,6 +127,7 @@ def format_data(data, **kwargs):
             TASK_WORD_ORDER, default_token_text_preference
         )
 
+        SENTENCE_TOKEN_IDS = {}
         SENTENCE_TEXT = {}
         text_simple = [
             ["#", "Verse", "Word Order"],
@@ -137,6 +138,7 @@ def format_data(data, **kwargs):
         sent_idx = 0
         current_boundary_id = None
         current_verse_id = None
+        sentence_token_ids = []
         sentence_token_texts = []
 
         for word_order in annotation_data[TASK_WORD_ORDER]:
@@ -145,6 +147,7 @@ def format_data(data, **kwargs):
                 current_verse_id = word_order["verse_id"]
 
             if current_boundary_id != word_order["boundary_id"]:
+                SENTENCE_TOKEN_IDS[current_boundary_id] = sentence_token_ids
                 sent_idx += 1
                 sentence_text = " ".join(sentence_token_texts)
                 SENTENCE_TEXT[current_boundary_id] = sentence_text
@@ -154,13 +157,16 @@ def format_data(data, **kwargs):
 
                 current_boundary_id = word_order["boundary_id"]
                 current_verse_id = word_order["verse_id"]
+                sentence_token_ids = []
                 sentence_token_texts = []
 
             token_id = word_order["token_id"]
             token = chapter_data["tokens"][token_id]
             token_text = get_token_text(token, preference)
+            sentence_token_ids.append(token_id)
             sentence_token_texts.append(token_text)
         else:
+            SENTENCE_TOKEN_IDS[current_boundary_id] = sentence_token_ids
             sent_idx += 1
             sentence_text = " ".join(sentence_token_texts)
             SENTENCE_TEXT[current_boundary_id] = sentence_text
@@ -218,7 +224,7 @@ def format_data(data, **kwargs):
             ["-----", "-----", "-----", "-----------"]
         ]
         text_simple = defaultdict(list)
-        text_standard = defaultdict(list)
+        text_standard = defaultdict(dict)
 
         for tokclf in annotation_data[TASK_TOKEN_CLASSIFICATION]:
             task_id = tokclf["task_id"]
@@ -227,11 +233,34 @@ def format_data(data, **kwargs):
 
             tokclf_token_id = tokclf["token_id"]
             tokclf_token = chapter_data["tokens"][tokclf_token_id]
-            token_text = get_token_text(tokclf_token, preference)
+            token_text_simple = get_token_text(tokclf_token, preference)
+
+            # NOTE: For efficiency, token_text is fetched from
+            # the dictionary used to store standard format
+
+            # BEGIN: Standard Format: B-I-O
+            tokclf_boundary_id = tokclf["boundary_id"]
+            tokclf_sentence = SENTENCE_TOKEN_IDS[tokclf_boundary_id]
+            if not text_standard[task_id].get(tokclf_boundary_id):
+                text_standard[task_id][tokclf_boundary_id] = {
+                    tok_id: (
+                        get_token_text(
+                            chapter_data["tokens"][tok_id],
+                            ["form", "misc.Unsandhied", "lemma"]
+                        ),
+                        "O"
+                    )
+                    for tok_id in tokclf_sentence
+                }
+            token_text_standard = text_standard[task_id][tokclf_boundary_id][tokclf_token_id][0]
+            text_standard[task_id][tokclf_boundary_id][tokclf_token_id] = (
+                token_text_standard, f'B-{tokclf["label_label"]}'
+            )
+            # END: Standard Format: B-I-O
 
             text_simple[task_id].append([
                 str(tokclf["verse_id"]),
-                token_text,
+                token_text_simple,
                 tokclf["label_label"],
                 tokclf["label_description"]
             ])
@@ -241,7 +270,12 @@ def format_data(data, **kwargs):
                 "\t".join(tokclf_row)
                 for tokclf_row in text_simple[task_id]
             )
-            task_data_standard[TASK_TOKEN_CLASSIFICATION][task_id] = None
+            task_data_standard[TASK_TOKEN_CLASSIFICATION][task_id] = "\n\n".join(
+                "\n".join(
+                    f"{_text} {_label}" for (_text, _label) in _sent.values()
+                )
+                for _sent in text_standard[task_id].values()
+            )
 
         # ------------------------------------------------------------------- #
 
