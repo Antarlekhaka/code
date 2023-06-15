@@ -47,12 +47,14 @@ def get_token_text(token: dict, key_preference: List[str]):
     return token_text
 
 ###############################################################################
-# Simple Format
+# Format Data
 # --------------------------------------------------------------------------- #
 
 
-def simple_format(data, **kwargs):
+def format_data(data, **kwargs):
     simple_data = {}
+    standard_data = {}
+
     token_text_preference_map = kwargs.get("token_text_preference", {})
     default_token_text_preference = ["lemma", "form"]
 
@@ -65,7 +67,8 @@ def simple_format(data, **kwargs):
         chapter_id, annotator_id = annotation_id
         chapter_data = data["chapter"][chapter_id]
 
-        task_data = defaultdict(lambda: defaultdict(dict))
+        task_data_simple = defaultdict(lambda: defaultdict(dict))
+        task_data_standard = defaultdict(lambda: defaultdict(dict))
 
         # ------------------------------------------------------------------- #
         # NOTE: Assumption is that there's only one SentenceBoundary task
@@ -81,7 +84,8 @@ def simple_format(data, **kwargs):
         ]
         next_boundary = boundary_tokens[0] if boundary_tokens else None
 
-        display_text = []
+        text_simple = []
+        text_standard = []
         for verse_id, verse_tokens in chapter_data["verse_tokens"].items():
             for line_tokens in verse_tokens:
                 line_text = []
@@ -101,14 +105,15 @@ def simple_format(data, **kwargs):
                             else None
                         )
 
-                display_text.append(line_text)
-            display_text[-1].extend(["//", str(verse_id)])
-            display_text.append([])
+                text_simple.append(line_text)
+            text_simple[-1].extend(["//", str(verse_id)])
+            text_simple.append([])
 
-        task_data[TASK_SENTENCE_BOUNDARY][task_id] = "\n".join(
+        task_data_simple[TASK_SENTENCE_BOUNDARY][task_id] = "\n".join(
             " ".join(line_text)
-            for line_text in display_text
+            for line_text in text_simple
         )
+        task_data_standard[TASK_SENTENCE_BOUNDARY][task_id] = None
 
         # ------------------------------------------------------------------- #
         # NOTE: Assumption is that there's only one WordOrder task
@@ -122,16 +127,17 @@ def simple_format(data, **kwargs):
             TASK_WORD_ORDER, default_token_text_preference
         )
 
-        SENTENCES = {}
-        display_text = [
+        SENTENCE_TEXT = {}
+        text_simple = [
             ["#", "Verse", "Word Order"],
             ["-", "-----", "----------"]
         ]
+        text_standard = []
 
         sent_idx = 0
         current_boundary_id = None
         current_verse_id = None
-        sentence_tokens = []
+        sentence_token_texts = []
 
         for word_order in annotation_data[TASK_WORD_ORDER]:
             if current_boundary_id is None:
@@ -140,97 +146,102 @@ def simple_format(data, **kwargs):
 
             if current_boundary_id != word_order["boundary_id"]:
                 sent_idx += 1
-                sentence_text = " ".join(sentence_tokens)
-                SENTENCES[current_boundary_id] = sentence_text
-                display_text.append(
+                sentence_text = " ".join(sentence_token_texts)
+                SENTENCE_TEXT[current_boundary_id] = sentence_text
+                text_simple.append(
                     [str(sent_idx), str(current_verse_id), sentence_text]
                 )
 
                 current_boundary_id = word_order["boundary_id"]
                 current_verse_id = word_order["verse_id"]
-                sentence_tokens = []
+                sentence_token_texts = []
 
             token_id = word_order["token_id"]
             token = chapter_data["tokens"][token_id]
             token_text = get_token_text(token, preference)
-            sentence_tokens.append(token_text)
+            sentence_token_texts.append(token_text)
         else:
             sent_idx += 1
-            sentence_text = " ".join(sentence_tokens)
-            SENTENCES[current_boundary_id] = sentence_text
-            display_text.append(
+            sentence_text = " ".join(sentence_token_texts)
+            SENTENCE_TEXT[current_boundary_id] = sentence_text
+            text_simple.append(
                 [str(sent_idx), str(current_verse_id), sentence_text]
             )
 
-        task_data[TASK_WORD_ORDER][task_id] = "\n".join(
+        task_data_simple[TASK_WORD_ORDER][task_id] = "\n".join(
             "\t".join(sentence_row)
-            for sentence_row in display_text
+            for sentence_row in text_simple
         )
+        task_data_standard[TASK_WORD_ORDER][task_id] = None
 
         # ------------------------------------------------------------------- #
 
         preference = token_text_preference_map.get(
             TASK_TOKEN_TEXT_ANNOTATION, default_token_text_preference
         )
-        display_text_header = [
+        text_simple_header = [
             ["Verse", "Token", "Annotation"],
             ["-----", "-----", "----------"]
         ]
-        display_text = defaultdict(list)
+        text_simple = defaultdict(list)
+        text_standard = defaultdict(list)
 
         for text_annotation in annotation_data[TASK_TOKEN_TEXT_ANNOTATION]:
             task_id = text_annotation["task_id"]
-            if task_id not in display_text:
-                display_text[task_id].extend(display_text_header)
+            if task_id not in text_simple:
+                text_simple[task_id].extend(text_simple_header)
 
             text_annotation_token_id = text_annotation["token_id"]
             text_annotation_token = chapter_data["tokens"][text_annotation_token_id]
             token_text = get_token_text(text_annotation_token, preference)
 
-            display_text[task_id].append([
+            text_simple[task_id].append([
                 str(text_annotation["verse_id"]),
                 token_text,
                 text_annotation["text"]
             ])
 
-        for task_id in display_text:
-            task_data[TASK_TOKEN_TEXT_ANNOTATION][task_id] = "\n".join(
+        for task_id in text_simple:
+            task_data_simple[TASK_TOKEN_TEXT_ANNOTATION][task_id] = "\n".join(
                 "\t".join(text_annotation_row)
-                for text_annotation_row in display_text[task_id]
+                for text_annotation_row in text_simple[task_id]
             )
+            task_data_standard[TASK_TOKEN_TEXT_ANNOTATION][task_id] = None
 
         # ------------------------------------------------------------------- #
 
         preference = token_text_preference_map.get(
             TASK_TOKEN_CLASSIFICATION, default_token_text_preference
         )
-        display_text_header = [
+        text_simple_header = [
             ["Verse", "Token", "Label", "Description"],
             ["-----", "-----", "-----", "-----------"]
         ]
-        display_text = defaultdict(list)
+        text_simple = defaultdict(list)
+        text_standard = defaultdict(list)
 
         for tokclf in annotation_data[TASK_TOKEN_CLASSIFICATION]:
             task_id = tokclf["task_id"]
-            if task_id not in display_text:
-                display_text[task_id].extend(display_text_header)
+            if task_id not in text_simple:
+                text_simple[task_id].extend(text_simple_header)
 
             tokclf_token_id = tokclf["token_id"]
             tokclf_token = chapter_data["tokens"][tokclf_token_id]
             token_text = get_token_text(tokclf_token, preference)
 
-            display_text[task_id].append([
+            text_simple[task_id].append([
                 str(tokclf["verse_id"]),
                 token_text,
                 tokclf["label_label"],
                 tokclf["label_description"]
             ])
 
-        for task_id in display_text:
-            task_data[TASK_TOKEN_CLASSIFICATION][task_id] = "\n".join(
+        for task_id in text_simple:
+            task_data_simple[TASK_TOKEN_CLASSIFICATION][task_id] = "\n".join(
                 "\t".join(tokclf_row)
-                for tokclf_row in display_text[task_id]
+                for tokclf_row in text_simple[task_id]
             )
+            task_data_standard[TASK_TOKEN_CLASSIFICATION][task_id] = None
 
         # ------------------------------------------------------------------- #
 
@@ -238,13 +249,14 @@ def simple_format(data, **kwargs):
             TASK_TOKEN_GRAPH, default_token_text_preference
         )
 
-        token_graph_data = {}
+        token_graph_data_simple = {}
         token_graph_node_ids = {}
+        token_graph_data_standard = {}
 
         for tokrel in annotation_data[TASK_TOKEN_GRAPH]:
             task_id = tokrel["task_id"]
-            if task_id not in token_graph_data:
-                token_graph_data[task_id] = {
+            if task_id not in token_graph_data_simple:
+                token_graph_data_simple[task_id] = {
                     "nodes": [],
                     "edges": []
                 }
@@ -260,7 +272,7 @@ def simple_format(data, **kwargs):
                 if token_text not in token_graph_node_ids[task_id]:
                     token_graph_node_ids[task_id][token_text] = get_unique_id()
 
-                    token_graph_data[task_id]["nodes"].append({
+                    token_graph_data_simple[task_id]["nodes"].append({
                         "id": token_graph_node_ids[task_id][token_text],
                         "label": token_text,
                         "value": 3,
@@ -272,7 +284,7 @@ def simple_format(data, **kwargs):
                 if token_id == tokrel["dst_id"]:
                     to_id = token_graph_node_ids[task_id][token_text]
 
-            token_graph_data[task_id]["edges"].append({
+            token_graph_data_simple[task_id]["edges"].append({
                 "from": from_id,
                 "to": to_id,
                 "label": tokrel["label_description"],
@@ -285,7 +297,8 @@ def simple_format(data, **kwargs):
                 "value": 3,
             })
 
-        task_data[TASK_TOKEN_GRAPH] = token_graph_data
+        task_data_simple[TASK_TOKEN_GRAPH] = token_graph_data_simple
+        task_data_standard[TASK_TOKEN_GRAPH] = token_graph_data_standard
 
         # ------------------------------------------------------------------- #
 
@@ -303,7 +316,8 @@ def simple_format(data, **kwargs):
                 tokcon["src_id"], tokcon["dst_id"]
             )
 
-        display_text = defaultdict(list)
+        text_simple = defaultdict(list)
+        text_standard = defaultdict(list)
 
         for task_id in token_connection_graph:
             clusters = nx.weakly_connected_components(
@@ -323,42 +337,45 @@ def simple_format(data, **kwargs):
                         ])
                     )
 
-                display_text[task_id].append(cluster_text)
+                text_simple[task_id].append(cluster_text)
 
-            task_data[TASK_TOKEN_CONNECTION][task_id] = "\n".join(
+            task_data_simple[TASK_TOKEN_CONNECTION][task_id] = "\n".join(
                 ", ".join(cluster_text)
-                for cluster_text in display_text[task_id]
+                for cluster_text in text_simple[task_id]
             )
+            task_data_standard[TASK_TOKEN_CONNECTION][task_id] = None
 
         # ------------------------------------------------------------------- #
 
-        display_text_header = [
+        text_simple_header = [
             ["#", "Verse", "Sentence", "Label", "Description"],
             ["-", "-----", "--------", "-----", "-----------"]
         ]
-        display_text = defaultdict(list)
+        text_simple = defaultdict(list)
+        text_standard = defaultdict(list)
         snclf_idx = {}
 
         for snclf in annotation_data[TASK_SENTENCE_CLASSIFICATION]:
             task_id = snclf["task_id"]
-            if task_id not in display_text:
-                display_text[task_id].extend(display_text_header)
+            if task_id not in text_simple:
+                text_simple[task_id].extend(text_simple_header)
                 snclf_idx[task_id] = 0
 
             snclf_idx[task_id] += 1
-            display_text[task_id].append([
+            text_simple[task_id].append([
                 str(snclf_idx[task_id]),
                 str(snclf["verse_id"]),
-                SENTENCES[snclf["boundary_id"]],
+                SENTENCE_TEXT[snclf["boundary_id"]],
                 snclf["label_label"],
                 snclf["label_description"]
             ])
 
-        for task_id in display_text:
-            task_data[TASK_SENTENCE_CLASSIFICATION][task_id] = "\n".join(
+        for task_id in text_simple:
+            task_data_simple[TASK_SENTENCE_CLASSIFICATION][task_id] = "\n".join(
                 "\t".join(sentence_row)
-                for sentence_row in display_text[task_id]
+                for sentence_row in text_simple[task_id]
             )
+            task_data_standard[TASK_SENTENCE_CLASSIFICATION][task_id] = None
 
         # ------------------------------------------------------------------- #
 
@@ -366,13 +383,14 @@ def simple_format(data, **kwargs):
             TASK_SENTENCE_GRAPH, default_token_text_preference
         )
 
-        sentence_graph_data = {}
+        sentence_graph_data_simple = {}
         sentence_graph_node_ids = {}
+        sentence_graph_data_standard = {}
 
         for sentrel in annotation_data[TASK_SENTENCE_GRAPH]:
             task_id = sentrel["task_id"]
-            if task_id not in sentence_graph_data:
-                sentence_graph_data[task_id] = {
+            if task_id not in sentence_graph_data_simple:
+                sentence_graph_data_simple[task_id] = {
                     "nodes": [],
                     "edges": []
                 }
@@ -385,8 +403,8 @@ def simple_format(data, **kwargs):
             dst_token = chapter_data["tokens"][sentrel["dst_token_id"]]
             relation_type = sentrel["relation_type"]
 
-            src_title = SENTENCES[sentrel["src_boundary_id"]]
-            dst_title = SENTENCES[sentrel["dst_boundary_id"]]
+            src_title = SENTENCE_TEXT[sentrel["src_boundary_id"]]
+            dst_title = SENTENCE_TEXT[sentrel["dst_boundary_id"]]
 
             if relation_type in [2, 3]:
                 src_token_text = f"S-{sentrel['src_boundary_id']}"
@@ -405,7 +423,7 @@ def simple_format(data, **kwargs):
             if src_token_text not in sentence_graph_node_ids[task_id]:
                 sentence_graph_node_ids[task_id][src_token_text] = get_unique_id()
 
-                sentence_graph_data[task_id]["nodes"].append({
+                sentence_graph_data_simple[task_id]["nodes"].append({
                     "id": sentence_graph_node_ids[task_id][src_token_text],
                     "label": src_token_text,
                     "title": src_title,
@@ -416,7 +434,7 @@ def simple_format(data, **kwargs):
             if dst_token_text not in sentence_graph_node_ids[task_id]:
                 sentence_graph_node_ids[task_id][dst_token_text] = get_unique_id()
 
-                sentence_graph_data[task_id]["nodes"].append({
+                sentence_graph_data_simple[task_id]["nodes"].append({
                     "id": sentence_graph_node_ids[task_id][dst_token_text],
                     "label": dst_token_text,
                     "title": dst_title,
@@ -424,7 +442,7 @@ def simple_format(data, **kwargs):
                     "group": dst_group
                 })
 
-            sentence_graph_data[task_id]["edges"].append({
+            sentence_graph_data_simple[task_id]["edges"].append({
                 "from": sentence_graph_node_ids[task_id][src_token_text],
                 "to": sentence_graph_node_ids[task_id][dst_token_text],
                 "label": sentrel["label_label"],
@@ -437,22 +455,15 @@ def simple_format(data, **kwargs):
                 "value": 3,
             })
 
-        task_data[TASK_SENTENCE_GRAPH] = sentence_graph_data
+        task_data_simple[TASK_SENTENCE_GRAPH] = sentence_graph_data_simple
+        task_data_standard[TASK_SENTENCE_CLASSIFICATION] = sentence_graph_data_standard
 
         # ------------------------------------------------------------------- #
 
-        simple_data[annotation_id] = task_data
+        simple_data[annotation_id] = task_data_simple
+        standard_data[annotation_id] = task_data_standard
 
-    return simple_data
-
-
-###############################################################################
-# Standard Format
-# --------------------------------------------------------------------------- #
-
-
-def standard_format(data):
-    pass
+    return simple_data, standard_data
 
 
 ###############################################################################

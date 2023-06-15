@@ -123,7 +123,7 @@ from utils.database import (
     get_verse_data, get_chapter_data, export_data,
     get_annotation_progress, clone_user_annotations
 )
-from utils.export import simple_format, standard_format
+from utils.export import format_data
 from utils.conllu import CoNLLUParser
 from utils.plaintext import PlaintextProcessor
 
@@ -739,7 +739,7 @@ def show_export():
             chapter_ids=[int(chapter_id) for chapter_id in chapter_ids],
             task_ids=[]
         )
-        annotation_result_simple = simple_format(
+        annotation_result_simple, annotation_result_standard = format_data(
             annotation_data,
             token_text_preference=EXPORT_CONFIG["token_text_preference"]
         )
