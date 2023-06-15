@@ -3,11 +3,22 @@
     GRAPH_DATA["{{task.id}}"] = {};
     GRAPH_NETWORK["{{task.id}}"] = {};
 </script>
-{% for (chapter_id, annotator_id), chapter_result in data.result.items() %}
+{% for (chapter_id, annotator_id), chapter_result in data.result_simple.items() %}
 <!-- Load Graph Data -->
 <script>
     GRAPH_DATA["{{task.id}}"]["{{chapter_id}}"] =  JSON.parse('{{chapter_result[task.category].get(task.id) | tojson }}');
 </script>
+{% if data.result_standard[(chapter_id, annotator_id)][task.category].get(task.id) %}
+    {# NOTE: result_simple and result_standard should have the same structure #}
+    <button id="download_standard_{{task.id}}_{{chapter_id}}" title="Export Machine Readable Data" data-chapter="{{chapter_id}}" data-task-id="{{task.id}}" data-task-category="{{task.category}}" data-target="pre_standard_{{task.id}}_{{chapter_id}}" class="btn btn-primary float-right ml-1 task-download">
+        <i class="fa fa-file-export"></i>
+    </button>
+    <pre id="pre_standard_{{task.id}}_{{chapter_id}}" class="pre-scrollable p-3 text-info">{{data.result_standard[(chapter_id, annotator_id)][task.category][task.id]}}</pre>
+{% else %}
+    <button id="download_standard_{{task.id}}_{{chapter_id}}" title="Export Machine Readable Data" data-chapter="{{chapter_id}}" data-task-id="{{task.id}}" data-task-category="{{task.category}}" data-target="pre_standard_{{task.id}}_{{chapter_id}}" class="btn btn-primary float-right ml-1 task-download" disabled>
+        <i class="fa fa-file-export"></i>
+    </button>
+{% endif %}
 <button id="graph-snapshot-button-{{task.id}}-{{chapter_id}}" title="Snapshot" data-task-id="{{task.id}}" data-task-category="{{task.category}}" data-chapter="{{chapter_id}}" class="btn btn-primary mr-auto float-right graph-snapshot">
     <i class="fa fa-camera"></i>
 </button>

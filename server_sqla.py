@@ -747,7 +747,8 @@ def show_export():
             'annotator_id': annotator_id,
             'chapter_ids': chapter_ids
         }
-        data["result"] = annotation_result_simple
+        data["result_simple"] = annotation_result_simple
+        data["result_standard"] = annotation_result_standard
 
     return render_template('export.html', data=data)
 

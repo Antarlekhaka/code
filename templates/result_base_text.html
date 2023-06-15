@@ -1,11 +1,22 @@
 {% block body %}
-{% for (chapter_id, annotator_id), chapter_result in data.result.items() %}
+{% for (chapter_id, annotator_id), chapter_result in data.result_simple.items() %}
 <div class="border rounded">
-    <button id="download_{{task.id}}_{{chapter_id}}" data-chapter="{{chapter_id}}" data-task-id="{{task.id}}" data-task-category="{{task.category}}" data-target="pre_{{task.id}}_{{chapter_id}}" class="btn btn-primary float-right task-download">
+    {% if data.result_standard[(chapter_id, annotator_id)][task.category].get(task.id) %}
+        {# NOTE: result_simple and result_standard should have the same structure #}
+        <button id="download_standard_{{task.id}}_{{chapter_id}}" title="Export Machine Readable Data" data-chapter="{{chapter_id}}" data-task-id="{{task.id}}" data-task-category="{{task.category}}" data-target="pre_standard_{{task.id}}_{{chapter_id}}" class="btn btn-primary float-right ml-1 task-download">
+            <i class="fa fa-file-export"></i>
+        </button>
+        <pre id="pre_standard_{{task.id}}_{{chapter_id}}" class="pre-scrollable p-3 text-info">{{data.result_standard[(chapter_id, annotator_id)][task.category][task.id]}}</pre>
+    {% else %}
+        <button id="download_standard_{{task.id}}_{{chapter_id}}" title="Export Machine Readable Data" data-chapter="{{chapter_id}}" data-task-id="{{task.id}}" data-task-category="{{task.category}}" data-target="pre_standard_{{task.id}}_{{chapter_id}}" class="btn btn-primary float-right ml-1 task-download" disabled>
+            <i class="fa fa-file-export"></i>
+        </button>
+    {% endif %}
+    <button id="download_simple_{{task.id}}_{{chapter_id}}" title="Download Human Readable Data" data-chapter="{{chapter_id}}" data-task-id="{{task.id}}" data-task-category="{{task.category}}" data-target="pre_simple_{{task.id}}_{{chapter_id}}" class="btn btn-primary float-right task-download">
         <i class="fa fa-download"></i>
     </button>
     <span class="badge badge-secondary p-2">{{data.chapters[chapter_id].name}}</span>
-    <pre id="pre_{{task.id}}_{{chapter_id}}" class="pre-scrollable p-3 text-info">{{chapter_result[task.category].get(task.id)}}</pre>
+    <pre id="pre_simple_{{task.id}}_{{chapter_id}}" class="pre-scrollable p-3 text-info">{{chapter_result[task.category].get(task.id)}}</pre>
 </div>
 <hr>
 {% endfor %}
