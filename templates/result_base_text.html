@@ -1,14 +1,27 @@
 {% block body %}
 {% for (chapter_id, annotator_id), chapter_result in data.result_simple.items() %}
+{% if data.result_standard[(chapter_id, annotator_id)][task.category].get(task.id) %}
+{% set has_standard_format = true %}
+{% endif %}
 <div class="border rounded">
-    {% if data.result_standard[(chapter_id, annotator_id)][task.category].get(task.id) %}
-        {# NOTE: result_simple and result_standard should have the same structure #}
-        <button id="download_standard_{{task.id}}_{{chapter_id}}" title="Export Machine Readable Data" data-chapter="{{chapter_id}}" data-task-id="{{task.id}}" data-task-category="{{task.category}}" data-target="pre_standard_{{task.id}}_{{chapter_id}}" class="btn btn-primary float-right ml-1 task-download">
+    <div class="float-right">
+        <input type="checkbox" data-toggle="toggle"
+            id="format_toggle_{{task.id}}_{{chapter_id}}"
+            data-width="59px" data-height="38px"
+            data-on="<i class='fa fa-user'></i>" data-onstyle="info"
+            data-off="<i class='fa fa-robot'></i>" data-offstyle="dark"
+            data-simple-format-target="pre_simple_{{task.id}}_{{chapter_id}}"
+            data-standard-format-target="pre_standard_{{task.id}}_{{chapter_id}}"
+            title="Toggle Data Format"
+            class="format-toggle"
+            checked {% if not has_standard_format %}disabled{% endif %}>
+    </div>
+    {% if has_standard_format %}
+        <button id="download_standard_{{task.id}}_{{chapter_id}}" title="Export Machine Readable Data" data-chapter="{{chapter_id}}" data-task-id="{{task.id}}" data-task-category="{{task.category}}" data-target="pre_standard_{{task.id}}_{{chapter_id}}" class="btn btn-primary float-right mx-1 task-download">
             <i class="fa fa-file-export"></i>
         </button>
-        <pre id="pre_standard_{{task.id}}_{{chapter_id}}" class="pre-scrollable p-3 text-info">{{data.result_standard[(chapter_id, annotator_id)][task.category][task.id]}}</pre>
     {% else %}
-        <button id="download_standard_{{task.id}}_{{chapter_id}}" title="Export Machine Readable Data" data-chapter="{{chapter_id}}" data-task-id="{{task.id}}" data-task-category="{{task.category}}" data-target="pre_standard_{{task.id}}_{{chapter_id}}" class="btn btn-primary float-right ml-1 task-download" disabled>
+        <button id="download_standard_{{task.id}}_{{chapter_id}}" title="Export Machine Readable Data" data-chapter="{{chapter_id}}" data-task-id="{{task.id}}" data-task-category="{{task.category}}" data-target="pre_standard_{{task.id}}_{{chapter_id}}" class="btn btn-primary float-right mx-1 task-download" disabled>
             <i class="fa fa-file-export"></i>
         </button>
     {% endif %}
@@ -16,6 +29,10 @@
         <i class="fa fa-download"></i>
     </button>
     <span class="badge badge-secondary p-2">{{data.chapters[chapter_id].name}}</span>
+    {% if has_standard_format %}
+    {# NOTE: result_simple and result_standard should have the same structure #}
+    <pre id="pre_standard_{{task.id}}_{{chapter_id}}" class="d-none pre-scrollable p-3 text-info">{{data.result_standard[(chapter_id, annotator_id)][task.category][task.id]}}</pre>
+    {% endif %}
     <pre id="pre_simple_{{task.id}}_{{chapter_id}}" class="pre-scrollable p-3 text-info">{{chapter_result[task.category].get(task.id)}}</pre>
 </div>
 <hr>

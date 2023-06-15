@@ -81,6 +81,30 @@ $(document).ready(function () {
     }
 });
 
+/* *************************** Format Toggle Events *************************** */
+
+$('.format-toggle').change(function () {
+    const show_simple_format = $(this).prop('checked');
+    const simple_format_target_id = $(this).data('simple-format-target');
+    const standard_format_target_id = $(this).data('standard-format-target');
+
+    const $simple_format_target = $(`#${simple_format_target_id}`);
+    const $standard_format_target = $(`#${standard_format_target_id}`);
+
+    if (show_simple_format) {
+        if ($simple_format_target.hasClass("d-none")) {
+            $standard_format_target.addClass("d-none");
+            $simple_format_target.removeClass("d-none");
+        }
+    } else {
+        if ($standard_format_target.hasClass("d-none")) {
+            $standard_format_target.removeClass("d-none");
+            $simple_format_target.addClass("d-none");
+        }
+    }
+});
+
+
 /* *************************** Tab Change Events *************************** */
 
 $('.task-tab[data-toggle="pill"]').on('shown.bs.tab', function (event) {
