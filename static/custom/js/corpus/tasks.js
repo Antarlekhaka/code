@@ -1349,14 +1349,21 @@ function prepare_token_graph_data($data_location) {
     }
 
     $data_location.children(".triplet-row").each(function (triplet_index, triplet_row) {
+        // CAUTION: The ID on entity selectors is currently repeated for each row.
+        // We aren't using it and instead looping on all elements having a particular class,
+        // so this still works, but might as well get rid of it or make it unique!
+
         const $triplet_row = $(triplet_row);
         const $source_entity = $triplet_row.find('.source-entity');
         const $target_entity = $triplet_row.find('.target-entity');
         const $relation_label = $triplet_row.find('.relation-label');
 
-        const source_entity_value = $source_entity.selectpicker('val');
-        const target_entity_value = $target_entity.selectpicker('val');
+        const source_entity_value = $source_entity.selectpicker('val'); // node_id of source entity
+        const target_entity_value = $target_entity.selectpicker('val'); // node_id of target entity
         const relation_label_value = $relation_label.selectpicker('val');
+
+        const source_entity_is_custom = $source_entity.find(`[value=${source_entity_value}]`).data('content').indexOf('token-manual') > -1;
+        const target_entity_is_custom = $target_entity.find(`[value=${target_entity_value}]`).data('content').indexOf('token-manual') > -1;
 
         if (!source_entity_value || !relation_label_value || !relation_label_value) {
             return;
@@ -1365,7 +1372,7 @@ function prepare_token_graph_data($data_location) {
         }
 
         const source_entity = $source_entity.find(`[value=${source_entity_value}]`).html();
-        const target_entity = $source_entity.find(`[value=${target_entity_value}]`).html();
+        const target_entity = $target_entity.find(`[value=${target_entity_value}]`).html();
         const relation_label = $relation_label.find(`[value=${relation_label_value}]`).data("subtext");
 
         if (!node_ids.hasOwnProperty(source_entity)) {
@@ -1376,7 +1383,7 @@ function prepare_token_graph_data($data_location) {
                 label: source_entity, // label
                 title: `Token ID: ${source_entity_value}`, // title (visible on hover)
                 value: 3,
-                group: null // group-id (upos/xpos based?)
+                group: source_entity_is_custom ? 1 : 0, // group-id (0: present in corpus, 1: custom tokens)
             });
         }
         if (!node_ids.hasOwnProperty(target_entity)) {
@@ -1387,7 +1394,7 @@ function prepare_token_graph_data($data_location) {
                 label: target_entity, // label
                 title: `Token ID: ${target_entity_value}`, // title (visible on hover)
                 value: 3,
-                group: null // group-id (upos/xpos based?)
+                group: target_entity_is_custom ? 1 : 0, // group-id (upos/xpos based?)
             });
         }
 
@@ -1405,6 +1412,17 @@ function prepare_token_graph_data($data_location) {
         });
     });
 
+    // sort to get nodes with group: 0 at the start,
+    // so that non-manual tokens (group: 1) always get second colour
+    data.nodes.sort(function(a, b) {
+        if (a.group < b.group) {
+            return -1;
+        }
+        if (a.group > b.group) {
+            return 1;
+        }
+        return 0;
+    });
     console.log("Graph Data: ");
     console.log(data);
     return data;
