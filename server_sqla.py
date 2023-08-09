@@ -775,6 +775,7 @@ def show_corpus(chapter_id=None):
     data = {}
     data['title'] = 'Corpus'
     data['chapter_id'] = chapter_id
+    data['show_annotation'] = True
     data['enable_annotation'] = current_user.has_permission(
         PERMISSION_ANNOTATE
     )

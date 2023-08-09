@@ -19,9 +19,11 @@
         <button type="button" class="btn btn-light" disabled>
             <span id="verse-id-task-{{task.id}}" class="verse-id-container">None</span>
         </button>
+        {% if data.enable_annotation %}
         <button type="button" class="btn btn-primary float-right task-submit-button" id="task-{{task.id}}-submit" data-task-id="{{task.id}}" data-task-category="{{task.category}}">
             Submit
         </button>
+        {% endif %}
         {% endblock %}
         {% block extra_footer %}{% endblock %}
     </div>
