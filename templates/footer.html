@@ -52,12 +52,14 @@
         <footer class="footer">
             <div class="container-fluid">
                 <span class="text-secondary">
-                    &copy; 2021-{{now.year}}, Hrishikesh Terdalkar. All Rights Reserved
+                    &copy; {{since}}{% if since != now.year %}-{{now.year}}{% endif %}{% if copyright %}, {{copyright}}{% endif %}
                 </span>
                 <span class="float-right">
-                    <a class="text-secondary mx-2" href="{{url_for('show_terms')}}">Terms</a>
-                    <a class="text-secondary mx-2" href="{{url_for('show_about')}}">About</a>
-                    <a class="text-secondary mx-2" href="{{url_for('show_contact')}}">Contact</a>
+                    {% for id in footer_links %}
+                    {% set func = footer_links[id][0] %}
+                    {% set caption = footer_links[id][1] %}
+                    <a class="text-secondary mx-2" href="{{url_for(func)}}">{{caption}}</a>
+                    {% endfor %}
                 </span>
             </div>
         </footer>

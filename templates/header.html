@@ -187,7 +187,7 @@
 </head>
 
 <body class="font-weight-light">
-    {% set navigation_bar = {
+    {% set navigation_menu = {
         'home': ('show_home', 'Home'),
         'corpus': ('show_corpus', 'Corpus'),
     }-%}
@@ -212,24 +212,24 @@
         {% endif %}
 
         {% if current_user.has_role(context_roles.curator) %}
-            {% set _dummy = navigation_bar.update(curator_navigation) %}
+            {% set _dummy = navigation_menu.update(curator_navigation) %}
         {% endif %}
 
         {% if current_user.has_role(context_roles.annotator) %}
-            {% set _dummy = navigation_bar.update(annotator_navigation) %}
+            {% set _dummy = navigation_menu.update(annotator_navigation) %}
         {% endif %}
 
-        {% set _dummy = navigation_bar.update(user_navigation) %}
+        {% set _dummy = navigation_menu.update(user_navigation) %}
 
         {% if current_user.has_role(context_roles.admin) %}
-            {% set _dummy = navigation_bar.update(admin_navigation) %}
+            {% set _dummy = navigation_menu.update(admin_navigation) %}
         {% endif %}
 
-        {% set _dummy = navigation_bar.update({
+        {% set _dummy = navigation_menu.update({
             'logout': ('security.logout', 'Logout (' + current_user_name + ')')
         })-%}
     {% else %}
-        {% set _dummy = navigation_bar.update({
+        {% set _dummy = navigation_menu.update({
             'login': ('security.login', 'Login')
         })-%}
     {% endif %}
@@ -238,11 +238,11 @@
 
     <ul class="nav nav-tabs bg-light">
         <li class="nav-item col-sm lead">
-            <span class="nav-link text-secondary disabled">{{title}}</span>
+            <span class="nav-link text-secondary disabled">{{header}}</span>
         </li>
-        {% for id in navigation_bar %}
-        {% set func = navigation_bar[id][0] %}
-        {% set caption = navigation_bar[id][1] %}
+        {% for id in navigation_menu %}
+        {% set func = navigation_menu[id][0] %}
+        {% set caption = navigation_menu[id][1] %}
         <li class="nav-item lead">
             <a class="nav-link {% if id == active_page %}active{% endif %}" href="{{url_for(func)}}">{{caption}}</a>
         </li>

@@ -24,20 +24,48 @@ from constants import (
 ###############################################################################
 # EDIT
 
+# used to reference application in code
+APP_NAME = "Antarlekhaka, a Multiple-Task Annotation Framework"
+APP_TITLE = "Antarlekhaka"             # displayed in HTML <title>
+APP_HEADER = "Antarlekhaka"            # displayed as ".lead" header
+
+APP_SINCE = 2021
+APP_COPYRIGHT = "Hrishikesh Terdalkar. All rights reserved"
+
 DEBUG = False
 
-APP_NAME = "Antarlekhaka, a Multiple-Task Annotation Framework"
-APP_TITLE = "Antarlekhaka"
+# --------------------------------------------------------------------------- #
+# Paths
+# DO NOT CHANGE APP_DIR PATH
 
 APP_DIR = os.path.dirname(os.path.realpath(__file__))
+
+# --------------------------------------------------------------------------- #
+#  Paths Can be absolute or relative to APP_DIR
+
+STATIC_DIR = os.path.join(APP_DIR, "static")
 LOG_FILE = os.path.join(APP_DIR, "antarlekhaka.log")
 
 # DB_DIR is used for specifying directory containing SQLite3 database
 
-DB_DIR = "db"
-DATA_DIR = "data"
+DB_DIR = os.path.join(APP_DIR, "db")
+DATA_DIR = os.path.join(APP_DIR, "data")
+
+# TABLES_DIR and CORPUS_DIR can be absolute or relative to DATA_DIR
 TABLES_DIR = os.path.join(DATA_DIR, "tables")
 CORPUS_DIR = os.path.join(DATA_DIR, "corpus")
+
+# --------------------------------------------------------------------------- #
+# Security
+
+# Generate a nice key using secrets.token_urlsafe()
+SECRET_KEY = os.environ.get("SECRET_KEY", "secret-key")
+
+# Bcrypt is set as default SECURITY_PASSWORD_HASH, which requires a salt
+# Generate a good salt using: secrets.SystemRandom().getrandbits(128)
+SECURITY_PASSWORD_SALT = os.environ.get(
+    "SECURITY_PASSWORD_SALT", "00000000000000000000000000000000000000"
+)
 
 # --------------------------------------------------------------------------- #
 
@@ -128,6 +156,16 @@ APPLICATION_CONFIG = {
 
 # --------------------------------------------------------------------------- #
 
+NAVIGATION_MENU = {}
+
+FOOTER_LINKS = {
+    "terms": ("show_terms", "Terms"),
+    "about": ("show_about", "About"),
+    "contact": ("show_contact", "Contact"),
+}
+
+# --------------------------------------------------------------------------- #
+
 CONTACTS = [
     {
         "name": "Hrishikesh Terdalkar",
@@ -140,7 +178,7 @@ CONTACTS = [
 # --------------------------------------------------------------------------- #
 # HTML About
 
-ABOUT = """
+APP_ABOUT = """
 "Antarlekhaka" is a general purpose, multi-task annotation framework
 featuring sequential annotation of corpora towards a
 comprehensive set of computational linguistic tasks
@@ -168,18 +206,6 @@ CUSTOM_PAGES = {
         "card_body": """This is a cusotm page with HTML content."""
     }
 }
-
-# --------------------------------------------------------------------------- #
-# Security
-
-# Generate a nice key using secrets.token_urlsafe()
-SECRET_KEY = os.environ.get("SECRET_KEY", "secret-key")
-
-# Bcrypt is set as default SECURITY_PASSWORD_HASH, which requires a salt
-# Generate a good salt using: secrets.SystemRandom().getrandbits(128)
-SECURITY_PASSWORD_SALT = os.environ.get(
-    "SECURITY_PASSWORD_SALT", "00000000000000000000000000000000000000"
-)
 
 # --------------------------------------------------------------------------- #
 # First User
@@ -249,21 +275,29 @@ USE_SQLITE = True
 app = Configuration()
 app.name = APP_NAME
 app.title = APP_TITLE
+app.header = APP_HEADER
+
+app.since = APP_SINCE
+app.copyright = APP_COPYRIGHT
+
 app.debug = DEBUG
 
 # Config
+app.about = APP_ABOUT
 app.config = APPLICATION_CONFIG
-app.about = ABOUT
 app.custom_pages = CUSTOM_PAGES
+app.navigation_menu = NAVIGATION_MENU
+app.footer_links = FOOTER_LINKS
 
 # Paths
 app.dir = APP_DIR
+app.static_dir = os.path.join(APP_DIR, STATIC_DIR)
 app.db_dir = os.path.join(APP_DIR, DB_DIR)
 app.data_dir = os.path.join(APP_DIR, DATA_DIR)
-app.tables_dir = os.path.join(APP_DIR, TABLES_DIR)
-app.corpus_dir = os.path.join(APP_DIR, CORPUS_DIR)
+app.tables_dir = os.path.join(DATA_DIR, TABLES_DIR)
+app.corpus_dir = os.path.join(DATA_DIR, CORPUS_DIR)
 
-app.log_file = LOG_FILE
+app.log_file = os.path.join(APP_DIR, LOG_FILE)
 
 # Security
 

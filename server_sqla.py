@@ -147,8 +147,7 @@ def uia_username_mapper(identity):
 ###############################################################################
 # Flask Application
 
-webapp = Flask(app.name, static_folder='static')
-webapp.config['DEBUG'] = app.debug
+webapp = Flask(app.name, static_folder=app.static_dir)
 webapp.wsgi_app = ReverseProxied(webapp.wsgi_app)
 webapp.url_map.strict_slashes = False
 
@@ -157,6 +156,7 @@ webapp.config['SECRET_KEY'] = app.secret_key
 webapp.config['SECURITY_PASSWORD_SALT'] = app.security_password_salt
 webapp.config['JSON_AS_ASCII'] = False
 webapp.config['JSON_SORT_KEYS'] = False
+webapp.config['DEBUG'] = app.debug
 
 # SQLAlchemy Config
 webapp.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -222,7 +222,6 @@ admin = Admin(
         url="/admin/database"
     ),
     template_mode="bootstrap4",
-    base_template="admin_base.html",
 )
 admin.add_view(UserModelView(User, db.session))
 admin.add_view(TaskModelView(Task, db.session))
@@ -310,8 +309,9 @@ def record_submit(verse_id: int, annotator_id: int, task_id: int) -> bool:
 # Hooks
 
 
-@webapp.before_first_request
-def init_database():
+# @webapp.before_first_request
+# def init_database():
+with webapp.app_context():
     """Initiate database and create admin user"""
     db.create_all()
     role_definitions = sorted(
@@ -555,7 +555,12 @@ def inject_global_context():
 
     return {
         'title': app.title,
+        'header': app.header,
         'now': datetime.datetime.utcnow(),
+        'since': app.since,
+        'copyright': app.copyright,
+        # 'navigation_menu': app.navigation_menu,
+        'footer_links': app.footer_links,
         'context_roles': ROLES,
         'context_tasks': TASKS,
         'context_labels': LABELS,

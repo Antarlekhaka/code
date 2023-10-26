@@ -43,10 +43,12 @@ class BaseModelView(SecureModelView):
     can_export = True
     can_create = False
     can_edit = True
+    can_view_details = True
     can_delete = False
 
     create_modal = False
     edit_modal = True
+    details_modal = True
 
     can_set_page_size = True
 

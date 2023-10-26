@@ -1,0 +1,32 @@
+{% extends admin_base_template %}
+{% block head %}
+<link rel="stylesheet" href="{{url_for('static', filename='custom/css/sticky-footer.css')}}">
+{% endblock %}
+
+{% block brand %}
+    <a href="{{url_for('show_admin')}}" class="navbar-brand">{{admin_view.admin.name}}</a>
+{% endblock %}
+
+{#
+{% block access_control %}
+<a class="text-white text-decoration-none" href="{{url_for('logout')}}">Logout</a>
+{% endblock %}
+#}
+
+{% block tail %}
+<div class="pt-1"></div>
+<footer class="footer">
+    <div class="container-fluid">
+        <span class="text-secondary">
+            &copy; {{since}}{% if since != now.year %}-{{now.year}}{% endif %}{% if copyright %}, {{copyright}}{% endif %}
+        </span>
+        <span class="float-right">
+            {% for id in footer_links %}
+            {% set func = footer_links[id][0] %}
+            {% set caption = footer_links[id][1] %}
+            <a class="text-secondary mx-2" href="{{url_for(func)}}">{{caption}}</a>
+            {% endfor %}
+        </span>
+    </div>
+</footer>
+{% endblock %}
