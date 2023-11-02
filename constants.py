@@ -129,10 +129,10 @@ TASK_DEFAULT_INFORMATION = {
     },
     TASK_WORD_ORDER: {
         "category": "word_order",
-        "title": "Word Order",
-        "short": "Word Order",
+        "title": "Token Order",
+        "short": "Token Order",
         "help": (
-            "Arrange the words in the correct order. Optionally, "
+            "Arrange the tokens in the required order. Optionally, "
             "add new tokens or exclude existing tokens from the sentence."
         )
     },

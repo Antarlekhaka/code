@@ -58,7 +58,7 @@
   - [x] Remove `task_id` hard-coding in `server_sqla.py` api action handling
   - [x] Next task etc using Task.order
   - [x] Task related elements etc in JS
-  - [ ] `export.py` hard-coding for Sentence Boundary and Word Order task
+  - [ ] `export.py` hard-coding for Sentence Boundary and Token Order task
 
 ---
 
@@ -75,10 +75,10 @@
 
 ## Implemented
 
-- [x] Update Word Order task pipeline
+- [x] Update Token Order task pipeline
   - [x] Present it as a two-step task
   - [x] Step 1: Decide which tokens to keep or get rid of
-  - [x] Step 2: Decide word order (current full task)
+  - [x] Step 2: Decide token order (current full task)
 - [x] Allow display of additional context when required
 - [x] Task Category System (allow multiple tasks from same category)
   - [x] Global `TASK_CATEGORY` Constants
@@ -121,7 +121,7 @@
 
 - [x] Front-end
   - [x] Sentence Boundary Interface
-  - [x] Canonical Word Order Interface
+  - [x] Canonical Token Order Interface
     - [x] Reordering Front-end (sortable)
   - [x] Token Text Annotation Interface
   - [x] Token Classification Interface (e.g. Named Entity)
@@ -136,7 +136,7 @@
   - [x] Sentence Boundary
     - [x] Deleting necessary boundaries if required
     - [x] Delete related objects
-  - [x] Canonical Word Order
+  - [x] Canonical Token Order
   - [x] Token Text Annotation
   - [x] Token Classification
   - [x] Token Graph

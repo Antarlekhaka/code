@@ -452,10 +452,10 @@ function submit_task_sentence_boundary(task_id) {
 
 /* ********************** END Task: Sentence Boundary ********************** */
 
-/* ************************ BEGIN Task: Word Order ************************ */
-// Task: Word Order
+/* ************************ BEGIN Task: Token Order ************************ */
+// Task: Token Order
 
-// Setup: Word Order
+// Setup: Token Order
 function setup_sortable() {
     console.log(`Called ${arguments.callee.name}(${Object.values(arguments).join(", ")});`);
 
@@ -482,7 +482,7 @@ function setup_sortable() {
         // ui.item contains the current dragged element.
         // Triggered when the user stopped sorting and the DOM position has changed.
         const boundary_element_id = this.id;
-        // store word order to localStorage for restoring (stored as ',' joined list of token-ids)
+        // store token order to localStorage for restoring (stored as ',' joined list of token-ids)
         const word_order_order = $(this).sortable("toArray").join(",");
         storage.setItem(`${PREFIX_KEY_BOUNDARY_WORD_ORDER}_${boundary_element_id}`, word_order_order);
         const boundary_state_key = `${PREFIX_KEY_BOUNDARY_STATE}_${boundary_element_id}`;
@@ -495,7 +495,7 @@ function setup_sortable() {
     });
 }
 
-// apply specific word order to a sentence
+// apply specific token order to a sentence
 function apply_word_order(boundary_element_id, proposed_word_order) {
     // proposed_word_order is list of token ids (either <integer> or token-button-<integer>)
     // only those token_id from proposed_word_order that are already in $sentence_container will be used
@@ -554,12 +554,12 @@ function apply_word_order(boundary_element_id, proposed_word_order) {
     $sentence_container.sortable("refresh");
 }
 
-// restore saved word order
+// restore saved token order
 function restore_word_order(boundary_element_id) {
     const saved_order = storage.getItem(`${PREFIX_KEY_BOUNDARY_WORD_ORDER}_${boundary_element_id}`);
     if (saved_order) {
         apply_word_order(boundary_element_id, saved_order.split(","));
-        console.log(`Restored Saved Word Order to ${boundary_element_id}`);
+        console.log(`Restored Saved Token Order to ${boundary_element_id}`);
     }
 }
 
@@ -781,7 +781,7 @@ function setup_task_word_order(task_id, verse_id) {
                     // second step: apply heuristic
                     if (_boundary_state == BOUNDARY_STATE_TOKEN_DECISION) {
                         const _heuristic_order = storage.getItem(`${PREFIX_KEY_BOUNDARY_HEURISTIC_WORD_ORDER}_${boundary_element_id}`);
-                        console.log("Heuristic Word Order: " + _heuristic_order);
+                        console.log("Heuristic Token Order: " + _heuristic_order);
                         apply_word_order(_boundary_element_id, _heuristic_order.split(","));
                         update_badge(`boundary-status-${_boundary_element_id}`, "Heuristic", "info");
                         storage.setItem(`${PREFIX_KEY_BOUNDARY_STATE}_${boundary_element_id}`, BOUNDARY_STATE_HEURISTIC);
@@ -796,7 +796,7 @@ function setup_task_word_order(task_id, verse_id) {
             case BOUNDARY_STATE_HEURISTIC:
                 // $task_submit_button.prop("disabled", false);
                 const _heuristic_order = storage.getItem(`${PREFIX_KEY_BOUNDARY_HEURISTIC_WORD_ORDER}_${boundary_element_id}`);
-                console.log("Heuristic Word Order: " + _heuristic_order);
+                console.log("Heuristic Token Order: " + _heuristic_order);
                 apply_word_order(boundary_element_id, _heuristic_order.split(","));
                 break;
             case BOUNDARY_STATE_SORT:
@@ -809,7 +809,7 @@ function setup_task_word_order(task_id, verse_id) {
     }
 }
 
-/* Task: Word Order: Actions */
+/* Task: Token Order: Actions */
 
 // Add Token
 $add_token_button.click(function() {
@@ -867,7 +867,7 @@ $add_token_button.click(function() {
     });
 });
 
-// Submit: Word Order
+// Submit: Token Order
 function submit_task_word_order(task_id) {
     console.log(`Called ${arguments.callee.name}(${Object.values(arguments).join(", ")});`);
 
@@ -879,7 +879,7 @@ function submit_task_word_order(task_id) {
         const boundary_id = sentence_element.id;
         word_order_data[boundary_id] = $(sentence_element).sortable("toArray");
     });
-    // console.log("Word Order Data: ");
+    // console.log("Token Order Data: ");
     // console.log(word_order_data);
 
     $.post(API_URL, {
@@ -900,7 +900,7 @@ function submit_task_word_order(task_id) {
                 storage.removeItem(`${PREFIX_KEY_BOUNDARY_WORD_ORDER}_${boundary_element_id}`);
                 storage.removeItem(`${PREFIX_KEY_BOUNDARY_HEURISTIC_WORD_ORDER}_${boundary_element_id}`);
                 storage.removeItem(`${PREFIX_KEY_BOUNDARY_STATE}_${boundary_element_id}`);
-                console.log(`Removed stored word order for ${boundary_element_id} after a successful submit.`);
+                console.log(`Removed stored token order for ${boundary_element_id} after a successful submit.`);
             }
             refresh_row_data(verse_id);
             const first_task = response.first_task;
@@ -913,7 +913,7 @@ function submit_task_word_order(task_id) {
     });
 };
 
-/* ************************* END Task: Word Order ************************* */
+/* ************************* END Task: Token Order ************************* */
 
 /* ******************* BEGIN Task: Token Classification ******************* */
 // Task: Token Classification

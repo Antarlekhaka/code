@@ -183,7 +183,7 @@ APP_ABOUT = """
 featuring sequential annotation of corpora towards a
 comprehensive set of computational linguistic tasks
 such as sentence boundary identification, canonical
-word ordering, token text annotation, token
+token ordering, token text annotation, token
 classification (e.g., named entity recognition),
 token graph (e.g., action graph, dependency graph),
 token connection (e.g., co-reference resolution),

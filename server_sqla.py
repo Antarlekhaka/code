@@ -994,9 +994,9 @@ def api():
             # print("Next Boundary:", next_boundary)
 
             # NOTE: We do not check with task_id because, currently, only
-            # single word order task is supported (as there needs to be a
+            # single token order task is supported (as there needs to be a
             # link between this and boundary task)
-            # NOTE: If for some reason we need multiple word order tasks,
+            # NOTE: If for some reason we need multiple token order tasks,
             # all of them would require to be deleted anyway as the boundary
             # gets changed, so we might never need to check with task_id here
             if next_boundary:
