@@ -641,8 +641,8 @@
     </div>
 </div>
 <script>
-    const TASK_TASKS = JSON.parse('{{context_tasks.tasks | tojson() }}');
-    const TASK_DEFAULT = JSON.parse('{{context_tasks.default | tojson() }}');
+    const TASK_TASKS = JSON.parse('{{context_tasks.tasks | tojson() | replace("\\", "\\\\") }}');
+    const TASK_DEFAULT = JSON.parse('{{context_tasks.default | tojson() | replace("\\", "\\\\") }}');
 </script>
 <script src="{{url_for('static', filename='custom/js/admin/admin.js')}}"></script>
 {% include "footer.html" %}

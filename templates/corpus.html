@@ -192,9 +192,9 @@
     // JSON generated from tojson() filter would have double quotes ("),
     // so must use single quotes (') in JSON.parse()
 
-    const TASK_ACTIVE_TASKS = JSON.parse('{{context_tasks.active_tasks | tojson() }}');
-    const TASK_UPDATE_ACTIONS = JSON.parse('{{context_tasks.update_actions | tojson() }}');
-    const TASK_NEXT = JSON.parse('{{context_tasks.next_task | tojson() }}');
+    const TASK_ACTIVE_TASKS = JSON.parse('{{context_tasks.active_tasks | tojson() | replace("\\", "\\\\") }}');
+    const TASK_UPDATE_ACTIONS = JSON.parse('{{context_tasks.update_actions | tojson() | replace("\\", "\\\\") }}');
+    const TASK_NEXT = JSON.parse('{{context_tasks.next_task | tojson() | replace("\\", "\\\\") }}');
 
     // Graph Related
     // Reference: https://visjs.github.io/vis-network/docs/network/
