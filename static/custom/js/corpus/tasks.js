@@ -1037,8 +1037,12 @@ $merge_token_button.click(function() {
                 $added_token_button.find('[name="token-merge"]').prop("disabled", false);
                 $added_token_button.find('[name="token-toggle"]').prop("disabled", false);
 
+                const $clicked_token_boundary = $clicked_token_button.parent();
+
                 $clicked_token_button.find('[name="token-toggle"]').click();
                 $merge_with_token_button.find('[name="token-toggle"]').click();
+
+                $clicked_token_boundary.trigger("sortupdate");
             }, {
                 added_token_id: added_token_id,
                 clicked_token_id: clicked_token_id,
