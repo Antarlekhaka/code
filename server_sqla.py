@@ -890,7 +890,7 @@ def api():
     # Action Authorization
 
     task_update_actions = list(TASK_UPDATE_ACTIONS.values())
-    annotator_actions = task_update_actions + ["add_token"]
+    annotator_actions = task_update_actions + ["add_token", "split_token"]
 
     role_actions = {
         ROLE_ADMIN: [],
@@ -1078,6 +1078,52 @@ def api():
                 f"Token '{token_data['text']}' added! (ID: {token.id})"
             )
             api_response["data"] = {"id": token.id}
+            api_response["style"] = "success"
+            api_response["success"] = True
+        except Exception as e:
+            webapp.logger.exception(e)
+            api_response["success"] = False
+            api_response["message"] = "Something went wrong!"
+            api_response["style"] = "danger"
+
+        return jsonify(api_response)
+
+    # ----------------------------------------------------------------------- #
+
+    if action == "split_token":
+        annotator_id = current_user.id
+        verse_id = int(request.form["verse_id"])  # why is this required?
+        token_id = int(request.form["token_id"])
+        token_split_data = json.loads(request.form["token_split_data"])
+
+        parent_token = Token.query.get(token_id)
+        split_tokens = []
+        for idx, token_data in enumerate(token_split_data, start=1):
+            token = Token()
+            token.line_id = parent_token.line_id  # associate with parent's line_id
+            token.inner_id = f"split_{token_id}_{idx}"
+            token.order = -1  # TODO: assign adequate value
+            token.text = token_data["text"]
+            token.lemma = token_data.get("lemma", "_")
+            token.analysis = token_data["analysis"]
+            token.annotator_id = annotator_id
+            split_tokens.append(token)
+
+        api_response["data"] = None
+        try:
+            # NOTE: db.session.bulk_save_objects() will result in the tokens
+            # in split_tokens not being assigned id even after commit.
+            # Therefore, we use db.session.add_all(), which, although inefficient,
+            # should be still fine for our use-case due to linguistically limited
+            # and relatively small number of split components
+            db.session.add_all(split_tokens)
+            db.session.commit()
+            print(split_tokens)
+            api_response["message"] = (
+                f"Split token '{parent_token.text}' into {len(split_tokens)} parts!<br />"
+                f"Parts: {', '.join([f'{_t.text} ({_t.id})' for _t in split_tokens])})"
+            )
+            api_response["data"] = {"splits": [_t.id for _t in split_tokens]}
             api_response["style"] = "success"
             api_response["success"] = True
         except Exception as e:

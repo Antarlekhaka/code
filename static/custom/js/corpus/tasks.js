@@ -112,6 +112,12 @@ function generate_token_button(options) {
         token_class = token_class_multitoken;
     }
 
+    // split tokens appear with token_class_subtoken and similar to a merged token
+    // take higher priority than manual
+    if (token.inner_id.includes("split_")) {
+        token_class = token_class_subtoken;
+    }
+
     var token_hover_text = [
         `ID: ${token.id}`,
         `Text: ${token.text}`,
@@ -746,10 +752,21 @@ function setup_task_word_order(task_id, verse_id) {
                 title: "Split",
                 on: {
                     click: function() {
-                        $.notify({message: "NotImplementedError: Please remove the joint token and add constituent tokens using the 'Add Token' button."});
+                        $split_token_modal_header_span.empty();
+                        $split_token_form.data("row-id", 0);
+                        $split_token_form.empty();
+                        $split_token_row_add_button.click();
+                        $split_token_row_add_button.click();
+                        const $clicked_token_clone = $(this).parent().find("span").clone(true);
+                        $clicked_token_clone.removeAttr("id");
+                        $clicked_token_clone.attr("style", "pointer-events: none; -webkit-user-select: text; -moz-user-select: text; -ms-user-select: text; user-select: text;");
+                        $clicked_token_clone.addClass("btn-lg");
+                        $clicked_token_clone.appendTo($split_token_modal_header_span);
                     }
                 }
             });
+            $token_split.attr("data-toggle", "modal");
+            $token_split.attr("data-target", "#split-token-modal");
             $token_button.append($token_split);
 
             const $token_merge = $("<button />", {
@@ -1051,6 +1068,122 @@ $merge_token_button.click(function() {
         }
     });
 
+});
+
+// Split Token Add Row
+$split_token_row_add_button.click(function() {
+    const row_id = $split_token_form.data("row-id") + 1;
+
+    // clone sample row
+    const $split_token_token_row = $split_token_sample_token_row.clone();
+
+    // set ids and other necessary attributes
+    $split_token_token_row.attr("id", `split-token-row-${row_id}`);
+    $split_token_token_row.find(".split-token-basic-row").attr("id", `split-token-basic-row-${row_id}`);
+    $split_token_token_row.find(".split-token-analysis-row").attr("id", `split-token-analysis-row-${row_id}`);
+    $split_token_token_row.find(".split-token-analysis-row-toggle").attr("data-target", `#split-token-analysis-row-${row_id}`);
+    $split_token_token_row.find(".split-token-analysis-row-toggle").attr("aria-controls", `split-token-analysis-row-${row_id}`);
+
+    $split_token_token_row.removeClass("d-none");
+    $split_token_token_row.appendTo($split_token_form);
+    $split_token_token_row.find(".split-token-analysis-row-toggle").collapse();
+
+    $split_token_form.data("row-id", row_id);
+});
+
+
+// NOTE: Currently there are several portions that are repeated in Add-Token and Split-Token
+// This is primarily because Split-Token is a special form of adding tokens, which involves
+// removing the token to be split and adding multiple tokens in its place.
+// It is worth exploring if code can be made a bit more DRY.
+
+// Split Token
+$split_token_button.click(function() {
+    if (!$split_token_form[0].checkValidity()) {
+        $split_token_form[0].reportValidity();
+        return;
+    }
+    const verse_id = $verse_id_containers.html();
+    const token_id = $split_token_modal_header_span.find("span").data("id");
+    const token_split_data = [];
+
+    $(".split-token-token-row").each(function(token_index, token_element) {
+        if ($(this).hasClass("d-none")) {
+            return;
+            // "return;" in .each() ==> "continue;"
+            // "return false;" in .each() ==> "break;"
+        }
+        const token_text = $(token_element).find("input.split-token-input-text").val();
+        const token_lemma =  $(token_element).find("input.split-token-input-lemma").val();
+        const token_analysis_upos = $(token_element).find("input.split-token-analysis-input-upos").val();
+        const token_analysis_xpos = $(token_element).find("input.split-token-analysis-input-xpos").val();
+        const token_features = {};
+
+        $split_token_feature_items.each(function(_index, _element){
+            const $element = $(_element);
+            const label = $element.find(split_token_feature_label_selector).html().trim();
+            const value = $element.find(split_token_feature_input_selector).val();
+            if (value) {
+                token_features[label] = value;
+            }
+        });
+        const token_analysis = {
+            form: token_text,
+            lemma: token_lemma,
+            upos: token_analysis_upos,
+            xpos: token_analysis_xpos,
+            feats: token_features,
+            misc: {}
+        }
+        const split_token_token = {
+            text: token_text,
+            lemma: token_lemma,
+            analysis: token_analysis,
+        };
+        token_split_data.push(split_token_token);
+    });
+    $split_token_modal.modal('hide');
+    $.post(API_URL, {
+        action: "split_token",
+        verse_id: verse_id,
+        token_id: token_id,
+        token_split_data: JSON.stringify(token_split_data),
+    },
+    function (response) {
+        $.notify({
+            message: response.message
+        }, {
+            type: response.style
+        });
+
+        if (response.success) {
+            const split_ids = response.data.splits;
+            console.log(split_ids);
+            refresh_row_data(verse_id, function split_token_handler(options) {
+                console.log(`Called ${arguments.callee.name}(${Object.values(arguments).join(", ")});`);
+
+                const $clicked_token_button = $(`#token-button-${token_id}`);
+                for (const split_id of [...options.split_ids].reverse()) {
+                    // insert in reversed order since we use "insertAfter"
+                    const $added_token_button = $(`#token-button-${split_id}`);
+                    $added_token_button.insertAfter($clicked_token_button);
+                    $added_token_button.find('[name="token-split"]').prop("disabled", false);
+                    $added_token_button.find('[name="token-merge"]').prop("disabled", false);
+                    $added_token_button.find('[name="token-toggle"]').prop("disabled", false);
+                }
+                const $clicked_token_boundary = $clicked_token_button.parent();
+
+                $clicked_token_button.find('[name="token-toggle"]').click();
+
+                $clicked_token_boundary.trigger("sortupdate");
+            }, {
+                split_ids: split_ids,
+            });
+            // NOTE: The following may be redundant, as we also do this when launching a fresh modal.
+            $split_token_form.data("row-id", 0);
+            $split_token_form.empty();
+        }
+    });
 });
 
 // Submit: Token Order

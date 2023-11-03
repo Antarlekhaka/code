@@ -49,6 +49,24 @@ const $merge_token_clicked_token_container = $("#merge-token-clicked-token-conta
 const $merge_token_merge_with_token_container = $("#merge-token-merge-with-token-container");
 const $merge_token_merged_token_container = $("#merge-token-merged-token-container");
 
+/* *** Split Token *** */
+
+const $split_token_modal = $("#split-token-modal");
+const $split_token_form = $("#split-token-form");
+const $split_token_button = $("#split-token");
+const $split_token_modal_header_span = $("#split-token-modal-header-span");
+
+const $split_token_row_add_button = $("#split-token-row-add");
+const $split_token_sample_token_row = $("#split-token-sample-token-row");
+
+const $split_token_analysis_items = $(".split-token-analysis-item");
+const $split_token_feature_items = $(".split-token-feature-item");
+
+const split_token_analysis_label_selector = ".split-token-analysis-label";  // currently unused
+const split_token_analysis_input_selector = ".split-token-analysis-input";  // currently unused
+const split_token_feature_label_selector = ".split-token-feature-label";
+const split_token_feature_input_selector = ".split-token-feature-input";
+
 /* ***************** */
 
 /* *** Graph Modal *** */

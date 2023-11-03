@@ -174,6 +174,83 @@
     </div>
 </div>
 <!-- Merge Token Modal -- END -->
+<!-- Split Token Modal -- BEGIN -->
+<div class="modal fade" id="split-token-modal" tabindex="-1" aria-labelledby="split-token-modal-label" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="split-token-modal-label">Split Token <span class="ml-3" id="split-token-modal-header-span"></span></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="split-token-form">
+                </form>
+                <div id="split-token-sample-token-row" class="row d-none split-token-token-row">
+                    <div class="col-sm">
+                        <div class="row split-token-basic-row p-1">
+                            <div class="col-sm-1 my-auto">Text</div>
+                            <div class="col-sm">
+                                <input type="text" class="form-control split-token-input-text" name="token-text" placeholder="Text" required>
+                            </div>
+
+                            <div class="col-sm-1 my-auto">Lemma</div>
+                            <div class="col-sm">
+                                <input type="text" class="form-control split-token-input-lemma" name="token-lemma" placeholder="Lemma (Optional)">
+                            </div>
+
+                            <div class="col-sm-1 my-auto">
+                                {% if config.token_analysis_items or config.token_feature_items %}
+                                <button type="button" title="Add Analysis" class="btn split-token-analysis-row-toggle" data-toggle="collapse" data-target="" aria-expanded="false" aria-controls="">
+                                    <i class="text-secondary fas fa-chevron-down"></i>
+                                </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="row bg-light collapse split-token-analysis-row py-1 my-1">
+                            <div class="col-sm pr-0 pl-1 py-0 scroll-medium">
+                                {% if config.token_analysis_items %}
+                                <!-- <legend>Analysis</legend> -->
+                                <table class="table">
+                                    {% for analysis_item in config.token_analysis_items %}
+                                    <tr class="split-token-analysis-item p-0">
+                                        <td class="my-auto split-token-analysis-label">{{analysis_item.title}}</td>
+                                        <td class="py-1"><input type="text" class="form-control split-token-analysis-input-{{analysis_item.id}}" name="token-analysis-{{analysis_item.id}}" placeholder="{{analysis_item.title}}"></td></td>
+                                    </tr>
+                                    {% endfor %}
+                                </table>
+                                {% endif %}
+                            </div>
+                            <div class="col-sm pr-1 py-0 pl-0 scroll-medium">
+                                {% if config.token_feature_items %}
+                                <!-- <legend>Features</legend> -->
+                                <table class="table">
+                                    {% for feature_item in config.token_feature_items %}
+                                    <tr class="split-token-feature-item p-0">
+                                        <td class="my-auto split-token-feature-label">{{feature_item.title}}</td>
+                                        <td class="py-1"><input type="text" class="form-control split-token-feature-input" name="token-feats-{{feature_item.id}}" placeholder="{{feature_item.title}}"></td></td>
+                                    </tr>
+                                    {% endfor %}
+                                </table>
+                                {% endif %}
+                            </div>
+                            <div class="col-sm-1"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="split-token-row-add" type="button" title="Add Token Row" class="btn btn-info mr-auto">
+                    <i class="fa fa-plus"></i> Add Row
+                </button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button id="split-token" type="button" class="btn btn-primary">Split</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Split Token Modal -- END -->
 <!-- Show Graph Modal -- BEGIN -->
 <div class="modal fade" id="show-graph-modal" tabindex="-1" aria-labelledby="show-graph-modal-label" aria-hidden="true">
     <div class="modal-dialog modal-lg">
