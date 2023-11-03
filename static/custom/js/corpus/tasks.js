@@ -105,6 +105,13 @@ function generate_token_button(options) {
         token_class = token_class_manual;
     }
 
+    // merged tokens take higher priority than manual
+    // i.e. merged token will appear with token_class_multitoken
+    // instead of with token_class_manual, despite having token_annotator_id != null
+    if (token.inner_id.includes("group_")) {
+        token_class = token_class_multitoken;
+    }
+
     var token_hover_text = [
         `ID: ${token.id}`,
         `Text: ${token.text}`,
@@ -753,91 +760,34 @@ function setup_task_word_order(task_id, verse_id) {
                 title: "Merge with Next",
                 on: {
                     click: function() {
-                        const $clicked_token = $(this).parent().find("span");
-                        const clicked_token_id = $clicked_token.data("id");
-                        const clicked_token_text = $clicked_token.data("text");
-                        const clicked_token_analysis = $clicked_token.data("analysis");
+                        const $clicked_token_clone = $(this).parent().find("span").clone(true);
+                        const clicked_token_text = $clicked_token_clone.data("text");
 
-                        const $merge_with_token = $(this).parent().next().find("span");
-                        const merge_with_token_id = $merge_with_token.data("id");
-                        const merge_with_token_text = $merge_with_token.data("text");
-                        const merge_with_token_analysis = $merge_with_token.data("analysis");
+                        const $merge_with_token_clone = $(this).parent().next().find("span").clone(true);
+                        const merge_with_token_text = $merge_with_token_clone.data("text");
 
                         const merged_token_text = [
                             clicked_token_text,
                             merge_with_token_text
                         ].join("_");
-                        const merged_token_parts = [];
-                        if (clicked_token_analysis.misc && clicked_token_analysis.misc.parts) {
-                            merged_token_parts.push(...clicked_token_analysis.misc.parts);
-                        } else {
-                            merged_token_parts.push(clicked_token_id);
-                        }
-                        if (merge_with_token_analysis.misc && merge_with_token_analysis.misc.parts) {
-                            merged_token_parts.push(...merge_with_token_analysis.misc.parts);
-                        } else {
-                            merged_token_parts.push(merge_with_token_id);
-                        }
+                        const $merged_token_prototype = generate_token_button({
+                            token: {
+                                text: merged_token_text,
+                                analysis: {misc: {}},
+                                inner_id: "group_"
+                            }
+                        });
+                        console.log($merged_token_prototype);
 
-                        const answer = confirm(
-                            `Are you sure you want to GROUP the following tokens?\n` +
-                            `${clicked_token_id}: ${clicked_token_text}\n` +
-                            `${merge_with_token_id}: ${merge_with_token_text}\n---\n` +
-                            `Resulting token will be: ${merged_token_text}.`
-                        );
-                        if (answer) {
-                            $.post(API_URL, {
-                                action: "add_token",
-                                verse_id: verse_id,
-                                token_data: JSON.stringify({
-                                    text: merged_token_text,
-                                    inner_id: `group_${merged_token_parts.join("_")}`,
-                                    lemma: "_",
-                                    analysis: {
-                                        form: merged_token_text,
-                                        lemma: "_",
-                                        feats: {},
-                                        misc: {
-                                            parts: merged_token_parts
-                                        },
-                                    }
-                                })
-                            },
-                            function (response) {
-                                $.notify({
-                                    message: response.message
-                                }, {
-                                    type: response.style
-                                });
+                        $merge_token_clicked_token_container.empty();
+                        $merge_token_merge_with_token_container.empty();
+                        $merge_token_merged_token_container.empty();
 
-                                if (response.success) {
-                                    const added_token_id = response.data.id;
-                                    refresh_row_data(verse_id, function merge_token_handler(options) {
-                                        console.log(`Called ${arguments.callee.name}(${Object.values(arguments).join(", ")});`);
+                        $clicked_token_clone.appendTo($merge_token_clicked_token_container);
+                        $merge_with_token_clone.appendTo($merge_token_merge_with_token_container);
+                        $merged_token_prototype.appendTo($merge_token_merged_token_container);
 
-                                        const added_token_id = options.added_token_id;
-                                        const clicked_token_id = options.clicked_token_id;
-                                        const merge_with_token_id = options.merge_with_token_id;
-
-                                        const $added_token_button = $(`#token-button-${added_token_id}`);
-                                        const $clicked_token_button = $(`#token-button-${clicked_token_id}`);
-                                        const $merge_with_token_button = $(`#token-button-${merge_with_token_id}`);
-
-                                        $added_token_button.insertAfter($clicked_token_button);
-                                        $added_token_button.find('[name="token-split"]').prop("disabled", false);
-                                        $added_token_button.find('[name="token-merge"]').prop("disabled", false);
-                                        $added_token_button.find('[name="token-toggle"]').prop("disabled", false);
-
-                                        $clicked_token_button.find('[name="token-toggle"]').click();
-                                        $merge_with_token_button.find('[name="token-toggle"]').click();
-                                    }, {
-                                        added_token_id: added_token_id,
-                                        clicked_token_id: clicked_token_id,
-                                        merge_with_token_id: merge_with_token_id
-                                    });
-                                }
-                            });
-                        }
+                        $merge_token_modal.modal('show');
                     }
                 }
             });
@@ -1011,6 +961,92 @@ $add_token_button.click(function() {
             $add_token_form[0].reset();
         }
     });
+});
+
+// Merge Token
+$merge_token_button.click(function() {
+    const verse_id = $verse_id_containers.html();
+
+    const $clicked_token = $merge_token_clicked_token_container.find("span");
+    const clicked_token_id = $clicked_token.data("id");
+    const clicked_token_text = $clicked_token.data("text");
+    const clicked_token_analysis = $clicked_token.data("analysis");
+
+    const $merge_with_token = $merge_token_merge_with_token_container.find("span").clone(true);
+    const merge_with_token_id = $merge_with_token.data("id");
+    const merge_with_token_text = $merge_with_token.data("text");
+    const merge_with_token_analysis = $merge_with_token.data("analysis");
+
+    const merged_token_text = [
+        clicked_token_text,
+        merge_with_token_text
+    ].join("_");
+
+    const merged_token_parts = [];
+    if (clicked_token_analysis.misc && clicked_token_analysis.misc.parts) {
+        merged_token_parts.push(...clicked_token_analysis.misc.parts);
+    } else {
+        merged_token_parts.push(clicked_token_id);
+    }
+    if (merge_with_token_analysis.misc && merge_with_token_analysis.misc.parts) {
+        merged_token_parts.push(...merge_with_token_analysis.misc.parts);
+    } else {
+        merged_token_parts.push(merge_with_token_id);
+    }
+
+    $merge_token_modal.modal('hide');
+    $.post(API_URL, {
+        action: "add_token",
+        verse_id: verse_id,
+        token_data: JSON.stringify({
+            text: merged_token_text,
+            inner_id: `group_${merged_token_parts.join("_")}`,
+            lemma: "_",
+            analysis: {
+                form: merged_token_text,
+                lemma: "_",
+                feats: {},
+                misc: {
+                    parts: merged_token_parts
+                },
+            }
+        })
+    },
+    function (response) {
+        $.notify({
+            message: response.message
+        }, {
+            type: response.style
+        });
+
+        if (response.success) {
+            const added_token_id = response.data.id;
+            refresh_row_data(verse_id, function merge_token_handler(options) {
+                console.log(`Called ${arguments.callee.name}(${Object.values(arguments).join(", ")});`);
+
+                const added_token_id = options.added_token_id;
+                const clicked_token_id = options.clicked_token_id;
+                const merge_with_token_id = options.merge_with_token_id;
+
+                const $added_token_button = $(`#token-button-${added_token_id}`);
+                const $clicked_token_button = $(`#token-button-${clicked_token_id}`);
+                const $merge_with_token_button = $(`#token-button-${merge_with_token_id}`);
+
+                $added_token_button.insertAfter($clicked_token_button);
+                $added_token_button.find('[name="token-split"]').prop("disabled", false);
+                $added_token_button.find('[name="token-merge"]').prop("disabled", false);
+                $added_token_button.find('[name="token-toggle"]').prop("disabled", false);
+
+                $clicked_token_button.find('[name="token-toggle"]').click();
+                $merge_with_token_button.find('[name="token-toggle"]').click();
+            }, {
+                added_token_id: added_token_id,
+                clicked_token_id: clicked_token_id,
+                merge_with_token_id: merge_with_token_id
+            });
+        }
+    });
+
 });
 
 // Submit: Token Order

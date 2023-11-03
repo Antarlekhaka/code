@@ -147,6 +147,33 @@
     </div>
 </div>
 <!-- Add Token Modal -- END -->
+<!-- Merge Token Modal -- BEGIN -->
+<div class="modal fade" id="merge-token-modal" tabindex="-1" aria-labelledby="merge-token-modal-label" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="merge-token-modal-label">Merge Tokens</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to merge the tokens
+                <span id="merge-token-clicked-token-container"></span>
+                and
+                <span id="merge-token-merge-with-token-container"></span>
+                ?
+                <hr />
+                The resulting token will be <span id="merge-token-merged-token-container"></span>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button id="merge-token" type="button" class="btn btn-primary">Merge</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Merge Token Modal -- END -->
 <!-- Show Graph Modal -- BEGIN -->
 <div class="modal fade" id="show-graph-modal" tabindex="-1" aria-labelledby="show-graph-modal-label" aria-hidden="true">
     <div class="modal-dialog modal-lg">

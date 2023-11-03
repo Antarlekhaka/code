@@ -35,10 +35,19 @@ const $add_token_input_analysis_xpos = $("#add-token-input-analysis-xpos");
 const $add_token_analysis_items = $(".add-token-analysis-item");
 const $add_token_feature_items = $(".add-token-feature-item");
 
-const add_token_analysis_label_selector = ".add-token-analysis-label";
-const add_token_analysis_input_selector = ".add-token-analysis-input";
+const add_token_analysis_label_selector = ".add-token-analysis-label";  // currently unused
+const add_token_analysis_input_selector = ".add-token-analysis-input";  // currently unused
 const add_token_feature_label_selector = ".add-token-feature-label";
 const add_token_feature_input_selector = ".add-token-feature-input";
+
+/* *** Merge Token *** */
+
+const $merge_token_modal = $("#merge-token-modal");
+const $merge_token_button = $("#merge-token");
+
+const $merge_token_clicked_token_container = $("#merge-token-clicked-token-container");
+const $merge_token_merge_with_token_container = $("#merge-token-merge-with-token-container");
+const $merge_token_merged_token_container = $("#merge-token-merged-token-container");
 
 /* ***************** */
 
