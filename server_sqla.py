@@ -1063,19 +1063,21 @@ def api():
 
         token = Token()
         token.line_id = _line_id
-        token.inner_id = "custom"  # NOTE: not unique
+        token.inner_id = token_data.get("inner_id", "custom")  # NOTE: not unique
         token.order = min(lowest_order, 0) - 1
-        token.text = token_data['text']
-        token.lemma = token_data['lemma']
-        token.analysis = token_data['analysis']
+        token.text = token_data["text"]
+        token.lemma = token_data.get("lemma", "_")
+        token.analysis = token_data["analysis"]
         token.annotator_id = annotator_id
 
+        api_response["data"] = None
         try:
             db.session.add(token)
             db.session.commit()
             api_response["message"] = (
-                f"Token '{token_data['text']}' ({token_data['lemma']}) added!"
+                f"Token '{token_data['text']}' added! (ID: {token.id})"
             )
+            api_response["data"] = {"id": token.id}
             api_response["style"] = "success"
             api_response["success"] = True
         except Exception as e:
@@ -1084,7 +1086,6 @@ def api():
             api_response["message"] = "Something went wrong!"
             api_response["style"] = "danger"
 
-        api_response["data"] = None
         return jsonify(api_response)
 
     # ----------------------------------------------------------------------- #

@@ -105,14 +105,18 @@ function generate_token_button(options) {
         token_class = token_class_manual;
     }
 
+    var token_hover_text = [
+        `ID: ${token.id}`,
+        `Text: ${token.text}`,
+        `Lemma: ${token.lemma}`,
+    ]
+    if (token.analysis.misc.Unsandhied && token.analysis.misc.Unsandhied != "_") {
+        token_hover_text.push(`Padapāṭha: ${token.analysis.misc.Unsandhied}`); // corpus-specific
+    }
+
     const $token = $(token_element, {
         class: [token_class_common, token_class].join(" "),
-        title: [
-            `ID: ${token.id}`,
-            `Text: ${token.text}`,
-            `Lemma: ${token.lemma}`,
-            `Padapāṭha: ${token.analysis.misc.Unsandhied}`,
-        ].join("\n"),
+        title: token_hover_text.join("\n"),
         html: token_text
     });
     if (token_element.includes("button")) {
@@ -131,7 +135,7 @@ function generate_token_button(options) {
     return $token;
 }
 
-function refresh_row_data(unique_id, _callback) {
+function refresh_row_data(unique_id, _callback, _callback_options) {
     console.log(`Called ${arguments.callee.name}(${Object.values(arguments).join(", ")});`);
     const verse_data_url = SAMPLE_VERSE_DATA_URL.replace('0', unique_id);
     $.get(verse_data_url, function (data) {
@@ -144,7 +148,7 @@ function refresh_row_data(unique_id, _callback) {
         $corpus_table.bootstrapTable('check', storage.getItem(KEY_CURRENT_INDEX));
 
         if (_callback) {
-            _callback(unique_id);
+            _callback(_callback_options);
         }
     }, 'json');
     console.log(`Verse data updated for ID: ${unique_id}`);
@@ -469,7 +473,9 @@ function setup_sortable() {
         connectWith: ".sortable"
     }).on("sortremove", function(e, ui) {
         const toggle_id = ui.item[0].id.replace("button", "toggle");
-        $(`#${toggle_id}`).prop('disabled', false);
+        $(`#${toggle_id}`).prop("disabled", false);
+        $(`#${toggle_id}`).parent().find('[name="token-split"]').prop("disabled", false);
+        $(`#${toggle_id}`).parent().find('[name="token-merge"]').prop("disabled", false);
     });
     $('.sortable').sortable({
         items: "> div",
@@ -527,7 +533,7 @@ function apply_word_order(boundary_element_id, proposed_word_order) {
     proposed_word_order.forEach(token_id => {
         const token_button_id = (Number.isInteger(Number(token_id))) ? `token-button-${token_id}` : token_id;
         const $token_button = $(`#${token_button_id}`);
-        const $token_toggle = $token_button.find('button');
+        const $token_toggle = $token_button.find('[name="token-toggle"]');
         if (sentence_tokens.includes(token_button_id)) {
             $token_button.appendTo($sentence_container);
             // NOTE: Heuristics don't contain extra tokens
@@ -539,9 +545,23 @@ function apply_word_order(boundary_element_id, proposed_word_order) {
     });
     // fix toggles
     // BUG: this is triggering state change it seems
+    $extra_container.children("div").each(function(token_button_idx, token_button) {
+        const $token_button = $(`#${token_button.id}`);
+        // hide Split and Merge buttons when moving to extra container
+        $token_button.find('[name="token-split"]').prop("disabled", true);
+        $token_button.find('[name="token-merge"]').prop("disabled", true);
+        // style toggle correctly
+        const $token_toggle = $token_button.find('[name="token-toggle"]');
+        $token_toggle.attr("title", "");
+    });
     $unused_container.children("div").each(function(token_button_idx, token_button) {
         const $token_button = $(`#${token_button.id}`);
-        const $token_toggle = $token_button.find('button');
+        // hide Split and Merge buttons when moving to extra container
+        $token_button.find('[name="token-split"]').prop("disabled", true);
+        $token_button.find('[name="token-merge"]').prop("disabled", true);
+        // style toggle correctly
+        const $token_toggle = $token_button.find('[name="token-toggle"]');
+        $token_toggle.attr("title", "Include");
         if ($token_toggle.hasClass("exclude-token")) {
             // CAUTION: performing $token_toggle.click() would trigger "sortupdate", so avoid that.
             $token_toggle.removeClass("exclude-token");
@@ -705,22 +725,140 @@ function setup_task_word_order(task_id, verse_id) {
             }
             const $token = generate_token_button({
                 token: token,
-                id_prefix: "token"
+                id_prefix: "token",
+                token_data: token
             });
             $token_button.append($token);
+
+            /* BEGIN: Split and Merge buttons */
+            const $token_split = $("<button />", {
+                id: `token-split-${token.id}`,
+                name: "token-split",
+                class: "btn btn-secondary bright-2 split-token",
+                html: '<i class="fas fa-up-right-and-down-left-from-center"></i>',
+                title: "Split",
+                on: {
+                    click: function() {
+                        $.notify({message: "NotImplementedError: Please remove the joint token and add constituent tokens using the 'Add Token' button."});
+                    }
+                }
+            });
+            $token_button.append($token_split);
+
+            const $token_merge = $("<button />", {
+                id: `token-merge-next-${token.id}`,
+                name: "token-merge",
+                class: "btn btn-secondary bright-1 merge-token",
+                html: '<i class="fa fa-right-to-bracket"></i>',
+                title: "Merge with Next",
+                on: {
+                    click: function() {
+                        const $clicked_token = $(this).parent().find("span");
+                        const clicked_token_id = $clicked_token.data("id");
+                        const clicked_token_text = $clicked_token.data("text");
+                        const clicked_token_analysis = $clicked_token.data("analysis");
+
+                        const $merge_with_token = $(this).parent().next().find("span");
+                        const merge_with_token_id = $merge_with_token.data("id");
+                        const merge_with_token_text = $merge_with_token.data("text");
+                        const merge_with_token_analysis = $merge_with_token.data("analysis");
+
+                        const merged_token_text = [
+                            clicked_token_text,
+                            merge_with_token_text
+                        ].join("_");
+                        const merged_token_parts = [];
+                        if (clicked_token_analysis.misc && clicked_token_analysis.misc.parts) {
+                            merged_token_parts.push(...clicked_token_analysis.misc.parts);
+                        } else {
+                            merged_token_parts.push(clicked_token_id);
+                        }
+                        if (merge_with_token_analysis.misc && merge_with_token_analysis.misc.parts) {
+                            merged_token_parts.push(...merge_with_token_analysis.misc.parts);
+                        } else {
+                            merged_token_parts.push(merge_with_token_id);
+                        }
+
+                        const answer = confirm(
+                            `Are you sure you want to GROUP the following tokens?\n` +
+                            `${clicked_token_id}: ${clicked_token_text}\n` +
+                            `${merge_with_token_id}: ${merge_with_token_text}\n---\n` +
+                            `Resulting token will be: ${merged_token_text}.`
+                        );
+                        if (answer) {
+                            $.post(API_URL, {
+                                action: "add_token",
+                                verse_id: verse_id,
+                                token_data: JSON.stringify({
+                                    text: merged_token_text,
+                                    inner_id: `group_${merged_token_parts.join("_")}`,
+                                    lemma: "_",
+                                    analysis: {
+                                        form: merged_token_text,
+                                        lemma: "_",
+                                        feats: {},
+                                        misc: {
+                                            parts: merged_token_parts
+                                        },
+                                    }
+                                })
+                            },
+                            function (response) {
+                                $.notify({
+                                    message: response.message
+                                }, {
+                                    type: response.style
+                                });
+
+                                if (response.success) {
+                                    const added_token_id = response.data.id;
+                                    refresh_row_data(verse_id, function merge_token_handler(options) {
+                                        console.log(`Called ${arguments.callee.name}(${Object.values(arguments).join(", ")});`);
+
+                                        const added_token_id = options.added_token_id;
+                                        const clicked_token_id = options.clicked_token_id;
+                                        const merge_with_token_id = options.merge_with_token_id;
+
+                                        const $added_token_button = $(`#token-button-${added_token_id}`);
+                                        const $clicked_token_button = $(`#token-button-${clicked_token_id}`);
+                                        const $merge_with_token_button = $(`#token-button-${merge_with_token_id}`);
+
+                                        $added_token_button.insertAfter($clicked_token_button);
+                                        $added_token_button.find('[name="token-split"]').prop("disabled", false);
+                                        $added_token_button.find('[name="token-merge"]').prop("disabled", false);
+                                        $added_token_button.find('[name="token-toggle"]').prop("disabled", false);
+
+                                        $clicked_token_button.find('[name="token-toggle"]').click();
+                                        $merge_with_token_button.find('[name="token-toggle"]').click();
+                                    }, {
+                                        added_token_id: added_token_id,
+                                        clicked_token_id: clicked_token_id,
+                                        merge_with_token_id: merge_with_token_id
+                                    });
+                                }
+                            });
+                        }
+                    }
+                }
+            });
+            $token_button.append($token_merge);
+            /* END: Split and Merge buttons */
 
             if (token.annotator_id == null) {
                 if (is_token_used) {
                     var token_class = "btn btn-secondary exclude-token";
                     var token_html = '<i class="fa fa-times"></i>';
+                    var token_title = "Exclude";
                 } else {
                     var token_class = "btn btn-info";
                     var token_html = '<i class="fa fa-plus"></i>';
+                    var token_title = "Include";
                 }
                 const $token_toggle = $("<button />", {
                     id: `token-toggle-${token.id}`,
                     name: "token-toggle",
                     class: token_class,
+                    title: token_title,
                     html: token_html,
                     on: {
                         click: function() {
@@ -728,14 +866,20 @@ function setup_task_word_order(task_id, verse_id) {
                                 $(this).removeClass("exclude-token");
                                 $(this).removeClass("btn-secondary");
                                 $(this).addClass("btn-info");
+                                $(this).prop("title", "Include");
                                 $(this).html('<i class="fa fa-plus"></i>');
-                                $(`#unused-${boundary_id}`).append($(this).parent());
+                                $(this).parent().find('[name="token-split"]').prop("disabled", true);
+                                $(this).parent().find('[name="token-merge"]').prop("disabled", true);
+                                $(this).parent().appendTo($(`#unused-${boundary_id}`));
                             } else {
                                 $(this).removeClass("btn-info");
                                 $(this).addClass("btn-secondary");
                                 $(this).addClass("exclude-token");
+                                $(this).prop("title", "Exclude");
                                 $(this).html('<i class="fa fa-times"></i>');
-                                $(`#boundary-${boundary_id}`).append($(this).parent());
+                                $(this).parent().find('[name="token-split"]').prop("disabled", false);
+                                $(this).parent().find('[name="token-merge"]').prop("disabled", false);
+                                $(this).parent().appendTo($(`#boundary-${boundary_id}`));
                             }
                             $(`#boundary-${boundary_id}`).trigger("sortupdate");
                         }
@@ -747,13 +891,16 @@ function setup_task_word_order(task_id, verse_id) {
                     id: `token-toggle-${token.id}`,
                     name: "token-toggle",
                     class: "btn btn-secondary exclude-extra-token",
+                    title: "Exclude",
                     html: '<i class="fa fa-times"></i>',
                     disabled: is_extra_unused,
                     on: {
                         click: function() {
-                            const $boundary_element = $(this).parent().parent();
-                            $(`#extra-${verse_id}`).append($(this).parent());
                             $(this).prop("disabled", true);
+                            $(this).parent().find('[name="token-split"]').prop("disabled", true);
+                            $(this).parent().find('[name="token-merge"]').prop("disabled", true);
+                            $(this).parent().appendTo($(`#extra-${verse_id}`));
+                            const $boundary_element = $(this).parent().parent();
                             $boundary_element.trigger("sortupdate");
                         }
                     }
@@ -838,9 +985,7 @@ $add_token_button.click(function() {
         upos: token_analysis_upos,
         xpos: token_analysis_xpos,
         feats: token_features,
-        misc: {
-            "Unsandhied": token_text
-        } // Corpus Specific
+        misc: {}
     }
     const token_data = {
         text: token_text,
@@ -863,6 +1008,7 @@ $add_token_button.click(function() {
 
         if (response.success) {
             refresh_row_data(verse_id);
+            $add_token_form[0].reset();
         }
     });
 });
@@ -1601,7 +1747,7 @@ function setup_task_token_connection(task_id, verse_id, context_window) {
                 token: token,
                 token_element: "<button />",
                 id_prefix: `tokcon-token-${task_id}`,
-                token_data: {token_id: token_id, boundary_id: boundary_id},
+                token_data: {"token-id": token_id, "boundary-id": boundary_id},
                 onclick: function($element) {
                     const $annotation_token = $element.clone();
                     $annotation_token.removeAttr("id");

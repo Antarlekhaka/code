@@ -96,7 +96,7 @@
                 <form id="add-token-form">
                     <div class="row">
                         <div class="col-sm">
-                            <legend>Mandatory</legend>
+                            <!-- <legend>Mandatory</legend> -->
                             <table class="table">
                                 <tr>
                                     <td>Text</td>
@@ -104,9 +104,14 @@
                                 </tr>
                                 <tr>
                                     <td>Lemma</td>
-                                    <td><input type="text" class="form-control" name="token-lemma" id="add-token-input-lemma" placeholder="Lemma" required></td>
+                                    <td><input type="text" class="form-control" name="token-lemma" id="add-token-input-lemma" placeholder="Lemma"></td>
                                 </tr>
                             </table>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm">
+                            {% if config.token_analysis_items %}
                             <legend>Analysis</legend>
                             <table class="table">
                                 {% for analysis_item in config.token_analysis_items %}
@@ -116,8 +121,10 @@
                                 </tr>
                                 {% endfor %}
                             </table>
+                            {% endif %}
                         </div>
                         <div class="col-sm scroll-medium">
+                            {% if config.token_feature_items %}
                             <legend>Features</legend>
                             <table class="table">
                                 {% for feature_item in config.token_feature_items %}
@@ -127,6 +134,7 @@
                                 </tr>
                                 {% endfor %}
                             </table>
+                            {% endif %}
                         </div>
                     </div>
                 </form>

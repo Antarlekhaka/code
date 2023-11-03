@@ -702,14 +702,8 @@ def get_verse_data(
             "annotator_id": boundary.annotator_id,
             "annotator": boundary.annotator.username,
         }
-        if sentence_boundary_task_active:
-            data[verse_id]["sentences"] = get_sentences(
-                verse_id, boundary.annotator_id
-            )
-        else:
-            data[verse_id]["sentences"] = get_sentences(
-                verse_id, AUTO_ANNOTATION_USER_ID
-            )
+
+        data[verse_id]["sentences"] = get_sentences(verse_id, annotator_ids)
 
         # NOTE: Currently there is no support for multiple word order tasks.
         # Further, since the word order is used in other tasks to display
@@ -917,7 +911,7 @@ def get_verse_data(
 
 
 def get_sentences(
-    verse_id: int, annotator_id: int
+    verse_id: int, annotator_ids: List[int] = None,
 ) -> Dict[int, Dict[int, Token]]:
     """Get sentences (a list of tokens) that end on the specific line
 
@@ -925,8 +919,8 @@ def get_sentences(
     ----------
     verse_id : int
         Verse ID
-    annotator_id : int
-        Annotator ID
+    annotator_id : List[int]
+        Annotator IDs
 
     Returns
     -------
@@ -936,6 +930,26 @@ def get_sentences(
         * Dictionary of (token_id, tokens) in the sentences as values
     """
     sentences = {}
+
+    sentence_boundary_task_active = Task.query.filter(
+        Task.category == TASK_SENTENCE_BOUNDARY,
+        Task.is_deleted == False  # noqa
+    ).one_or_none()
+    word_order_task_active = Task.query.filter(
+        Task.category == TASK_WORD_ORDER,
+        Task.is_deleted == False  # noqa
+    ).one_or_none()
+
+    boundary_annotator_ids = (
+        annotator_ids
+        if sentence_boundary_task_active
+        else [AUTO_ANNOTATION_USER_ID]
+    )
+    token_annotator_ids = (
+        annotator_ids
+        if word_order_task_active
+        else [AUTO_ANNOTATION_USER_ID]
+    )
 
     # get first token from the chapter the verse_id belongs to
     verse = Verse.query.get(verse_id)
@@ -958,7 +972,7 @@ def get_sentences(
     # boundaries present in the current verse
     boundaries = Boundary.query.filter(
         Boundary.verse_id == verse_id,
-        Boundary.annotator_id == annotator_id,
+        Boundary.annotator_id.in_(boundary_annotator_ids),
     ).order_by(Boundary.token_id).all()
 
     if not boundaries:
@@ -968,7 +982,7 @@ def get_sentences(
     # of the first boundary in the current line
     previous_boundary = Boundary.query.filter(
         Boundary.verse_id < verse_id,
-        Boundary.annotator_id == annotator_id,
+        Boundary.annotator_id.in_(boundary_annotator_ids),
     ).order_by(Boundary.token_id.desc()).first()
 
     previous_boundary_token_id = (
@@ -983,7 +997,7 @@ def get_sentences(
 
     extra_tokens = Token.query.filter(
         Token.line.has(Line.verse_id == verse_id),
-        Token.annotator_id != None  # noqa
+        Token.annotator_id.in_(token_annotator_ids)
     ).all()
     sentences["extra"] = {
         token.id: {

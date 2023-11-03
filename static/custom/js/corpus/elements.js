@@ -30,7 +30,7 @@ const $add_token_input_text = $("#add-token-input-text");
 const $add_token_input_lemma = $("#add-token-input-lemma");
 
 const $add_token_input_analysis_upos = $("#add-token-input-analysis-upos");
-const $add_token_input_analysis_xpos = $("#add-token-input-analysis-upos");
+const $add_token_input_analysis_xpos = $("#add-token-input-analysis-xpos");
 
 const $add_token_analysis_items = $(".add-token-analysis-item");
 const $add_token_feature_items = $(".add-token-feature-item");
