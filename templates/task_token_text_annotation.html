@@ -1,4 +1,9 @@
 {% extends "task_base.html" %}
+{% block extra_header %}
+<button type="button" id="include-exclude-button-token-text-annotation-{{task.id}}" class="btn btn-sm ml-1 btn-success float-right include-all-token-text-annotation" title="Include All Tokens">
+    <i class="fas fa-list-check"></i>
+</button>
+{% endblock %}
 {% block body %}
 <div id="token-text-annotation-container-{{task.id}}">
     <form id="token-text-annotation-form-{{task.id}}" class="scroll-small">

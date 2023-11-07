@@ -354,7 +354,7 @@ with webapp.app_context():
         )
 
     # ----------------------------------------------------------------------- #
-    # Populate various tables if empty
+    # Populate required tables if empty
 
     objects = []
 
@@ -1118,7 +1118,7 @@ def api():
             # and relatively small number of split components
             db.session.add_all(split_tokens)
             db.session.commit()
-            print(split_tokens)
+            # print(split_tokens)
             api_response["message"] = (
                 f"Split token '{parent_token.text}' into {len(split_tokens)} parts!<br />"
                 f"Parts: {', '.join([f'{_t.text} ({_t.id})' for _t in split_tokens])})"

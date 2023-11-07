@@ -1247,6 +1247,31 @@ function setup_task_token_classification(task_id, verse_id) {
     const $token_null_class_table = $(`#token-null-class-table-${task_id}`);
     const $sample_token_classification_type = $(`#sample-token-type-${task_id}`);
 
+    const $include_exclude_token_button = $(`#include-exclude-button-token-classification-${task_id}`);
+    $include_exclude_token_button.click(function () {
+        const include_class = "include-all-token-classification";
+        const include_text = "Include All Tokens";
+        const exclude_class = "exclude-all-token-classification";
+        const exclude_text = "Exclude All Tokens";
+        if ($include_exclude_token_button.hasClass(include_class)) {
+            console.log("Including all tokens.");
+            $token_null_class_table.find('[name="tokclf-toggle"]').click();
+            $include_exclude_token_button.removeClass(include_class);
+            $include_exclude_token_button.removeClass("btn-success");
+            $include_exclude_token_button.addClass(exclude_class);
+            $include_exclude_token_button.addClass("btn-danger");
+            $include_exclude_token_button.attr("title", exclude_text);
+        } else if ($include_exclude_token_button.hasClass(exclude_class)) {
+            console.log("Excluding all tokens.");
+            $token_classification_table.find('[name="tokclf-toggle"]').click();
+            $include_exclude_token_button.removeClass(exclude_class);
+            $include_exclude_token_button.removeClass("btn-danger");
+            $include_exclude_token_button.addClass(include_class);
+            $include_exclude_token_button.addClass("btn-success");
+            $include_exclude_token_button.attr("title", include_text);
+        }
+    });
+
     $token_classification_table.html("");
     $token_null_class_table.html("");
 
@@ -2701,6 +2726,31 @@ function setup_task_token_text_annotation(task_id, verse_id) {
     const $token_text_annotation_table = $(`#token-text-annotation-table-${task_id}`);
     const $token_non_annotation_table = $(`#token-non-annotation-table-${task_id}`);
     const $sample_token_text_annotation_text = $(`#sample-token-text-annotation-text-${task_id}`);
+
+    const $include_exclude_token_button = $(`#include-exclude-button-token-text-annotation-${task_id}`);
+    $include_exclude_token_button.click(function () {
+        const include_class = "include-all-token-text-annotation";
+        const include_text = "Include All Tokens";
+        const exclude_class = "exclude-all-token-text-annotation";
+        const exclude_text = "Exclude All Tokens";
+        if ($include_exclude_token_button.hasClass(include_class)) {
+            console.log("Including all tokens.");
+            $token_non_annotation_table.find('[name="token-text-annotation-toggle"]').click();
+            $include_exclude_token_button.removeClass(include_class);
+            $include_exclude_token_button.removeClass("btn-success");
+            $include_exclude_token_button.addClass(exclude_class);
+            $include_exclude_token_button.addClass("btn-danger");
+            $include_exclude_token_button.attr("title", exclude_text);
+        } else if ($include_exclude_token_button.hasClass(exclude_class)) {
+            console.log("Excluding all tokens.");
+            $token_text_annotation_table.find('[name="token-text-annotation-toggle"]').click();
+            $include_exclude_token_button.removeClass(exclude_class);
+            $include_exclude_token_button.removeClass("btn-danger");
+            $include_exclude_token_button.addClass(include_class);
+            $include_exclude_token_button.addClass("btn-success");
+            $include_exclude_token_button.attr("title", include_text);
+        }
+    });
 
     $token_text_annotation_table.html("");
     $token_non_annotation_table.html("");
