@@ -2,6 +2,8 @@
 
 A web-based distributed multi-task annotation framework following sequential annotation method.
 
+This work has been accepted in **3rd Workshop on NLP Open Source Software at the 2023 Conference on Empirical Methods in Natural Language Processing (EMNLP 2023)**.
+
 ## Installation Instructions
 
 * Clone repository
@@ -21,3 +23,25 @@ A web-based distributed multi-task annotation framework following sequential ann
 * Task 6: Sentence Classification
 * Task 7: Sentence Graph (e.g. Discourse Graph)
 * Task 8: Token Text Annotation (e.g. Lemmatization)
+
+## Cite
+
+* Download Paper: [arXiv](https://arxiv.org/abs/2310.07826)
+
+```
+@inproceedings{terdalkar2023antarlekhaka,
+  title         = {{Antarlekhaka}: A Comprehensive Tool for Multi-task Natural Language Annotation},
+  author        = {Terdalkar, Hrishikesh and Bhattacharya, Arnab},
+  year          = {2023},
+  eprint        = {2310.07826},
+  url           = {https://arxiv.org/abs/2310.07826},
+  publisher     = {Association for Computational Linguistics},
+  archiveprefix = {arXiv},
+  keywords      = {Annotation Tool, Sequential Annotation, Natural Language Processing},
+  booktitle     = {Proceedings of the 3rd Workshop on NLP Open Source Software at the 2023 Conference on Empirical Methods in Natural Language Processing},
+  primaryclass  = {cs.CL},
+  numpages      = {8},
+  location      = {Singapore},
+  series        = {NLP-OSS @ EMNLP}
+}
+```
