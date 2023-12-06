@@ -1,8 +1,17 @@
 # Antarlekhaka
 
-A web-based distributed multi-task annotation framework following sequential annotation method.
+A web-deployable annotation tool for distributed multi-task natural language annotation. 
+
+**Features**
+
+* Sequential annotation method
+* Eight categories of admission tasks with unique interfaces
+* Comprehensive task coverage
 
 This work has been accepted in **3rd Workshop on NLP Open Source Software at the 2023 Conference on Empirical Methods in Natural Language Processing (EMNLP 2023)**.
+
+You may access the paper at [arXiv](https://arxiv.org/abs/2310.07826).
+More details [here](https://hrishikeshrt.github.io/publication/nlposs2023/).
 
 ## Installation Instructions
 
