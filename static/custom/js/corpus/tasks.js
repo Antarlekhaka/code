@@ -167,6 +167,13 @@ function refresh_row_data(unique_id, _callback, _callback_options) {
     console.log(`Verse data updated for ID: ${unique_id}`);
 }
 
+function draw_graph_displacy(data) {
+    const displacy = new displaCy('', {
+        container: graph_displacy_container_selector,
+    });
+    displacy.render(data, {color: '#000042'});
+}
+
 function draw_graph(data) {
     const container = $graph[0];
     const options = {
@@ -1515,8 +1522,9 @@ function setup_task_token_graph(task_id, verse_id) {
         const $graph_input_header = $graph_input.find(".boundary-token-graph-header");
 
         // populate options
-        var options = {};
+        var options = [];
         var header_html = [];
+        var header_html_elements = [];
         for (const token_id of used_token_ids) {
             const token = all_tokens[token_id];
             const $token = generate_token_button({
@@ -1524,21 +1532,33 @@ function setup_task_token_graph(task_id, verse_id) {
                 token_class_common: "btn-sm"
             });
             const token_text = $token.html();
+            const $token_text = $('<span />', {
+                text: token_text,
+                title: `ID: ${token_id}`
+            });
+            $token_text.data("token_id", token_id);
             const token_html = $token.wrapAll('<div>').parent().html();
             header_html.push(token_text);
-            options[token_id] = {
+            header_html_elements.push($token_text);
+            options.push({
+                value: token_id,
                 text: token_text,
                 content: token_html
-            };
+            });
         }
         const header_text = header_html.join(" ");
-        $graph_input_header.html(header_text);
+        $graph_input_header.html("");
+        for (const $header_element of header_html_elements) {
+            $graph_input_header.append($header_element);
+            $graph_input_header.append($("<span />", {text: " "}));
+        }
 
         // Re-Bind Add Triplet Row Function
         const $add_triplet_button = $graph_input.find(".add-triplet-button");
         const $triplet_location = $graph_input.find(".token-graph-input");
         $triplet_location.data("triplet-count", 0);
         $triplet_location.data("header-text", header_text);
+        $triplet_location.data("tokens", options);
         $triplet_location.data("source-options", options);
         $triplet_location.data("target-options", options);
 
@@ -1600,9 +1620,9 @@ function add_token_graph_row($location, task_id, is_heuristic) {
     $input_source_entity.addClass("source-entity");
 
     // Add Options
-    for (const [option_value, option] of Object.entries(source_entity_options)) {
+    for (const option of source_entity_options) {
         const $option = $("<option />", {
-            value: option_value,
+            value: option.value,
             html: option.text
         });
         $option.attr("data-content", option.content);
@@ -1642,9 +1662,9 @@ function add_token_graph_row($location, task_id, is_heuristic) {
     $input_target_entity.addClass("target-entity");
 
     // Add Options
-    for (const [option_value, option] of Object.entries(target_entity_options)) {
+    for (const option of target_entity_options) {
         const $option = $("<option />", {
-            value: option_value,
+            value: option.value,
             html: option.text
         });
         $option.attr("data-content", option.content);
@@ -1675,6 +1695,64 @@ function add_token_graph_row($location, task_id, is_heuristic) {
     $input_target_entity.selectpicker();
 
     return $row;
+}
+
+function prepare_token_graph_data_displacy($data_location) {
+    var data = {
+        words: [],
+        arcs: []
+    };
+
+    // temporary id store
+    const node_ids = {};
+    var node_id = 0;
+    function get_node_id() {
+        return node_id++;
+    }
+
+    const tokens = $data_location.data("tokens");
+    for (const token of tokens) {
+        node_ids[token.value] = get_node_id();
+        data.words.push({
+            text: token.text
+        });
+    }
+
+    $data_location.children(".triplet-row").each(function (triplet_index, triplet_row) {
+        // CAUTION: The ID on entity selectors is currently repeated for each row.
+        // We aren't using it and instead looping on all elements having a particular class,
+        // so this still works, but might as well get rid of it or make it unique!
+
+        const $triplet_row = $(triplet_row);
+        const $source_entity = $triplet_row.find('.source-entity');
+        const $target_entity = $triplet_row.find('.target-entity');
+        const $relation_label = $triplet_row.find('.relation-label');
+
+        const source_entity_value = $source_entity.selectpicker('val'); // node_id of source entity
+        const target_entity_value = $target_entity.selectpicker('val'); // node_id of target entity
+        const relation_label_value = $relation_label.selectpicker('val');
+
+        const source_entity_is_custom = $source_entity.find(`[value=${source_entity_value}]`).data('content').indexOf('token-manual') > -1;
+        const target_entity_is_custom = $target_entity.find(`[value=${target_entity_value}]`).data('content').indexOf('token-manual') > -1;
+
+        if (!source_entity_value || !relation_label_value || !relation_label_value) {
+            return;
+            // "return;" in .each() ==> "continue;"
+            // "return false;" in .each() ==> "break;"
+        }
+
+        const source_entity = $source_entity.find(`[value=${source_entity_value}]`).html();
+        const target_entity = $target_entity.find(`[value=${target_entity_value}]`).html();
+        const relation_label = $relation_label.find(`[value=${relation_label_value}]`).data("subtext");
+        data.arcs.push({
+            start: Math.min(node_ids[source_entity_value], node_ids[target_entity_value]),
+            end: Math.max(node_ids[source_entity_value], node_ids[target_entity_value]),
+            dir: (node_ids[target_entity_value] < node_ids[target_entity_value]) ? "right" : "left",
+            label: relation_label
+        });
+    });
+
+    return data;
 }
 
 function prepare_token_graph_data($data_location) {
@@ -1787,10 +1865,11 @@ $show_graph_modal.on('shown.bs.modal', function(event) {
 
         const sentence_text = $target_location.data("header-text");
         $show_graph_modal_label.html(sentence_text);
-
         const token_graph_data = prepare_token_graph_data($target_location);
         draw_graph(token_graph_data);
 
+        const token_graph_data_displacy = prepare_token_graph_data_displacy($target_location);
+        draw_graph_displacy(token_graph_data_displacy);
     } else if (trigger_task_category == TASK_SENTENCE_GRAPH) {
         // triggered from sentence_graph task
         const $target_location = $(`#sentence-graph-annotation-container-${trigger_task_id}`);

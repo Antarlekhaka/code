@@ -263,15 +263,19 @@
             </div>
             <div class="modal-body">
                 <div class="container-fluid px-0">
-                    <div class="border rounded px-2 py-1" id="graph" style="height: 55vh;">
+                    <div class="border rounded px-2 py-1 visjs-container collapse show multi-collapse" id="graph">
+                        No edges have been added yet.
+                    </div>
+                    <div class="border rounded px-2 py-1 displacy-container collapse multi-collapse" id="graph-displacy">
                         No edges have been added yet.
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="snapshot-graph-button" title="Snapshot" class="btn btn-primary mr-auto">
+                <button id="snapshot-graph-button" title="Snapshot" class="btn btn-primary">
                     <i class="fa fa-camera"></i>
                 </button>
+                <button type="button" class="btn btn-primary mr-auto" data-toggle="collapse" data-target=".multi-collapse" id="toggle-graph-style" aria-controls="graph graph-displacy">Toggle Graph Style</button>
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Continue</button>
             </div>
         </div>
