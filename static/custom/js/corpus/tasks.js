@@ -1747,7 +1747,7 @@ function prepare_token_graph_data_displacy($data_location) {
         data.arcs.push({
             start: Math.min(node_ids[source_entity_value], node_ids[target_entity_value]),
             end: Math.max(node_ids[source_entity_value], node_ids[target_entity_value]),
-            dir: (node_ids[target_entity_value] < node_ids[target_entity_value]) ? "right" : "left",
+            dir: (node_ids[source_entity_value] < node_ids[target_entity_value]) ? "right" : "left",
             label: relation_label
         });
     });
