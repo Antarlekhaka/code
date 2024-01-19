@@ -77,6 +77,7 @@ const $show_graph_modal_buttons = $(".show-graph-modal-button");
 const $show_graph_modal = $("#show-graph-modal");
 const $show_graph_modal_label = $("#show-graph-modal-label")
 const $snapshot_graph_button = $("#snapshot-graph-button");
+const $snapshot_graph_displacy_button = $("#snapshot-graph-displacy-button");
 const graph_container_selector = "#graph";
 const graph_displacy_container_selector = "#graph-displacy";
 const $graph = $(graph_container_selector);

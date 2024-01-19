@@ -264,6 +264,33 @@ $snapshot_graph_button.click(function() {
     document.body.removeChild(download_anchor);
 });
 
+$snapshot_graph_displacy_button.click(function() {
+    const svg_element = $graph_displacy.find("svg.displacy")[0];
+    const serializer = new XMLSerializer();
+    var source = serializer.serializeToString(svg_element);
+
+    // add name spaces.
+    if(!source.match(/^<svg[^>]+xmlns="http\:\/\/www\.w3\.org\/2000\/svg"/)){
+        source = source.replace(/^<svg/, '<svg xmlns="http://www.w3.org/2000/svg"');
+    }
+    if(!source.match(/^<svg[^>]+"http\:\/\/www\.w3\.org\/1999\/xlink"/)){
+        source = source.replace(/^<svg/, '<svg xmlns:xlink="http://www.w3.org/1999/xlink"');
+    }
+
+    // add xml declaration
+    source = '<?xml version="1.0" standalone="no"?>\r\n' + source;
+
+    // convert svg source to URI data scheme.
+    const url = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(source);
+
+    const download_anchor = document.createElement('a');
+    download_anchor.href = url;
+    download_anchor.download = 'graph.svg';
+    document.body.appendChild(download_anchor);
+    download_anchor.click();
+    document.body.removeChild(download_anchor);
+});
+
 
 /* ************************** Generic Task Setup ************************** */
 
