@@ -353,10 +353,16 @@ def format_data(data, **kwargs):
         text_simple = defaultdict(list)
         text_standard = defaultdict(list)
 
+
         for task_id in token_connection_graph:
+            # CAUTION: Function returns a generator
             clusters = nx.weakly_connected_components(
                 token_connection_graph[task_id]
             )
+
+            # store token-cluster map for use in MUC-6
+            token_cluster_map = {}
+
             for cluster_idx, cluster in enumerate(clusters):
                 cluster_text = []
                 for token_id in cluster:
@@ -371,13 +377,45 @@ def format_data(data, **kwargs):
                         ])
                     )
 
+                    # store token_id to cluster_id map for use in MUC-6
+                    token_cluster_map[token_id] = cluster_idx + 1
+
                 text_simple[task_id].append(cluster_text)
+
+
+            # BEGIN: Standard Format: MUC-6
+            MULTIPLIER = 1000   # Large enough number (larger than expected number of items in any cluster)
+            CLUSTER_TOKEN_COUNTER = defaultdict(int)
+
+            for boundary_id, token_ids in SENTENCE_TOKEN_IDS.items():
+                sentence = []
+                for token_id in token_ids:
+                    token_text = get_token_text(
+                        chapter_data["tokens"][token_id],
+                        ["form", "misc.Unsandhied", "lemma"]
+                    )
+                    if token_id in token_cluster_map:
+                        cluster_id = token_cluster_map[token_id]
+                        CLUSTER_TOKEN_COUNTER[cluster_id] += 1
+                        coref_id = cluster_id * MULTIPLIER + CLUSTER_TOKEN_COUNTER[cluster_id]
+                        if CLUSTER_TOKEN_COUNTER[cluster_id] > 1:
+                            coref_ref = cluster_id * MULTIPLIER + 1
+                            sentence.append(f'<COREF ID="{coref_id}" REF="{coref_ref}">{token_text}</COREF>')
+                        else:
+                            sentence.append(f'<COREF ID="{coref_id}">{token_text}</COREF>')
+                    else:
+                        sentence.append(token_text)
+                text_standard[task_id].append(sentence)
+            # END: Standard Format: MUC-6
 
             task_data_simple[TASK_TOKEN_CONNECTION][task_id] = "\n".join(
                 ", ".join(cluster_text)
                 for cluster_text in text_simple[task_id]
             )
-            task_data_standard[TASK_TOKEN_CONNECTION][task_id] = None
+            task_data_standard[TASK_TOKEN_CONNECTION][task_id] = "\n".join(
+                " ".join(sentence_token_texts)
+                for sentence_token_texts in text_standard[task_id]
+            )
 
         # ------------------------------------------------------------------- #
 
